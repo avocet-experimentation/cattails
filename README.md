@@ -4,12 +4,6 @@
 
 ### MongoDB as a Docker Container
 
-If you have MongoDB already installed you can just check the script `init-db.sh` content and run the commands there.
-In case you don't, you can use Docker (check the compose file in `./mongodb`) to run MongoDB as a container.
-If you want to know more about running MongoDB in Docker, you can check this video:
-[How to run MongoDB in Docker: dev setups](https://www.youtube.com/watch?v=cfmPk93mOeo) (channel
-[@fromDev2Dev](https://www.youtube.com/@fromDev2Dev)).
-
 Open Git Bash in this project folder and run the following commands:
 
 ```
