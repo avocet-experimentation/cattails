@@ -8,8 +8,6 @@ export type Attribute = {
   dataType: AttributeData;
 }
 
-// type OverrideRuleStatus = "in_test" | "completed" | "archived" | "active";
-
 export type Status =
   | "draft"
   | "active"
@@ -26,8 +24,8 @@ export interface OverrideRule {
   startTimestamp?: number; // unix timestamp | undefined if never enabled
   endTimestamp?: number;
   enrollment: {
-	attributes: Attribute[]; // keys for the values sent to the experimentation server and consistently hashed for random assignment
-	proportion: number; // 0 < proportion <= 1
+    attributes: Attribute[]; // keys for the values sent to the experimentation server and consistently hashed for random assignment
+    proportion: number; // 0 < proportion <= 1
   };
 }
 
@@ -67,42 +65,20 @@ export interface Experiment extends OverrideRule {
   dependents: EventTelemetry[]; // all dependent variables
 }
 
-const assertDocument = (arg: unknown): asserts arg is Document => {
-  if (typeof arg !== 'object' 
-    || arg === null 
-    || !('_id' in arg)
-    || !('__v' in arg)
-  ) {
-    throw new TypeError(`${arg} is not a Mongoose Document`);
-  }
-}
-
-
-const assertExperiment = (arg: Document): asserts arg is Experiment => {
-  if (
-    
-  ) {
-    throw new TypeError(`${arg} is not an Experiment`);
-  }
-}
-
-
-
 type ExperimentRecord = Omit<Experiment, 'id'> & { _id: any, __v: number };
 
-const transform = <T extends Experiment>(
-  doc: HydratedDocument<T>, ret: Record<string, any>
-): Experiment => {
-  assertDocument(ret);
+const transform = (
+  doc: any, ret: Record<string, any>
+) => {
   const { _id, __v, ...rest } = ret;
-  const returnValue: Experiment = {
+  const transformed = {
     ...rest,
     id: String(ret._id.toString()),
   }
   // ret.id = ret._id.toString();
   // delete ret._id;
   // delete ret.__v;
-  return returnValue;
+  return transformed;
 }
 
 // embedded into experimentSchema
