@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "@fastify/cors": "^8.0.0",
-    "@fflags/mongo-loader": "^0.0.16",
-    "@fflags/types": "^0.0.16",
+    "@fflags/mongo-loader": "file:../packages/fflags-mongo-loader",
+    "@fflags/types": "file:../packages/fflags-types",
     "dotenv": "^16.4.5",
     "fastify": "^4.17.0",
     "mongoose": "^7.2.2"
