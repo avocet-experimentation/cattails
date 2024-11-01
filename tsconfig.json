@@ -12,6 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true
   },
+  "reflection": true,
   "include": ["src/**/*", "vitest.config.ts"],
   "exclude": [
     "node_modules",

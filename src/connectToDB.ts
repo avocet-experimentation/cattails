@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import envConfig from "./envConfig.js";
+import env from "./envalid.js";
 
 export const connectToDB = async () => {
-  const uri: string | undefined = envConfig ? envConfig.MONGO_URI : undefined;
+  const uri = env.MONGO_URI;
   const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
