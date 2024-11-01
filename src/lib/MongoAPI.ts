@@ -1,4 +1,5 @@
 import { MongoClient, ObjectId, Document, WithId, Collection, Db } from 'mongodb';
+import { cast, MinLength, ReflectionClass, is, assert } from '@deepkit/type';
 import envConfig from '../envConfig.js';
 import { Experiment } from '../experiments/experiments.types.js';
 import { FFlag } from '../fflags/fflags.types.js';
@@ -79,7 +80,6 @@ export default class MongoAPI {
 
   /**
    * Insert a new flag into the database
-   * @param flag a Feature Flag object
    * @returns A hex string representation of the new record's Object ID
    */
   async insertFlag(flag: FFlag): Promise<string> {
