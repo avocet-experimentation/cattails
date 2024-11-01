@@ -9,6 +9,7 @@
     "build": "rm -rf dist && tsup --clean --format esm ./src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest",
+    "coverage": "vitest run --coverage",
     "compose": "cd mongodb && docker-compose up -d && sh init-db.sh"
   },
   "keywords": [],
