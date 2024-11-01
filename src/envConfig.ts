@@ -1,8 +1,12 @@
 import dotenv from "dotenv";
 import path from "path";
 
-const envConfig = dotenv.config({
+const config = dotenv.config({
   path: path.resolve(".env"),
-}).parsed;
+});
 
-export default envConfig;
+if (config.parsed === undefined) {
+  throw new Error('Unable to resolve environment configuration');
+}
+
+export default config.parsed ?? {};
