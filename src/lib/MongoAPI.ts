@@ -1,12 +1,17 @@
 import { MongoClient, ObjectId, Document, WithId, Collection, Db } from 'mongodb';
 import { cast, MinLength, ReflectionClass, is, assert } from '@deepkit/type';
-import envConfig from '../envConfig.js';
+import 'dotenv/config';
 import { Experiment } from '../experiments/experiments.types.js';
 import { FFlag } from '../fflags/fflags.types.js';
 
 /*
 - ObjectID() doc: https://mongodb.github.io/node-mongodb-native/Next/classes/BSON.ObjectId.html
 */
+
+/**
+ * Transformed record that stores a hex string representing an ObjectId on the `id` property
+ */
+type WithMongoStringId<T> = T & { id: string };
 
 /**
  * CRUD individual environments, featureFlags and experiments
@@ -27,64 +32,104 @@ export default class MongoAPI {
   #experiments: Collection<Experiment>;
   // environments: Collection<Environment>;
 
-  constructor() {
-    this.#client = new MongoClient(envConfig.MONGO_CONNECTION_STRING);
-    this.#db = this.#client.db()
+  constructor(mongoUri?: string) {
+    this.#client = new MongoClient(mongoUri ?? process.env.MONGO_URI);
+    this.#db = this.#client.db();
     this.#flags = this.#db.collection('flags');
     this.#experiments = this.#db.collection('experiments');
     // this.environments = this.db.collection('environments');
-    try {
-      this.#client.connect();
-    } catch(e: unknown) {
-      if (e instanceof Error) {
-        console.error(e);
-      }
-    }
+    // try {
+    //   this.#client.connect();
+    // } catch(e: unknown) {
+    //   if (e instanceof Error) {
+    //     console.error(e);
+    //   }
+    // }
   }
 
-  transform<T>(input: WithId<Document>): T {
+  /**
+   * Turns a MongoDB Document into the corresponding object
+   * @param input a MongoDB Document
+   * @returns a transformed object
+   */
+  _RecordToObject<T extends Document>(input: WithId<T>): T {
     const { _id, __v, ...rest } = input;
     const morphed = { id: _id, ...rest };
     assert<T>(morphed);
     return morphed;
   }
 
-  _storedFlags() { // for debugging
+  _objectToRecord<T, O extends WithMongoStringId<T>>(input: O): WithId<T> {
+    const { id, ...rest } = input;
+    const morphed = { _id: ObjectId.createFromHexString(id), ...rest };
+    assert<WithId<T>>(morphed);
+    return morphed;
+  }
+
+  _storedFlagCount() { // for debugging
     const count = this.#flags.estimatedDocumentCount;
     console.log({ count });
     return count;
   }
 
-  _storedExperiments() { // for debugging
+  _storedExperimentCount() { // for debugging
     const count = this.#experiments.estimatedDocumentCount;
     console.log({ count });
     return count;
   }
   /**
    * Get up to `maxCount` feature flags, or all if not specified
+   * @returns a possibly empty array of documents
    */
-  async getAllFlags(maxCount?: number) {
+  async getAllFlags(maxCount?: number): Promise<FFlag[]> {
     const resultCursor = this.#flags.find();
     if (maxCount) resultCursor.limit(maxCount);
-    return resultCursor.toArray();
+    const flagDocuments = await resultCursor.toArray();
+    const transformed = flagDocuments.map(this._RecordToObject);
+    return transformed;
   }
 
   /**
-   * @param documentId a MongoDB ObjectId serialized to hex string
+   * @param documentId a hex string representing an ObjectId
    */
-  async getFlag(documentId: string) {
+  async getFlag(documentId: string): Promise<FFlag | null> {
     const docId = ObjectId.createFromHexString(documentId);
     const result = await this.#flags.findOne({ _id: docId });
-    return result;
+    if (result === null) return result;
+    return this._RecordToObject(result);
   }
 
   /**
-   * Insert a new flag into the database
-   * @returns A hex string representation of the new record's Object ID
+   * @returns a hex string representing the new record's ObjectId
    */
-  async insertFlag(flag: FFlag): Promise<string> {
+  async createFlag(flag: FFlag): Promise<string | null> {
+    if ('id' in flag) {
+      throw new Error(`Argument has id ${flag.id}, suggesting the record already exists`);
+    }
+
     const result = await this.#flags.insertOne(flag);
-    return result.insertedId.toHexString();
+    return result.insertedId?.toHexString() ?? null;
+  }
+
+  /**
+   * Updates an existing flag
+   * @returns a hex string representing the updated record's ObjectId,
+   * or null if no record was updated
+   */
+  async updateFlag(flag: WithMongoStringId<FFlag>): Promise<string | null> {
+    const { id, ...updates } = flag;
+    const result = await this.#flags.updateOne({ _id: ObjectId.createFromHexString(id)}, updates);
+    return result.upsertedId?.toHexString() ?? null;
+  }
+
+  /**
+   * Deletes an existing flag
+   * @returns true if a flag was deleted, or false otherwise
+   */
+  async deleteFlag(documentId: string): Promise<boolean> {
+    const filter = { _id: ObjectId.createFromHexString(documentId)};
+    const result = await this.#flags.deleteOne(filter);
+    return result.deletedCount === 1;
   }
 
   /**
@@ -97,7 +142,7 @@ export default class MongoAPI {
   }
 
   /**
-   * @param documentId a MongoDB ObjectId serialized to hex string
+   * @param documentId a hex string representing an ObjectId
    */
   async getExperiment(documentId: string) {
     const docId = ObjectId.createFromHexString(documentId);
@@ -105,3 +150,5 @@ export default class MongoAPI {
     return result;
   }
 }
+
+console.log(process.env.MONGO_URI);
