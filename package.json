@@ -27,6 +27,7 @@
     "@fflags/types": "file:../packages/fflags-types",
     "dotenv": "^16.4.5",
     "fastify": "^4.17.0",
+    "mongodb": "^6.10.0",
     "mongoose": "^7.2.2"
   }
 }
