@@ -5,7 +5,7 @@ import { FeatureFlag } from './placeholderTypes.js';
 import MongoAPI from './MongoAPI';
 // import { FFlag } from '../fflags/fflags.types';
 
-// create an API using a new database
+// create an API for the testing database
 const db = new MongoAPI(env.MONGO_TESTING_URI);
 
 const getExampleFlag = (): FeatureFlag => {
@@ -43,11 +43,13 @@ const eraseTestData = async () => {
   client.db().dropCollection('experiments');
 }
 
+beforeAll(eraseTestData);
+
 describe('insertNewFlag', () => {
   it("creates a record and returns its `ObjectId` as a string if passed an object with no `id`", async () => {
     const result = await db.createFlag(getExampleFlag());
     console.log()
-    expectTypeOf(result).toBeString();
+    expect(typeof result).toBe('string');
   });
 
   it("does not create a new record if the passed object has an `id`", async () => {
@@ -56,9 +58,7 @@ describe('insertNewFlag', () => {
     expect(async () => await db.createFlag(input)).rejects.toThrow();
   });
 
-  afterAll(async () => {
-    await eraseTestData();
-  })
+  afterAll(eraseTestData);
 });
 
 describe('getAllFlags', () => {
@@ -76,6 +76,4 @@ describe('getAllFlags', () => {
   });
 });
 
-afterAll(async () => {
-  await eraseTestData();
-});
+afterAll(eraseTestData);

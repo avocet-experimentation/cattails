@@ -7,6 +7,18 @@ import { Experiment, FeatureFlag, MongoTypes, OverrideRule, WithMongoStringId } 
 
 /*
 - ObjectID() doc: https://mongodb.github.io/node-mongodb-native/Next/classes/BSON.ObjectId.html
+
+// mongoose options object:
+const options = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  authSource: "fflags",
+  directConnection: true,
+  autoIndex: true,
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+};
 */
 
 /**
@@ -17,6 +29,7 @@ import { Experiment, FeatureFlag, MongoTypes, OverrideRule, WithMongoStringId } 
  * todo:
  * - method implementations
  * - write environment type
+ * - integrate mongoose options?
  * - add runtime validation of fetched documents
  * - document types calculated from their standard types
  * - update property definitions to match document types
