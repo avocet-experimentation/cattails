@@ -1,4 +1,4 @@
-import { EnvironmentName, FlagName, UserGroups } from "@fflags/types";
+import { EnvironmentName, UserGroups } from "@fflags/types";
 import {} from "@fflags/mongo-loader";
 
 // Outer-scope feature flag properties;
@@ -51,7 +51,7 @@ export type EnvironmentContent = {
 };
 
 export type FFlag = {
-  name: FlagName;
+  name: string;
   description: string;
   state: State;
   metrics?: Metrics;
@@ -59,7 +59,7 @@ export type FFlag = {
   environments: Record<EnvironmentName, EnvironmentContent>;
 };
 
-export type FFlags = Record<FlagName, FFlag>;
+export type FFlags = Record<string, FFlag>;
 
 export type AuditableFFlag = FFlag & {
   createdAt: Date;
