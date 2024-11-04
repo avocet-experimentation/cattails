@@ -1,17 +1,13 @@
 import { MongoClient, ObjectId, Document, WithId, Collection, Db } from 'mongodb';
 import { cast, MinLength, ReflectionClass, is, assert } from '@deepkit/type';
-import 'dotenv/config';
-import { Experiment } from '../experiments/experiments.types.js';
-import { FFlag } from '../fflags/fflags.types.js';
+import env from '../envalid.js';
+// import { Experiment } from '../experiments/experiments.types.js';
+// import { FFlag } from '../fflags/fflags.types.js';
+import { Experiment, FeatureFlag, MongoTypes, OverrideRule, WithMongoStringId } from './placeholderTypes.js';
 
 /*
 - ObjectID() doc: https://mongodb.github.io/node-mongodb-native/Next/classes/BSON.ObjectId.html
 */
-
-/**
- * Transformed record that stores a hex string representing an ObjectId on the `id` property
- */
-type WithMongoStringId<T> = T & { id: string };
 
 /**
  * CRUD individual environments, featureFlags and experiments
@@ -28,12 +24,12 @@ type WithMongoStringId<T> = T & { id: string };
 export default class MongoAPI {
   #client: MongoClient;
   #db: Db;
-  #flags: Collection<FFlag>;
+  #flags: Collection<FeatureFlag>;
   #experiments: Collection<Experiment>;
   // environments: Collection<Environment>;
 
   constructor(mongoUri?: string) {
-    this.#client = new MongoClient(mongoUri ?? process.env.MONGO_URI);
+    this.#client = new MongoClient(mongoUri ?? env.MONGO_URI);
     this.#db = this.#client.db();
     this.#flags = this.#db.collection('flags');
     this.#experiments = this.#db.collection('experiments');
@@ -49,17 +45,18 @@ export default class MongoAPI {
 
   /**
    * Turns a MongoDB Document into the corresponding object
-   * @param input a MongoDB Document
-   * @returns a transformed object
    */
-  _RecordToObject<T extends Document>(input: WithId<T>): T {
-    const { _id, __v, ...rest } = input;
-    const morphed = { id: _id, ...rest };
-    assert<T>(morphed);
+  _RecordToObject<T extends MongoTypes>(document: WithId<Document>): FeatureFlag {
+    const { _id, __v, ...rest } = document;
+    const morphed: { id: string } & Document = { id: _id.toHexString(), ...rest };
+    assert<FeatureFlag>(morphed);
     return morphed;
   }
-
-  _objectToRecord<T, O extends WithMongoStringId<T>>(input: O): WithId<T> {
+  /**
+   * Transforms an object to prepare it for insertion into MongoDB
+   * Might be unnecessary
+   */
+  _objectToRecord<T extends MongoTypes>(input: WithMongoStringId<T>): WithId<T> {
     const { id, ...rest } = input;
     const morphed = { _id: ObjectId.createFromHexString(id), ...rest };
     assert<WithId<T>>(morphed);
@@ -77,32 +74,33 @@ export default class MongoAPI {
     console.log({ count });
     return count;
   }
+
   /**
    * Get up to `maxCount` feature flags, or all if not specified
    * @returns a possibly empty array of documents
    */
-  async getAllFlags(maxCount?: number): Promise<FFlag[]> {
+  async getAllFlags(maxCount?: number): Promise<FeatureFlag[]> {
     const resultCursor = this.#flags.find();
     if (maxCount) resultCursor.limit(maxCount);
     const flagDocuments = await resultCursor.toArray();
-    const transformed = flagDocuments.map(this._RecordToObject);
+    const transformed = flagDocuments.map(this._RecordToObject<WithId<FeatureFlag>>);
     return transformed;
   }
 
   /**
    * @param documentId a hex string representing an ObjectId
    */
-  async getFlag(documentId: string): Promise<FFlag | null> {
+  async getFlag(documentId: string): Promise<FeatureFlag | null> {
     const docId = ObjectId.createFromHexString(documentId);
     const result = await this.#flags.findOne({ _id: docId });
     if (result === null) return result;
-    return this._RecordToObject(result);
+    return this._RecordToObject<FeatureFlag>(result);
   }
 
   /**
    * @returns a hex string representing the new record's ObjectId
    */
-  async createFlag(flag: FFlag): Promise<string | null> {
+  async createFlag(flag: FeatureFlag): Promise<string | null> {
     if ('id' in flag) {
       throw new Error(`Argument has id ${flag.id}, suggesting the record already exists`);
     }
@@ -116,7 +114,7 @@ export default class MongoAPI {
    * @returns a hex string representing the updated record's ObjectId,
    * or null if no record was updated
    */
-  async updateFlag(flag: WithMongoStringId<FFlag>): Promise<string | null> {
+  async updateFlag(flag: WithMongoStringId<FeatureFlag>): Promise<string | null> {
     const { id, ...updates } = flag;
     const result = await this.#flags.updateOne({ _id: ObjectId.createFromHexString(id)}, updates);
     return result.upsertedId?.toHexString() ?? null;
@@ -151,4 +149,6 @@ export default class MongoAPI {
   }
 }
 
-console.log(process.env.MONGO_URI);
+// placeholder
+const db = new MongoAPI(env.MONGO_TESTING_URI);
+db._RecordToObject({ _id: ObjectId.createFromHexString('672554f934265b61cb05d5cf'), name: 'example record' });
