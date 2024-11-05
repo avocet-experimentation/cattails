@@ -120,6 +120,17 @@ export default class MongoAPI {
   }
 
   /**
+   * Find a flag document from any of its properties. An empty object matches all documents.
+   * To find by name, pass { name: <documentName> }
+   * See https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/query-document/#std-label-node-fundamentals-query-document
+   * @param query A MongoDB query
+   */
+  async findFlag(query: { [key: string]: unknown }): Promise<FeatureFlag | null> {
+    const result = await this.#flags.findOne(query);
+    if (result === null) return result;
+    return this._flagRecordToObject(result);
+  }
+  /**
    * @returns a hex string representing the new record's ObjectId
    */
   async createFlag(flag: DraftRecord<FeatureFlag>): Promise<string | null> {

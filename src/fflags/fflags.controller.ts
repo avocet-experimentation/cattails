@@ -3,29 +3,31 @@ import {
   CachingParams,
   CreateFFlagBodyRequest,
   CreateFFlagBodyResponse,
-  FFlags,
   FlagIdParams,
   FlagNameParams,
   GetFFlagBodyResponse,
   UpdateFFlagBodyRequest,
   UpdateFFlagBodyResponse,
 } from "./fflags.types.js";
-import * as fflagService from "./fflags.service.js";
-import { EnvironmentName, State } from "@fflags/types";
+import MongoAPI, { DraftRecord } from "../lib/MongoAPI.js";
+import { FeatureFlag } from "@fflags/types";
+import env from "../envalid.js";
+// import * as fflagService from "./fflags.service.js";
 
 // Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
+const mongoApi = new MongoAPI(env.MONGO_TESTING_URI);
 
 export const createFFlagHandler = async (
-  request: FastifyRequest<{ Body: CreateFFlagBodyRequest }>,
+  request: FastifyRequest<{ Body: DraftRecord<FeatureFlag> }>,
   reply: FastifyReply
-): Promise<CreateFFlagBodyResponse> => {
-  const fflag = await fflagService.createFFlag(request.body);
-  if (!fflag) {
+): Promise<string> => {
+  const documentId = await mongoApi.createFlag(request.body);
+  if (!documentId) {
     return reply
       .code(409)
       .send({ error: { code: 409, message: "flag already exists" } }); // return null due to duplicate key (name) error
   }
-  return reply.code(201).send(fflag);
+  return reply.code(201).send(documentId);
 };
 
 export const updateFFlagHandler = async (
@@ -41,7 +43,7 @@ export const updateFFlagHandler = async (
       .code(422)
       .send({ error: { code: 422, message: "inconsistent request" } });
   }
-  const fflag = await fflagService.updateFFlag(request.body);
+  const fflag = await mongoApi.updateFFlag(request.body);
   if (!fflag) {
     return reply
       .code(404)
@@ -65,9 +67,9 @@ export const deleteFFlagHandler = async (
 export const getFFlagByIdHandler = async (
   request: FastifyRequest<{ Params: FlagIdParams }>,
   reply: FastifyReply
-): Promise<GetFFlagBodyResponse> => {
+): Promise<FeatureFlag> => {
   const fflagId = request.params.fflagId;
-  const fflag = await fflagService.getFFlagById(fflagId);
+  const fflag = await mongoApi.getFlag(fflagId);
   if (!fflag) {
     return reply
       .code(404)
@@ -90,10 +92,23 @@ export const getFFlagByNameHandler = async (
   return fflag;
 };
 
+export const getAllFFlagsHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<FeatureFlag[]> => {
+  const fflags = await mongoApi.getFlags();
+  if (!fflags) {
+    return reply
+      .code(404)
+      .send({ error: { code: 404, message: "flags not found" } });
+  }
+  return fflags;
+};
+
 export const getAllFFlagsWithFilterHandler = async (
   request: FastifyRequest<{ Params: CachingParams }>,
   reply: FastifyReply
-): Promise<FFlags> => {
+): Promise<ClientFlagMapping> => {
   const { environmentName, stateName } = request.query as {
     environmentName: EnvironmentName;
     stateName: State;

@@ -1,5 +1,19 @@
-import { buildServer } from "./buildServer.js";
+import { fastify, FastifyInstance } from "fastify";
 import env from "./envalid.js";
+import { getClientRoutes } from "./client.routes.js";
+import { getAdminRoutes } from "./admin.routes.js";
+
+export const buildServer = async (): Promise<FastifyInstance> => {
+  const server = fastify({
+    logger: true,
+  });
+  // check if service is up during deployment; check on regular frequency
+  server.get("/healthcheck", async () => ({ status: "OK" }));
+  // register routes for out flag entity
+  await server.register(getClientRoutes, { prefix: "api" });
+  await server.register(getAdminRoutes, { prefix: "admin" });
+  return server;
+};
 
 const main = async (): Promise<void> => {
   const PORT = env.SERVICE_PORT;
