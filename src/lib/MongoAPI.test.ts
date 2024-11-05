@@ -73,7 +73,9 @@ describe('Feature Flags', () => {
 
   describe('getFlags', () => {
     beforeAll(async () => {
-      const insertions = new Array(10).fill(null).map(() => api.createFlag(getExampleFlag()).then((value) => console.log(value)));
+      const insertions = new Array(10).fill(null).map(() => api.createFlag(getExampleFlag())
+        // .then((value) => console.log(value))
+      );
       await Promise.all(insertions);
     });
 
