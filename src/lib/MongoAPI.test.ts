@@ -33,6 +33,11 @@ const getExampleFlag = (): DraftRecord<FeatureFlag> => {
         enabled: false,
         overrideRules: [],
       },
+      staging: {
+        name: 'staging',
+        enabled: false,
+        overrideRules: [],
+      },
     },
   }
 
@@ -101,8 +106,6 @@ describe('Feature Flags', () => {
       if (insertResult === null) return;
       const result = await api.getFlag(insertResult);
       expect(result).not.toBeNull();
-      // if (result === null) return;
-      // expect(result.length).toBe(1);
     });
 
     it("throws if provided an invalid ID", async () => {
@@ -117,7 +120,6 @@ describe('Feature Flags', () => {
     
     afterAll(eraseTestData);
   });
-
 });
 
 afterAll(eraseTestData);
