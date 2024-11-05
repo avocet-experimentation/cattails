@@ -1,11 +1,4 @@
-/**
- * Transformed record that stores a hex string representing an ObjectId on the `id` property
- */
-export type MongoTypes = FeatureFlag | Experiment;
-export type WithMongoStringId<T extends MongoTypes> = T & { id: string };
-
-// export type ToArray<T> = T extends any ? T[] : never;
-// export type MongoTypeArray = ToArray<MongoTypes>;
+import { FeatureFlag } from "@fflags/types";
 
 export type EnvironmentName = 'prod' | 'dev' | 'testing';
 
@@ -118,15 +111,15 @@ export type FlagEnvironments = { [key in EnvironmentName]: FlagEnvironment };
 // if the one below this line is the same as the one above, use it instead
 // type FlagEnvironments = Record<EnvironmentName, FlagEnvironment>;
 
-export type FeatureFlag = {
-  id?: string;
-  name: string;
-  description: string;
-  createdAt: number;
-  updatedAt: number; // default to the same as `createdAt`?
-  environments: FlagEnvironments;
-} & (
-  | { valueType: "boolean"; defaultValue: boolean }
-  | { valueType: "string"; defaultValue: string }
-  | { valueType: "number"; defaultValue: number }
-);
+// export type FeatureFlag = {
+//   id?: string;
+//   name: string;
+//   description: string;
+//   createdAt: number;
+//   updatedAt: number; // default to the same as `createdAt`?
+//   environments: FlagEnvironments;
+// } & (
+//   | { valueType: "boolean"; defaultValue: boolean }
+//   | { valueType: "string"; defaultValue: string }
+//   | { valueType: "number"; defaultValue: number }
+// );
