@@ -1,11 +1,9 @@
 import { buildServer } from "./buildServer.js";
-import { connectToDB } from "./connectToDB.js";
 import env from "./envalid.js";
 
 const main = async (): Promise<void> => {
   const PORT = env.SERVICE_PORT;
   try {
-    await connectToDB();
     const server = await buildServer();
     await server.listen({ port: PORT });
     console.log(`FFlag server ready at port ${PORT}`);
@@ -14,3 +12,5 @@ const main = async (): Promise<void> => {
     process.exit(1);
   }
 };
+
+main().catch(console.error);
