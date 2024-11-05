@@ -114,7 +114,7 @@ export default class MongoAPI {
     const resultCursor = this.#flags.find({});
     if (maxCount) resultCursor.limit(maxCount);
     const flagDocuments = await resultCursor.toArray();
-    console.log({ flagDocuments })
+    // console.log({ flagDocuments })
     const transformed = flagDocuments.map(this._flagRecordToObject);
     return transformed;
   }
