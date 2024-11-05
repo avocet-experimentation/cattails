@@ -5,7 +5,7 @@ const main = async (): Promise<void> => {
   const PORT = env.SERVICE_PORT;
   try {
     const server = await buildServer();
-    await server.listen({ port: Number(PORT) });
+    await server.listen({ port: PORT });
     console.log(`FFlag server ready at port ${PORT}`);
   } catch (error) {
     console.error(error);
