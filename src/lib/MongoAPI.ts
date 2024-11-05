@@ -1,5 +1,4 @@
 import { MongoClient, ObjectId, Document, WithId, Collection, Db } from 'mongodb';
-// import { cast, MinLength, ReflectionClass, is, assert } from '@deepkit/type';
 import env from '../envalid.js';
 import { FeatureFlag, featureFlagSchema, Experiment, experimentSchema } from '@fflags/types';
 
@@ -33,7 +32,7 @@ export type WithMongoStringId<T extends MongoTypes> = T & { id: string };
  * 
  * todo:
  * - method implementations
- * - write environment type
+ * - write environment type and add to API
  * - integrate mongoose options?
  * - add runtime validation of fetched documents
  * - document types calculated from their standard types
@@ -52,13 +51,6 @@ export default class MongoAPI {
     this.#flags = this.#db.collection('flags');
     this.#experiments = this.#db.collection('experiments');
     // this.environments = this.db.collection('environments');
-    // try {
-    //   this.#client.connect();
-    // } catch(e: unknown) {
-    //   if (e instanceof Error) {
-    //     console.error(e);
-    //   }
-    // }
   }
 
   /**
@@ -67,10 +59,8 @@ export default class MongoAPI {
   _flagRecordToObject(document: WithId<Document>): FeatureFlag {
     const { _id, __v, ...rest } = document;
     const morphed: { id: string } & Document = { id: _id.toHexString(), ...rest };
-    console.log({morphed})
+    // console.log({morphed})
     return featureFlagSchema.parse(morphed);
-    // assert<FeatureFlag>(morphed);
-    // return morphed;
   }
 
   /**
@@ -80,27 +70,27 @@ export default class MongoAPI {
     const { _id, __v, ...rest } = document;
     const morphed: { id: string } & Document = { id: _id.toHexString(), ...rest };
     return experimentSchema.parse(morphed);
-    // assert<Experiment>(morphed);
-    // return morphed;
   }
-  // /**
-  //  * Transforms an object to prepare it for insertion into MongoDB
-  //  * Might be unnecessary
-  //  */
+  /**
+   * Transforms an object to prepare it for insertion into MongoDB
+   * Might be unnecessary
+   */
   // _objectToRecord<T extends MongoTypes>(input: WithMongoStringId<T>): WithId<T> {
   //   const { id, ...rest } = input;
   //   const morphed = { _id: ObjectId.createFromHexString(id), ...rest };
   //   assert<WithId<T>>(morphed);
   //   return morphed;
   // }
-
-  _storedFlagCount() { // for debugging
+  
+  // for debugging
+  _storedFlagCount() {
     const count = this.#flags.estimatedDocumentCount;
     console.log({ count });
     return count;
   }
 
-  _storedExperimentCount() { // for debugging
+  // for debugging
+  _storedExperimentCount() {
     const count = this.#experiments.estimatedDocumentCount;
     console.log({ count });
     return count;

@@ -5,9 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "postinstall": "node_modules/.bin/deepkit-type-install",
     "dev": "npx tsx src/index.ts",
-    "alt-loader": "node --loader ts-node/esm src/index.ts",
     "build": "rm -rf dist && tsup --clean --format esm ./src/index.ts",
     "start": "node dist/index.js",
     "test": "npx vitest",
@@ -18,7 +16,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@deepkit/type-compiler": "^1.0.1-alpha.155",
     "@types/node": "^20.16.13",
     "ts-node": "^10.9.2",
     "tsup": "^6.7.0",
@@ -27,7 +24,6 @@
     "vitest": "^0.32.0"
   },
   "dependencies": {
-    "@deepkit/type": "^1.0.1-alpha.155",
     "@fastify/cors": "^8.0.0",
     "@fflags/mongo-loader": "file:../packages/fflags-mongo-loader",
     "@fflags/types": "file:../packages/fflags-types",
@@ -35,7 +31,7 @@
     "envalid": "^8.0.0",
     "fastify": "^4.17.0",
     "mongodb": "^6.10.0",
-    "mongoose": "^7.2.2",
+    "mongoose": "^8.8.0",
     "zod": "^3.23.8"
   }
 }
