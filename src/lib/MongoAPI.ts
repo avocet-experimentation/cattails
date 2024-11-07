@@ -130,6 +130,12 @@ export default class MongoAPI {
     if (result === null) return result;
     return this._flagRecordToObject(result);
   }
+
+  async findMatchingFlags(query: { [key: string]: unknown }): Promise<FeatureFlag[]> {
+    const result = await this.#flags.find(query);
+    const docs = await result.toArray();
+    return docs.map(this._flagRecordToObject);
+  }
   /**
    * @returns a hex string representing the new record's ObjectId
    */
@@ -147,7 +153,7 @@ export default class MongoAPI {
    * @returns a hex string representing the updated record's ObjectId,
    * or null if no record was updated
    */
-  async updateFlag(flag: WithMongoStringId<FeatureFlag>): Promise<string | null> {
+  async updateFlag(flag: Partial<FeatureFlag> & { id: string }): Promise<string | null> {
     const { id, ...updates } = flag;
     const result = await this.#flags.updateOne({ _id: ObjectId.createFromHexString(id)}, updates);
     return result.upsertedId?.toHexString() ?? null;

@@ -1,7 +1,7 @@
 import { fastify, FastifyInstance } from "fastify";
 import env from "./envalid.js";
-import { getClientRoutes } from "./client.routes.js";
-import { getAdminRoutes } from "./admin.routes.js";
+import { getClientRoutes } from "./routes/client.routes.js";
+import { getAdminRoutes } from "./routes/admin.routes.js";
 
 export const buildServer = async (): Promise<FastifyInstance> => {
   const server = fastify({
