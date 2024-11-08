@@ -20,7 +20,7 @@ const main = async (): Promise<void> => {
   try {
     const server = await buildServer();
     await server.listen({ port: PORT });
-    console.log(`FFlag server ready at port ${PORT}`);
+    console.log(`cattails server ready at port ${PORT}`);
   } catch (error) {
     console.error(error);
     process.exit(1);
