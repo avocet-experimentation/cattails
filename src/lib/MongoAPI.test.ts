@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, expectTypeOf, afterAll, beforeEach } from 'vitest';
 import env from '../envalid.js';
 import { MongoClient, ObjectId } from 'mongodb';
-import { FeatureFlag } from '@fflags/types';
+import { FeatureFlag } from '@estuary/types';
 import MongoAPI, { DraftRecord } from './MongoAPI.ts';
 
 // create an API for the testing database

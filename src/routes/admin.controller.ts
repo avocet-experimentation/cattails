@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { FeatureFlag } from "@fflags/types";
+import { FeatureFlag } from "@estuary/types";
 import { FlagIdParam, FlagNameParam } from "./routes.types.js";
 import MongoAPI, { DraftRecord, WithMongoStringId } from "../lib/MongoAPI.js";
 import env from "../envalid.js";

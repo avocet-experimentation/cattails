@@ -17,7 +17,7 @@ When the container has been started up, run the script:
 ./init-db.sh
 ```
 
-This will create the `fflags-user` for the `fflags` database.
+This will create users for the `estuary` and `estuary_testing` databases.
 
 ### Running and Building the Service
 

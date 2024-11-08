@@ -2,7 +2,7 @@
  * Store a record of client identifier hashes and their corresponding flag value assignments based on override rules
  */
 
-import { FeatureFlag, OverrideRule } from "@fflags/types";
+import { FeatureFlag, OverrideRule } from "@estuary/types";
 
 interface ClientFlagOverride {
   flagId: string;
