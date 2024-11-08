@@ -1,5 +1,5 @@
 // const crypto = require('crypto')
-import { ClientSessionAttribute } from '@fflags/types';
+import { ClientSessionAttribute } from '@estuary/types';
 import crypto from 'node:crypto';
 /*
 MD5 vs DJB2:

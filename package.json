@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@fastify/cors": "^8.0.0",
-    "@fflags/types": "file:../packages/fflags-types",
+    "@estuary/types": "file:../packages/estuary-types",
     "dotenv": "^16.4.5",
     "envalid": "^8.0.0",
     "fastify": "^4.17.0",

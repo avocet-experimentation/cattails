@@ -1,4 +1,4 @@
-import { FeatureFlag, EnvironmentName, RuleStatus } from "@fflags/types";
+import { FeatureFlag, EnvironmentName, RuleStatus } from "@estuary/types";
 
 // Outer-scope feature flag properties;
 // these props will act as the configuration of how the test groups are tested, recorded, and distributed.

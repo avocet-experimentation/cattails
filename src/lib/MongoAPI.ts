@@ -1,6 +1,6 @@
 import { MongoClient, ObjectId, Document, WithId, Collection, Db } from 'mongodb';
 import env from '../envalid.js';
-import { FeatureFlag, featureFlagSchema, Experiment, experimentSchema } from '@fflags/types';
+import { FeatureFlag, featureFlagSchema, Experiment, experimentSchema } from '@estuary/types';
 
 /*
 - ObjectID() ref: https://mongodb.github.io/node-mongodb-native/Next/classes/BSON.ObjectId.html

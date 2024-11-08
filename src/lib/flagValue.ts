@@ -1,4 +1,4 @@
-import { ClientSessionAttribute, EnvironmentName, Experiment, ExperimentGroup, experimentGroupSchema, experimentSchema, FeatureFlag, FlagValueType, forcedValueSchema, OverrideRule } from "@fflags/types";
+import { ClientSessionAttribute, EnvironmentName, Experiment, ExperimentGroup, experimentGroupSchema, experimentSchema, FeatureFlag, FlagValueType, forcedValueSchema, OverrideRule } from "@estuary/types";
 import { hashAndAssign, hashIdentifiers } from "./hash.js";
 
 /**

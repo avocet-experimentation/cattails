@@ -3,7 +3,7 @@ import {
   ClientFlagMapping,
   ClientSessionAttribute,
   featureFlagClientDataSchema
-} from "@fflags/types";
+} from "@estuary/types";
 import { FastifyReply, FastifyRequest } from "fastify";
 import MongoAPI from "../lib/MongoAPI.js";
 import env from "../envalid.js";
