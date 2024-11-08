@@ -9,7 +9,7 @@ import MongoAPI from "../lib/MongoAPI.js";
 import env from "../envalid.js";
 import { currentFlagValue } from "../lib/flagValue.js";
 
-const mongoApi = new MongoAPI(env.MONGO_URI);
+const mongoApi = new MongoAPI(env.MONGO_API_URI);
 // until we have API keys corresponding to environments
 const PLACEHOLDER_ENVIRONMENT = 'dev';
 

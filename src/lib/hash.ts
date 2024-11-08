@@ -19,8 +19,8 @@ type Identifier = ClientSessionAttribute;
 
 // }
 //DJB2 Hash function.
-function hashIdentifiers(identifiers: Identifier[]) {
-  const sortedIdentifiers = identifiers.sort((a, b) => (a.name > b.name) ? 1 : -1);
+export function hashIdentifiers(identifiers: readonly Identifier[]) {
+  const sortedIdentifiers = identifiers.toSorted((a, b) => (a.name > b.name) ? 1 : -1);
   let string = '';
 
   sortedIdentifiers.forEach(({ name, dataType, value }) => {
@@ -41,21 +41,21 @@ function hashIdentifiers(identifiers: Identifier[]) {
 }
 
 /**
- * 
- * @param identifiers 
- * @param assignmentOptions A set of ExperimentBlock ids
- * @returns 
+ * Hash identifiers for pseudo-random assignment to one of many options
+ * todo:
+ * - change assignment options to Array<{ id: string, weight: proportion }>
+ * @param identifiers An array of values to use collectively as a unique identifier for the client
+ * @param assignmentOptions An array of IDs for possible assignments
+ * @returns one of the options passed in
  */
-export function hashAndAssign<BlockId extends string>(identifiers: Identifier[], assignmentOptions: BlockId[]): BlockId {
+export function hashAndAssign(identifiers: readonly Identifier[], assignmentOptions: readonly string[]): string {
   const hash = hashIdentifiers(identifiers);
-  const flagArray = [...assignmentOptions].sort();
-  // console.log(flagArray);
-
-  const index = Math.abs(hash) % flagArray.length;
-  return flagArray[index];
+  const sortedOptions = [...assignmentOptions].sort();
+  const index = Math.abs(hash) % sortedOptions.length;
+  return sortedOptions[index];
 }
 
-const flagValues = ['active', 'inactive', 'pending', 'suspended'];
+// const flagValues = ['active', 'inactive', 'pending', 'suspended'];
 
 // console.log(hashAndAssign({z: 'z',  az: 'a', ab: 'ab', bc: 'b', email: 'sean.a.mentele@gmail.com', name: 'sean'}, flagValues) === hashAndAssign({ email: 'sean.a.mentele@gmail.com', name: 'sean', z: 'z',  az: 'a', ab: 'ab', bc: 'b'}, flagValues));
 // console.log(hashAndAssign({name: 'sean', email: 'sean.a.mentele@gmail.com'}, flagValues) ===  hashAndAssign({email: 'sean.a.mentele@gmail.com', name: 'sean'}, flagValues))

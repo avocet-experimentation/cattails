@@ -1,4 +1,4 @@
-# Feature Flags Service
+# cattails
 
 ## Installation
 

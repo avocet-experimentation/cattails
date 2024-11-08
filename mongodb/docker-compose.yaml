@@ -1,7 +1,7 @@
 services:
   mongo:
     image: mongo
-    container_name: mongodb-fflags
+    container_name: estuary-mongodb
     restart: always
     ports:
       - "27017:27017"

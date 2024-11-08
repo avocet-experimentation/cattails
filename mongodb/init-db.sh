@@ -1,16 +1,17 @@
 #!/bin/bash
 
 # Connect to the MongoDB container without authentication
-docker exec -it mongodb-fflags mongosh --quiet \
+docker exec -it estuary-mongodb mongosh --quiet \
   --eval 'use admin' \
   --eval 'db.auth({ user: "root", pwd: "1234" })' \
-  --eval 'use fflags' \
+  --eval 'use estuary' \
   --eval 'db.dropAllUsers()' \
-  --eval 'db.createUser({ user: "fflags-user", pwd: "1234", roles: [{ role: "readWrite", db: "fflags" }] })' \
+  --eval 'db.createUser({ user: "estuary-admin", pwd: "1234", roles: [{ role: "readWrite", db: "estuary" }] })' \
+  --eval 'db.createUser({ user: "estuary-api", pwd: "1234", roles: [{ role: "read", db: "estuary" }] })' \
   --eval 'show users' \
-  --eval 'use testing-database' \
+  --eval 'use estuary_testing' \
   --eval 'db.dropAllUsers()' \
-  --eval 'db.createUser({ user: "fflags-test-user", pwd: "1234", roles: [{ role: "readWrite", db: "testing-database" }] })' \
+  --eval 'db.createUser({ user: "estuary-testing", pwd: "1234", roles: [{ role: "readWrite", db: "estuary_testing" }] })' \
   --eval 'show users'
 
 # Command to manually login to Docker mongoDB as authorized user:

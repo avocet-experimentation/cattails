@@ -1,7 +1,7 @@
 {
-  "name": "fflags-service",
+  "name": "cattails",
   "version": "1.0.0",
-  "description": "",
+  "description": "Service for working with estuary's feature flags and experiments",
   "main": "index.js",
   "type": "module",
   "scripts": {

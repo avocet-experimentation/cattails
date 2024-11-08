@@ -1,13 +1,13 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { FeatureFlag } from "@fflags/types";
-import { FlagIdParam, FlagNameParam } from "../routes/routes.types.js";
+import { FlagIdParam, FlagNameParam } from "./routes.types.js";
 import MongoAPI, { DraftRecord, WithMongoStringId } from "../lib/MongoAPI.js";
 import env from "../envalid.js";
 import { PartialUpdate } from "../repository/MongoRepository.types.js";
 
 // Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
 
-const mongoApi = new MongoAPI(env.MONGO_URI);
+const mongoApi = new MongoAPI(env.MONGO_ADMIN_URI);
 
 export const createFFlagHandler = async (
   request: FastifyRequest<{ Body: DraftRecord<FeatureFlag> }>,

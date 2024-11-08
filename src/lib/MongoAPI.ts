@@ -46,7 +46,7 @@ export default class MongoAPI {
   // environments: Collection<Environment>;
 
   constructor(mongoUri?: string) {
-    this.#client = new MongoClient(mongoUri ?? env.MONGO_URI);
+    this.#client = new MongoClient(mongoUri ?? env.MONGO_ADMIN_URI);
     this.#db = this.#client.db();
     this.#flags = this.#db.collection('flags');
     this.#experiments = this.#db.collection('experiments');
