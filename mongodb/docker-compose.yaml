@@ -17,3 +17,8 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=1234
+    healthcheck:
+      test: mongosh
+      interval: 2s
+      timeout: 60s
+      start_period: 4s
