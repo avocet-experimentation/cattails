@@ -1,5 +1,7 @@
 #!/bin/bash
-
+until [ "$(docker inspect -f {{.State.Health.Status}} estuary-mongodb)" = "healthy" ]; do
+  sleep 1;
+done;
 # Connect to the MongoDB container without authentication
 docker exec -it estuary-mongodb mongosh --quiet \
   --eval 'use admin' \
