@@ -3,7 +3,7 @@ until [ "$(docker inspect -f {{.State.Health.Status}} estuary-mongodb)" = "healt
   sleep 1;
 done;
 # Connect to the MongoDB container without authentication
-docker exec -it estuary-mongodb mongosh --quiet \
+docker exec estuary-mongodb mongosh --quiet \
   --eval 'use admin' \
   --eval 'db.auth({ user: "root", pwd: "1234" })' \
   --eval 'use estuary' \
