@@ -62,30 +62,30 @@ export function hashAndAssign(identifiers: readonly Identifier[], assignmentOpti
 // console.log(hashAndAssign({userId: "12345", userName: "john_doe"}, flagValues));
 // console.log(hashAndAssign({name: 'sean', email: 'sean.a.mentele@gmail.com'}, flagValues));
 
-function hashIdentifiersMD5(identifiers: Identifier[]) {
-  const sortedKeys = Object.keys(identifiers).sort();
-  let string = '';
+// function hashIdentifiersMD5(identifiers: Identifier[]) {
+//   const sortedKeys = Object.keys(identifiers).sort();
+//   let string = '';
 
-  sortedKeys.forEach((key) => {
-    string += identifiers[key];
-  });
+//   sortedKeys.forEach((key) => {
+//     string += identifiers[key];
+//   });
   
-  //Create a new MD5 hash instance -> Produces 128bit hash value (32char hexadecimal string)
-  const hexString = crypto.createHash('md5')
-    .update(string) //Feed the input string into the hash instance
-    .digest('hex'); //Specify hex to return a hexidecimal string
-  const hash = BigInt('0x' + hexString); //Converts to BigInt
+//   //Create a new MD5 hash instance -> Produces 128bit hash value (32char hexadecimal string)
+//   const hexString = crypto.createHash('md5')
+//     .update(string) //Feed the input string into the hash instance
+//     .digest('hex'); //Specify hex to return a hexidecimal string
+//   const hash = BigInt('0x' + hexString); //Converts to BigInt
 
-  return hash;
-}
+//   return hash;
+// }
 
-function hashAndAssignMD5(identifiers: Identifier[], flagValues=['Control', 'Variant']) {
-  const hashInt = hashIdentifiersMD5(identifiers);
-  const flagArray = Array.from(flagValues).sort();
+// function hashAndAssignMD5(identifiers: Identifier[], flagValues=['Control', 'Variant']) {
+//   const hashInt = hashIdentifiersMD5(identifiers);
+//   const flagArray = Array.from(flagValues).sort();
 
-  const index = Number(hashInt % BigInt(flagArray.length))
+//   const index = Number(hashInt % BigInt(flagArray.length))
 
-  return flagArray[index];
-}
+//   return flagArray[index];
+// }
 
-console.log(hashAndAssignMD5({z: 'z',  az: 'a', ab: 'ab', bc: 'b', email: 'sean.a.mentele@gmail.com', name: 'sean'}, flagValues));
+// console.log(hashAndAssignMD5({z: 'z',  az: 'a', ab: 'ab', bc: 'b', email: 'sean.a.mentele@gmail.com', name: 'sean'}, flagValues));
