@@ -1,12 +1,12 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import env from '../envalid.js';
 import { FFlagRepository, ExperimentRepository } from './';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { FeatureFlag, FlagValueType } from '@estuary/types';
-import { BeforeId, DraftRecord } from './MongoRepository.types.js';
+import { BeforeId } from './MongoRepository.types.js';
 
 const fflagRepo = new FFlagRepository(env.MONGO_TESTING_URI);
-const experimentRepo = new ExperimentRepository(env.MONGO_TESTING_URI);
+// const experimentRepo = new ExperimentRepository(env.MONGO_TESTING_URI);
 
 const flagEnvironmentInit = () => ({
   prod: { name: 'prod', enabled: false, overrideRules: [], },

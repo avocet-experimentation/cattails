@@ -2,31 +2,9 @@ import { MongoClient, ObjectId, Document, Collection, Db, Filter, OptionalUnless
 import { EstuarySchema } from '@estuary/types';
 import { EstuaryBaseTypes, MongoRecord, BeforeId, PartialUpdate } from './MongoRepository.types.js';
 
-/*
-- ObjectID() ref: https://mongodb.github.io/node-mongodb-native/Next/classes/BSON.ObjectId.html
-
-// mongoose options object:
-const options = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  authSource: "fflags",
-  directConnection: true,
-  autoIndex: true,
-};
-*/
-
 /**
- * Parent class for type-specific CRUD operations in Mongo
- * Transform records
- * 
- * todo:
- * - fix filter type
- * - extend for client-facing record access (and override transform to return ClientData)
- * - generalize method implementations
- * - create read-only Mongo account for client-facing MongoRepo subclass
- * - add environments
- * - integrate mongoose options?
- * - paginate find/getAll?
+ * Parent class for type-specific CRUD operations in Mongo. 
+ * Use subclasses instead of instantiating this directly.
  */
 export default class MongoRepository<T extends EstuaryBaseTypes> {
   #client: MongoClient;
@@ -42,7 +20,6 @@ export default class MongoRepository<T extends EstuaryBaseTypes> {
     this.collection = this.#db.collection(collectionName);
     // this.environments = this.db.collection('environments');
   }
-
   /**
    * Turns a MongoDB Document into the corresponding object
    */
@@ -52,24 +29,6 @@ export default class MongoRepository<T extends EstuaryBaseTypes> {
     const morphed: { id: string } & Document = { id: _id.toHexString(), ...rest };
     // console.log({morphed})
     return this.schema.parse(morphed);
-  }
-
-  /**
-   * Transforms an object to prepare it for insertion into MongoDB
-   * Might be unnecessary
-   */
-  // _objectToRecord(input: WithMongoStringId<T>): WithId<T> {
-  //   const { id, ...rest } = input;
-  //   const morphed = { _id: ObjectId.createFromHexString(id), ...rest };
-  //   assert<WithId<T>>(morphed);
-  //   return morphed;
-  // }
-  
-  // for debugging
-  async _storedDocumentCount() {
-    const count = await this.collection.estimatedDocumentCount();
-    console.log(`${count} records in '${this.collection.collectionName}' collection`);
-    return count;
   }
   /**
    * Get up to `maxCount` documents, or all if not specified
@@ -111,7 +70,6 @@ export default class MongoRepository<T extends EstuaryBaseTypes> {
     const result = await this.collection.insertOne({ ...newEntry });
     return result.insertedId?.toHexString() ?? null;
   }
-
   /**
    * Updates an existing record
    * @returns true if a record was updated, or false otherwise
@@ -122,7 +80,6 @@ export default class MongoRepository<T extends EstuaryBaseTypes> {
     const result = await this.collection.updateOne(filter, [{ $set: updates }]);
     return result.modifiedCount > 0;
   }
-
   /**
    * Deletes an existing record
    * @returns true if a record was deleted, or false otherwise
