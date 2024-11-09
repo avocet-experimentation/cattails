@@ -12,9 +12,9 @@ export type EstuaryBaseTypes = FeatureFlag | Experiment; // later: users, enviro
 /**
  * Version that is complete but not yet assigned an ObjectId by MongoDB
  */
-export type BeforeId<T extends EstuaryBaseTypes> = Omit<T, 'id'>;
+export type BeforeId<T extends EstuaryBaseTypes> = Omit<T, 'id' | '_id'>;
 /**
- * Alias for mongodb.WithId for clarity
+ * Alias for mongodb.WithId for clarity and to specify that `.id` shouldn't exist on the object
  */
 export type WithObjectId<T extends BeforeId<EstuaryBaseTypes>> = WithId<T>;
 /**
