@@ -7,9 +7,19 @@ type FlagParams = {
   fflagId: string;
   fflagName: string;
 }
+
+type ExperimentParams = {
+  experimentId: string;
+  experimentName: string;
+}
+
 export type FlagIdParam = Pick<FlagParams, 'fflagId'>;
 
 export type FlagNameParam = Pick<FlagParams, 'fflagName'>;
+
+export type ExperimentIdParam = Pick<ExperimentParams, 'experimentId'>;
+
+export type ExperimentNameParam = Pick<ExperimentParams, 'experimentName'>;
 
 // need to finish
 export type TrafficAllocation = {};
