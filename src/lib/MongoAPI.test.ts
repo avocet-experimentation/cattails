@@ -3,46 +3,10 @@ import env from '../envalid.js';
 import { MongoClient, ObjectId } from 'mongodb';
 import { FeatureFlag } from '@estuary/types';
 import MongoAPI, { DraftRecord } from './MongoAPI.ts';
+import { exampleFlags, getExampleFlag } from '../lib/testData.js';
 
 // create an API for the testing database
 const api = new MongoAPI(env.MONGO_TESTING_URI);
-
-const getExampleFlag = (): DraftRecord<FeatureFlag> => {
-  const currentTimeMs = Date.now();
-  
-  const example = {
-    name: 'test flag',
-    description: '',
-    valueType: 'boolean' as const,
-    defaultValue: 'false',
-    createdAt: currentTimeMs,
-    updatedAt: currentTimeMs,
-    environments: {
-      prod: {
-        name: 'prod',
-        enabled: false,
-        overrideRules: [],
-      },
-      dev: {
-        name: 'dev',
-        enabled: false,
-        overrideRules: [],
-      },
-      testing: {
-        name: 'testing',
-        enabled: false,
-        overrideRules: [],
-      },
-      staging: {
-        name: 'staging',
-        enabled: false,
-        overrideRules: [],
-      },
-    },
-  }
-
-  return example;
-};
 
 const eraseTestData = async () => {
   const client = new MongoClient(env.MONGO_TESTING_URI);
