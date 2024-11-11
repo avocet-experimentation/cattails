@@ -27,22 +27,27 @@ export function hashStringDJB2(input: string) {
   // Add the utf char value
   for (let i = 0; i < input.length; i++) {
     hash = (hash << 5) - hash + input.charCodeAt(i); 
-    console.log('left shifted:', hash)
+    // console.log('left shifted:', hash)
     hash |= 0; // Convert to 32bit integer -- bitwise OR operator(?)
-    console.log('converted to 32 bit:', hash)
+    // console.log('converted to 32 bit:', hash)
   }
 
   return hash;
 }
 
 /**
- * Combines a collection of IDs presumed to be universally unique.
+ * Combines a collection of strings presumed to be unique IDs.
  * Used for creating a hash of experiment, group, and block ID for sending to client
  */
 export function combineIds(ids: readonly string[]): string {
   const sortedIds = ids.toSorted();
   const combined = sortedIds.join('');
   return combined;
+}
+
+export function hashStringSet(strings: readonly string[]) {
+  const combined = combineIds(strings);
+  return hashStringDJB2(combined);
 }
 
 export function hashIdentifiers(identifierMap: ClientPropMapping) {
