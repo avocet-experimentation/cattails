@@ -1,8 +1,8 @@
 import {
-  FeatureFlagClientData,
-  ClientFlagMapping,
-  featureFlagClientDataSchema,
-  ClientPropMapping
+  ClientPropMapping,
+  flagClientValueSchema,
+  FlagClientValue,
+  FlagClientMapping
 } from "@estuary/types";
 import { FastifyReply, FastifyRequest } from "fastify";
 import MongoAPI from "../lib/MongoAPI.js";
@@ -26,7 +26,7 @@ type FetchFlagRequestParams = {
 export const fetchFFlagHandler = async (
   request: FastifyRequest<FetchFlagRequestParams>,
   reply: FastifyReply
-): Promise<FeatureFlagClientData> => {
+): Promise<FlagClientValue> => {
   const { fflagName } = request.params;
   const { clientSessionAttributes } = request.body;
   const fflag = await mongoApi.findFlag({ name: fflagName });
@@ -38,16 +38,13 @@ export const fetchFFlagHandler = async (
 
   const currentValue = currentFlagValue(fflag, PLACEHOLDER_ENVIRONMENT, clientSessionAttributes);
 
-  return featureFlagClientDataSchema.parse({
-    valueType: fflag.value.type,
-    value: currentValue,
-  });
+  return flagClientValueSchema.parse(currentValue);
 };
 
 export const getEnvironmentFFlagsHandler = async (
   request: FastifyRequest<{ Params: { environmentName: string } }>,
   reply: FastifyReply
-): Promise<ClientFlagMapping> => {
+): Promise<FlagClientMapping> => {
   const { environmentName } = request.params;
   const fflags = await mongoApi.findMatchingFlags({
     environmentName
@@ -61,6 +58,6 @@ export const getEnvironmentFFlagsHandler = async (
   const mapping = fflags.reduce((acc, el) => {
     Object.assign(acc, { [el.name]: el });
     return acc;
-  }, {} as ClientFlagMapping);
+  }, {});
   return mapping;
 };
