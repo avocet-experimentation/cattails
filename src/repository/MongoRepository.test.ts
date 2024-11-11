@@ -2,49 +2,10 @@ import { MongoClient, ObjectId } from 'mongodb';
 import env from '../envalid.js';
 import { FFlagRepository, ExperimentRepository } from './';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { FeatureFlag, FlagValueType } from '@estuary/types';
-import { BeforeId } from './MongoRepository.types.js';
+import { exampleFlags, getExampleFlag } from '../lib/testData.js';
 
 const fflagRepo = new FFlagRepository(env.MONGO_TESTING_URI);
 // const experimentRepo = new ExperimentRepository(env.MONGO_TESTING_URI);
-
-const flagEnvironmentInit = () => ({
-  prod: { name: 'prod', enabled: false, overrideRules: [], },
-  dev: { name: 'dev', enabled: false, overrideRules: [], },
-  testing: { name: 'testing', enabled: false, overrideRules: [], },
-  staging: { name: 'staging', enabled: false, overrideRules: [], },
-});
-
-const getExampleFlag = (
-  name: string = 'test flag',
-  description: string = '',
-  valueType: FlagValueType = 'boolean',
-  defaultValue: string = 'false',
-): BeforeId<FeatureFlag> => {
-  const currentTimeMs = Date.now();
-  
-  const flag = {
-    name,
-    description,
-    valueType,
-    defaultValue,
-    createdAt: currentTimeMs,
-    updatedAt: currentTimeMs,
-    environments: flagEnvironmentInit(),
-  }
-
-  return flag;
-};
-
-const exampleFlags = [
-  getExampleFlag('testing flag'),
-  getExampleFlag(
-    'live update', 
-    'refreshes charts automatically using server-sent events',
-    'boolean',
-    'true',
-  ),
-];
 
 const insertExampleFlags = async (resultsArray: (string | null)[]) => {
   const promises = [
@@ -177,8 +138,10 @@ describe('Feature Flags', () => {
 
       const updateObject = {
         id: first,
-        valueType: 'number' as const,
-        defaultValue: '3',
+        value: {
+          type: 'number' as const,
+          default: 3,
+        },
       };
       const result = await fflagRepo.update(updateObject);
       expect(result).not.toBeNull();
