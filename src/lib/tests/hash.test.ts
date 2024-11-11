@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, expectTypeOf, afterAll, beforeEach } from 'vitest';
-import { hashStringSet } from './hash.js';
+import { hashStringSet } from '../hash.js';
 import { ObjectId } from 'mongodb';
 import { randomUUID } from 'crypto';
 

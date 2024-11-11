@@ -1,8 +1,8 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import env from '../envalid.js';
-import { FFlagRepository, ExperimentRepository } from './';
+import env from '../../envalid.js';
+import { FFlagRepository, ExperimentRepository } from '../index.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { exampleFlags, getExampleFlag } from '../lib/testData.js';
+import { exampleFlags, getExampleFlag } from '../../lib/testData.js';
 
 const fflagRepo = new FFlagRepository(env.MONGO_TESTING_URI);
 // const experimentRepo = new ExperimentRepository(env.MONGO_TESTING_URI);
