@@ -1,8 +1,8 @@
 import {
   FeatureFlagClientData,
   ClientFlagMapping,
-  ClientSessionAttribute,
-  featureFlagClientDataSchema
+  featureFlagClientDataSchema,
+  ClientPropMapping
 } from "@estuary/types";
 import { FastifyReply, FastifyRequest } from "fastify";
 import MongoAPI from "../lib/MongoAPI.js";
@@ -15,7 +15,7 @@ const PLACEHOLDER_ENVIRONMENT = 'dev';
 
 type FetchFlagRequestParams = { 
   Params: { fflagName: string, }, 
-  Body: { environment: string, clientSessionAttributes: ClientSessionAttribute[]},
+  Body: { environment: string, clientSessionAttributes: ClientPropMapping},
 }
 
 /**
@@ -39,10 +39,8 @@ export const fetchFFlagHandler = async (
   const currentValue = currentFlagValue(fflag, PLACEHOLDER_ENVIRONMENT, clientSessionAttributes);
 
   return featureFlagClientDataSchema.parse({
-    name: fflag.name,
-    valueType: fflag.valueType,
-    defaultValue: fflag.defaultValue,
-    currentValue,
+    valueType: fflag.value.type,
+    value: currentValue,
   });
 };
 

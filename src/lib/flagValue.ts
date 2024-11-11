@@ -1,4 +1,15 @@
-import { ClientSessionAttribute, EnvironmentName, Experiment, ExperimentGroup, experimentGroupSchema, experimentSchema, FeatureFlag, FlagValueType, forcedValueSchema, OverrideRule } from "@estuary/types";
+import {
+  ClientPropMapping,
+  EnvironmentName,
+  Experiment,
+  ExperimentGroup,
+  experimentGroupSchema,
+  experimentSchema,
+  FeatureFlag,
+  FlagCurrentValue,
+  forcedValueSchema,
+  OverrideRule
+} from "@estuary/types";
 import { hashAndAssign, hashIdentifiers } from "./hash.js";
 
 /**
@@ -9,36 +20,49 @@ import { hashAndAssign, hashIdentifiers } from "./hash.js";
 /**
  * Checks each override rule on the flag, returning a value for the first rule that matches.
  * Uses the flag's default value as a fallback.
+ * 
+ * todo:
+ * - permit defining attributes as identifiers or not, then filter for only identifiers
  */
 export function currentFlagValue(
   flag: FeatureFlag,
   environment: EnvironmentName,
-  attributes: ClientSessionAttribute[]
-): string {
+  attributes: ClientPropMapping
+): FlagCurrentValue {
+  const { default: defaultValue } = flag.value;
   const overrideRules = flag.environments[environment]?.overrideRules;
-  if (!overrideRules) return flag.defaultValue;
+  if (!overrideRules) return defaultValue;
 
   const clientIdHash = hashIdentifiers(attributes);
-  const selectedRule = overrideRules.find(({ enrollment }) => {
-    return enrollment.proportion === 1 
-    || clientIdHash < enrollment.proportion;
-  });
+  const selectedRule = enroll(overrideRules, clientIdHash);
+  if (selectedRule === undefined) return flag.value.default;
 
-  if (selectedRule === undefined) return flag.defaultValue;
-
-  return getValueFromRule(selectedRule, attributes) ?? flag.defaultValue;
+  return getValueFromRule(selectedRule, attributes) ?? flag.value.default;
 }
 
-function getValueFromRule(rule: OverrideRule, attributes: ClientSessionAttribute[]): string | undefined {
+// random enrollment
+function enroll(overrideRules: OverrideRule[], hash: number) {
+  return overrideRules.find(({ enrollment }) => {
+    return enrollment.proportion === 1 
+    || hash < enrollment.proportion;
+  });
+}
+
+function getValueFromRule(rule: OverrideRule, identifiers: ClientPropMapping) {
   if (rule.type === 'Experiment') {
-    const group = getGroupAssignment(experimentSchema.parse(rule), attributes);
+    const group = getGroupAssignment(experimentSchema.parse(rule), identifiers);
     return currentBlockValue(group);
   } else if (rule.type === 'ForcedValue') {
     return forcedValueSchema.parse(rule).value;
   }
 }
 
-function getGroupAssignment(experiment: Experiment, identifiers: ClientSessionAttribute[]) {
+/**
+ * 
+ * todo:
+ * - only pass identifiers listed on enrollment.attributes into the hash function
+ */
+function getGroupAssignment(experiment: Experiment, identifiers: ClientPropMapping) {
   const { groups } = experiment;
   const groupIds = groups.map((group) => group.id);
   const assignmentGroupId = hashAndAssign(identifiers, groupIds);
@@ -46,7 +70,7 @@ function getGroupAssignment(experiment: Experiment, identifiers: ClientSessionAt
   return experimentGroupSchema.parse(assignedGroup);
 }
 
-function currentBlockValue(group: ExperimentGroup): FlagValueType | undefined {
+function currentBlockValue(group: ExperimentGroup): FlagCurrentValue | undefined {
   const now = Date.now();
 
   const concurrent = group.blocks.find(({ startTimestamp, endTimestamp }) => {
