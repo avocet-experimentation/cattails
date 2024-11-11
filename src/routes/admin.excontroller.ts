@@ -1,11 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { Experiment } from "@estuary/types";
-import { FlagIdParam, FlagNameParam } from "./routes.types.js";
-import MongoAPI, { DraftRecord, WithMongoStringId } from "../lib/MongoAPI.js";
-import env from "../envalid.js";
+import { ExperimentIdParam, ExperimentNameParam } from "./routes.types.js";
+import { DraftRecord, WithMongoStringId } from "../lib/MongoAPI.js";
 import { PartialUpdate } from "../repository/MongoRepository.types.js";
 import { getAdminRepos } from "../repository/index.js";
-import exp from "constants";
 
 // Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
 
@@ -30,7 +28,7 @@ export const createExperimentHandler = async (
 // might remove this in favor of using patch only
 export const updateExperimentHandler = async (
   request: FastifyRequest<{
-    Params: FlagIdParam;
+    Params: ExperimentIdParam;
     Body: WithMongoStringId<Experiment>;
   }>,
   reply: FastifyReply
@@ -53,12 +51,12 @@ export const updateExperimentHandler = async (
 
 export const patchExperimentHandler = async (
   request: FastifyRequest<{
-    Params: FlagIdParam;
+    Params: ExperimentIdParam;
     Body: PartialUpdate<Experiment>;
   }>,
   reply: FastifyReply
 ): Promise<boolean> => {
-  const { experimentId } = request.params.experimentId;
+  const { experimentId } = request.params;
   if (experimentId !== request.body.id) {
     return reply
       .code(422)
@@ -75,11 +73,11 @@ export const patchExperimentHandler = async (
 
 export const deleteExperimentHandler = async (
   request: FastifyRequest<{
-    Params: FlagIdParam;
+    Params: ExperimentIdParam;
   }>,
   reply: FastifyReply
 ): Promise<void> => {
-  const { experimentId } = request.params.experimentId;
+  const { experimentId } = request.params;
   const succeeded = await experimentRepo.delete(experimentId);
   if (!succeeded) {
     return reply
@@ -93,7 +91,7 @@ export const deleteExperimentHandler = async (
 };
 
 export const getExperimentByIdHandler = async (
-  request: FastifyRequest<{ Params: FlagIdParam }>,
+  request: FastifyRequest<{ Params: ExperimentIdParam }>,
   reply: FastifyReply
 ): Promise<Experiment> => {
   const { experimentId } = request.params;
@@ -107,10 +105,10 @@ export const getExperimentByIdHandler = async (
 };
 
 export const getExperimentByNameHandler = async (
-  request: FastifyRequest<{ Params: FlagNameParam }>,
+  request: FastifyRequest<{ Params: ExperimentNameParam }>,
   reply: FastifyReply
 ): Promise<Experiment> => {
-  const experimentName = request.params.experimentName;
+  const { experimentName } = request.params;
   const experiment = await experimentRepo.find({ name: experimentName });
   if (!experiment) {
     return reply
