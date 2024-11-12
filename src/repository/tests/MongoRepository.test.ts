@@ -98,7 +98,7 @@ describe('Feature Flags', () => {
     afterAll(eraseTestData);
   });
 
-  describe('find', () => {
+  describe('findOne', () => {
     let insertResults: (string | null)[] = [];
     beforeAll(async () => insertExampleFlags(insertResults));
 
@@ -106,7 +106,7 @@ describe('Feature Flags', () => {
       const first = insertResults[0];
       if (first === null) return;
 
-      const result = await fflagRepo.find({ name: 'testing flag' });
+      const result = await fflagRepo.findOne({ name: 'testing flag' });
       expect(result).not.toBeNull();
       expect(result?.id).toEqual(first);
     });
@@ -115,13 +115,13 @@ describe('Feature Flags', () => {
       const second = insertResults[1];
       if (second === null) return;
 
-      const result = await fflagRepo.find({ description: { $regex: /server-sent events/ } });
+      const result = await fflagRepo.findOne({ description: { $regex: /server-sent events/ } });
       expect(result).not.toBeNull();
       expect(result?.id).toEqual(second);
     });
 
     it("returns null if no records match the query", async () => {
-      const result = await fflagRepo.find({ name: 'asdfoasihgda'});
+      const result = await fflagRepo.findOne({ name: 'asdfoasihgda'});
       expect(result).toBeNull();
     });
     
@@ -167,7 +167,7 @@ describe('Feature Flags', () => {
     });
 
     it("doesn't overwrite if no document matches the `id`", async () => {
-      const result = await fflagRepo.find({ name: 'asdfoasihgda'});
+      const result = await fflagRepo.findOne({ name: 'asdfoasihgda'});
       expect(result).toBeNull();
     });
     
