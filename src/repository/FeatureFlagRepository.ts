@@ -10,11 +10,15 @@ export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> 
   /**
    * Add an override rule 
    */
-    async addRule(flagId: string, environmentName: string, rule: OverrideRule) {
-      const result = await this.push({ 
-        id: flagId, 
-        [`environments.${environmentName}.overrideRules`]: rule,
-      });
-      return result;
-    }
+  async addRule(flagId: string, environment: string, rule: OverrideRule) {
+    const result = await this.push({ 
+      id: flagId, 
+      [`environments.${environment}.overrideRules`]: rule,
+    });
+    return result;
+  }
+
+  async getEnvironmentFlags(environment: string) {
+    return this.findMany({ [`environments.${environment}.enabled`]: true });
+  }
 }
