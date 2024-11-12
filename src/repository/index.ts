@@ -1,6 +1,6 @@
 import env from "../envalid.js";
-import { FeatureFlagRepository } from "./FeatureFlagRepository.js";
-import { ExperimentRepository } from "./ExperimentRepository.js";
+import FeatureFlagRepository from "./FeatureFlagRepository.js";
+import ExperimentRepository from "./ExperimentRepository.js";
 /**
  * Use getAdminRepos or getClientRepos
  */

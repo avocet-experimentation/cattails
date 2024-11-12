@@ -1,10 +1,11 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import env from '../../envalid.js';
-import { FFlagRepository, ExperimentRepository } from '../index.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { exampleFlags, getExampleFlag } from '../../lib/testData.js';
+import FeatureFlagRepository from '../FeatureFlagRepository.js'
+// import ExperimentRepository from '../FeatureFlagRepository.js'
 
-const fflagRepo = new FFlagRepository(env.MONGO_TESTING_URI);
+const fflagRepo = new FeatureFlagRepository(env.MONGO_TESTING_URI);
 // const experimentRepo = new ExperimentRepository(env.MONGO_TESTING_URI);
 
 const insertExampleFlags = async (resultsArray: (string | null)[]) => {
