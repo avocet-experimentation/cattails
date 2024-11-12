@@ -28,4 +28,16 @@ describe('hashStringDJB2', async () => {
     expect(hash).toBeGreaterThanOrEqual((-2) ** 31);
     expect(hash).toBeLessThanOrEqual((2 ** 31) - 1);
   });
+
+  it('Returns the same hash value given the same input', async () => {
+    const hash = hashStringSet(exampleUUIDs);
+    const hash2 = hashStringSet(exampleUUIDs);
+    expect(hash).toEqual(hash2);
+  });
+
+  it('Returns different hash values given different inputs', async () => {
+    const hash = hashStringSet(exampleObjectIds);
+    const hash2 = hashStringSet(exampleUUIDs);
+    expect(hash).not.toEqual(hash2);
+  });
 });
