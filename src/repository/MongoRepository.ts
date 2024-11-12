@@ -89,4 +89,24 @@ export default class MongoRepository<T extends EstuaryBaseTypes> {
     const result = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
     return result.deletedCount === 1;
   }
+  /**
+   * Pushes to an array within a record
+   * @returns true if a record was updated, or false otherwise
+   */
+  async push(pushUpdates: PartialUpdate<T>) {
+    const { id, ...updates } = pushUpdates;
+    const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
+    const result = await this.collection.updateOne(filter, [{ $push: updates }]);
+    return result.modifiedCount > 0;
+  }
+  // /**
+  //  * Removes an element from a record's array
+  //  * @returns true if a record was updated, or false otherwise
+  //  */
+  // async pop(pushUpdates: PartialUpdate<T>) {
+  //   const { id, ...updates } = pushUpdates;
+  //   const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
+  //   const result = await this.collection.updateOne(filter, [{ $push: pushUpdates }]);
+  //   return result.modifiedCount > 0;
+  // }
 }

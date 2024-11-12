@@ -33,11 +33,10 @@ export function currentFlagValue(
   environment: EnvironmentName,
   attributes: ClientPropMapping
 ): FlagClientValue {
-  const { default: defaultValue } = flag.value;
   const defaultHash = randomHash();
-  const defaultReturn = { value: flag.value.default, hash: defaultHash }
+  const defaultReturn = { value: flag.value.default, hash: defaultHash };
   const overrideRules = flag.environments[environment]?.overrideRules;
-  if (!overrideRules) return defaultReturn
+  if (!overrideRules) return defaultReturn;
 
   const clientIdHash = hashIdentifiers(attributes);
   const selectedRule = enroll(overrideRules, clientIdHash);
