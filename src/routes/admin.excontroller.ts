@@ -109,7 +109,7 @@ export const getExperimentByNameHandler = async (
   reply: FastifyReply
 ): Promise<Experiment> => {
   const { experimentName } = request.params;
-  const experiment = await experimentRepo.find({ name: experimentName });
+  const experiment = await experimentRepo.findOne({ name: experimentName });
   if (!experiment) {
     return reply
       .code(404)
