@@ -93,4 +93,27 @@ export const staticFlags: FeatureFlag[] = [
     createdAt: 1731364209327,
     updatedAt: 1731364209327
   },
+  {
+    id: '94328591069f921a07e5bd76',
+    name: 'auto-update-ui',
+    value: { type: 'boolean', default: false },
+    description: 'Automatically update the page as new data is fetched. Long-lived flag',
+    environments: {
+      prod: { name: 'prod', enabled: false, overrideRules: [
+        {
+          id: '58343391069f921a07e5bd89',
+          type: 'ForcedValue',
+          description: 'Always sets this flag to true',
+          status: 'active',
+          enrollment: {
+            attributes: ['id'],
+            proportion: 1,
+          },
+        },
+      ] },
+      dev: { name: 'dev', enabled: true, overrideRules: [] },
+      testing: { name: 'testing', enabled: true, overrideRules: [] },
+      staging: { name: 'staging', enabled: false, overrideRules: [] }
+    },
+  },
 ];
