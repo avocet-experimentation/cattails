@@ -13,13 +13,12 @@ const { fflagRepo } = getClientRepos();
 // until we have API keys corresponding to environments
 const PLACEHOLDER_ENVIRONMENT = 'dev';
 
-interface FetchFlagsBody { 
-  Body: { environment: string, clientSessionAttributes: ClientPropMapping},
+interface FetchFlagsClientBody { 
+  Body: { environment: string, clientProps: ClientPropMapping},
 }
 
-interface FetchFlagRequest extends FetchFlagsBody { 
+interface FetchFlagClientRequest extends FetchFlagsClientBody { 
   Params: { fflagName: string, }, 
-  // Body: { environment: string, clientSessionAttributes: ClientPropMapping},
 }
 
 /**
@@ -28,11 +27,11 @@ interface FetchFlagRequest extends FetchFlagsBody {
  * - use key to identify environment
  */
 export const fetchFFlagHandler = async (
-  request: FastifyRequest<FetchFlagRequest>,
+  request: FastifyRequest<FetchFlagClientRequest>,
   reply: FastifyReply
 ): Promise<FlagClientValue> => {
   const { fflagName } = request.params;
-  const { environment, clientSessionAttributes } = request.body;
+  const { environment, clientProps } = request.body;
   const featureFlag = await fflagRepo.findOne({ name: fflagName });
   if (!featureFlag) {
     return reply
@@ -40,16 +39,16 @@ export const fetchFFlagHandler = async (
       .send({ error: { code: 404, message: "flag not found" } });
   }
 
-  const currentValue = currentFlagValue(featureFlag, PLACEHOLDER_ENVIRONMENT, clientSessionAttributes);
+  const currentValue = currentFlagValue(featureFlag, PLACEHOLDER_ENVIRONMENT, clientProps);
 
   return flagClientValueSchema.parse(currentValue);
 };
 
 export const getEnvironmentFFlagsHandler = async (
-  request: FastifyRequest<FetchFlagsBody>,
+  request: FastifyRequest<FetchFlagsClientBody>,
   reply: FastifyReply
 ): Promise<FlagClientMapping> => {
-  const { environment, clientSessionAttributes } = request.body;
+  const { environment, clientProps } = request.body;
   const featureFlags = await fflagRepo.getEnvironmentFlags(environment);
   if (!featureFlags) {
     return reply
@@ -61,7 +60,7 @@ export const getEnvironmentFFlagsHandler = async (
   // console.log({ overrideRules: fflags[0].environments.dev?.overrideRules });
 
   const mapping = featureFlags.reduce((acc, featureFlag) => {
-    Object.assign(acc, { [featureFlag.name]: currentFlagValue(featureFlag, PLACEHOLDER_ENVIRONMENT, clientSessionAttributes) });
+    Object.assign(acc, { [featureFlag.name]: currentFlagValue(featureFlag, PLACEHOLDER_ENVIRONMENT, clientProps) });
     return acc;
   }, {} as FlagClientMapping);
   return mapping;
