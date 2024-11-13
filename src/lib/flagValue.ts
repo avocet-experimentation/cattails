@@ -47,10 +47,23 @@ export function currentFlagValue(
 
 // random enrollment
 function enroll(overrideRules: OverrideRule[], hash: number) {
-  return overrideRules.find(({ enrollment }) => {
-    return enrollment.proportion === 1 
-    || hash < enrollment.proportion;
+  return overrideRules.find((rule) => {
+    return ruleInEffect(rule) 
+    && (rule.enrollment.proportion === 1 
+    || hash < rule.enrollment.proportion);
   });
+}
+
+/**
+ * Returns true if a rule is active and either there are no start/end timestamps,
+ * or the current time is in the range defined by them
+ */
+function ruleInEffect(rule: OverrideRule): boolean {
+  if (rule.status !== 'active') return false;
+  const startTime = rule.startTimestamp ?? 0;
+  const endTime = rule.endTimestamp ?? Infinity;
+  const currentTime = Date.now();
+  return startTime <= currentTime && currentTime < endTime;
 }
 
 function getValueFromRule(rule: OverrideRule, identifiers: ClientPropMapping) {
