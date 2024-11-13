@@ -1,36 +1,54 @@
-import { MongoClient, ObjectId, Document, Collection, Db, Filter, OptionalUnlessRequiredId } from 'mongodb';
-import { EstuarySchema } from '@estuary/types';
-import { EstuaryBaseTypes, MongoRecord, BeforeId, PartialUpdate } from './MongoRepository.types.js';
+import { MongoClient, ObjectId, Document, Condition, Collection, Db, Filter, OptionalUnlessRequiredId, WithId } from 'mongodb';
+import { EstuarySchema, EstuaryMongoTypes, BeforeId, PartialUpdate } from '@estuary/types';
+
+/* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
+
+export type MongoRecord<T extends EstuaryMongoTypes> = WithId<BeforeId<T>>;
+
+// temporary/WIP
+type findFilter<T extends EstuaryMongoTypes> = { [P in keyof WithId<T>]?: Condition<WithId<T>[P]> | undefined; };
 
 /**
  * Parent class for type-specific CRUD operations in Mongo. 
  * Use subclasses instead of instantiating this directly.
+ * 
+ * todo:
+ * - solve filter type problem and remove the `as Filter...` assertions
  */
-export default class MongoRepository<T extends EstuaryBaseTypes> {
+export default class MongoRepository<T extends EstuaryMongoTypes> {
   #client: MongoClient;
   #db: Db;
-  schema: EstuarySchema<T>;
+  schema: EstuarySchema;
   collection: Collection<BeforeId<T>>;
-  // environments: Collection<Environment>;
 
-  constructor(collectionName: string, schema: EstuarySchema<T>, mongoUri: string) {
+  constructor(collectionName: string, schema: EstuarySchema, mongoUri: string) {
     this.#client = new MongoClient(mongoUri);
     this.#db = this.#client.db();
     this.schema = schema;
     this.collection = this.#db.collection(collectionName);
-    // this.environments = this.db.collection('environments');
     this._recordToObject = this._recordToObject.bind(this);
   }
-  /**
-   * Turns a MongoDB Document into the corresponding object
-   */
+
   _recordToObject(document: MongoRecord<T>): T {
-    // const { _id, __v, ...rest } = document;
     const { _id, ...rest } = document;
-    const morphed: { id: string } & Document = { id: _id.toHexString(), ...rest };
-    // console.log({morphed})
+    const morphed = { id: _id.toHexString(), ...rest };
     return this.schema.parse(morphed);
   }
+
+  _validateNew(obj: BeforeId<T>): T {
+    // get the schema without an id
+    return this.schema.parse(obj);
+  }
+
+  // _validateUpdate(obj: PartialUpdate<T>): T {
+  //   const update = (this.schema.optional()).parse(obj);
+  //   if (!('id' in update)) {
+  //     throw new TypeError('Update objects must contain `id`!');
+  //   }
+  //   const {id, ...rest } = update;
+  //   // const morphed = { id, ...rest };
+  //   return update;
+  // }
   /**
    * Get up to `maxCount` documents, or all if not specified
    * @returns a possibly empty array of documents
@@ -73,7 +91,6 @@ export default class MongoRepository<T extends EstuaryBaseTypes> {
     const resultCursor = await this.collection.find(query);
     if (maxCount) resultCursor.limit(maxCount);
     const records = await resultCursor.toArray();
-    // if (result === null) return result;
     return records.map(this._recordToObject);
   }
   /**
