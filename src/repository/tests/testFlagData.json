@@ -19,10 +19,9 @@
               {
                   "id": "43328591069f921a07e5bd89",
                   "type": "ForcedValue",
-                  "enabled": true,
+                  "status": "active",
                   "value": true,
                   "description": "Always sets this flag to true in the dev environment",
-                  "status": "active",
                   "enrollment": {
                       "attributes": [
                           "id"
