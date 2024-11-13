@@ -1,7 +1,5 @@
 import { FeatureFlag, featureFlagSchema, OverrideRule } from "@estuary/types";
 import MongoRepository from "./MongoRepository.js";
-import { BeforeId, PartialUpdate } from "./MongoRepository.types.js";
-import { Filter, ObjectId } from "mongodb";
 
 export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> {
   constructor(mongoUri: string) {
