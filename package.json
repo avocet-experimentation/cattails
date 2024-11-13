@@ -24,11 +24,12 @@
     "vitest": "^0.32.0"
   },
   "dependencies": {
-    "@fastify/cors": "^8.0.0",
     "@estuary/types": "file:../packages/estuary-types",
+    "@fastify/cors": "^8.0.0",
     "dotenv": "^16.4.5",
     "envalid": "^8.0.0",
     "fastify": "^4.17.0",
+    "mercurius": "~14.1.0",
     "mongodb": "^6.10.0",
     "zod": "^3.23.8"
   }
