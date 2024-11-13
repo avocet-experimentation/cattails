@@ -15,10 +15,10 @@ export const buildServer = async (): Promise<FastifyInstance> => {
   // register routes for out flag entity
   await server.register(getClientRoutes, { prefix: "api" });
   await server.register(getAdminRoutes, { prefix: "admin" });
-  server.register(mercurius, {
+  await server.register(mercurius, {
     schema,
     resolvers,
-    graphiql: true,  // Optional: Enable GraphiQL playground
+    graphiql: true,
   });
   return server;
 };
