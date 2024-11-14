@@ -41,7 +41,7 @@ export const exampleFlags = [
   ),
 ];
 
-export const staticFlags = [
+export const staticFlags: FeatureFlag[] = [
   {
     id: '67328591069f921a07e5bd76',
     name: 'use-new-database',
