@@ -1,9 +1,9 @@
-import { FeatureFlag, featureFlagSchema, OverrideRule } from "@estuary/types";
+import { Experiment, experimentSchema, FeatureFlag, featureFlagSchema, OverrideRule } from "@estuary/types";
 import MongoRepository from "./MongoRepository.js";
 
-export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> {
+export default class FeatureFlagRepository extends MongoRepository<FeatureFlag, typeof featureFlagSchema> {
   constructor(mongoUri: string) {
-    super('flags', featureFlagSchema, mongoUri);
+    super('FeatureFlag', featureFlagSchema, mongoUri);
   }
   /**
    * Add an override rule 

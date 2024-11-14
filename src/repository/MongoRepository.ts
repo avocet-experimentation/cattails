@@ -1,12 +1,30 @@
-import { MongoClient, ObjectId, Document, Condition, Collection, Db, Filter, OptionalUnlessRequiredId, WithId } from 'mongodb';
-import { EstuarySchema, EstuaryMongoTypes, BeforeId, PartialUpdate } from '@estuary/types';
+import {
+  MongoClient,
+  ObjectId,
+  Collection,
+  Db,
+  Filter,
+  OptionalUnlessRequiredId,
+  WithId,
+} from 'mongodb';
+import {
+  EstuarySchema,
+  EstuaryMongoCollectionName,
+  BeforeId,
+  EstuaryMongoTypes,
+  RequireOnly,
+  AnyZodSchema,
+  getPartialSchema,
+} from '@estuary/types';
 
 /* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
 
 export type MongoRecord<T extends EstuaryMongoTypes> = WithId<BeforeId<T>>;
 
 // temporary/WIP
-type findFilter<T extends EstuaryMongoTypes> = { [P in keyof WithId<T>]?: Condition<WithId<T>[P]> | undefined; };
+// type findFilter<T extends InferFromSchema> = { [P in keyof WithId<T>]?: Condition<WithId<T>[P]> | undefined; };
+
+const exampleId = ObjectId.createFromTime(0);
 
 /**
  * Parent class for type-specific CRUD operations in Mongo. 
@@ -14,41 +32,70 @@ type findFilter<T extends EstuaryMongoTypes> = { [P in keyof WithId<T>]?: Condit
  * 
  * todo:
  * - solve filter type problem and remove the `as Filter...` assertions
+ * - narrow the type of EstuaryObjectSchema so that it is recognized as an object type
  */
-export default class MongoRepository<T extends EstuaryMongoTypes> {
+export default class MongoRepository<T extends EstuaryMongoTypes, S extends EstuarySchema<T>> {
   #client: MongoClient;
   #db: Db;
-  schema: EstuarySchema;
   collection: Collection<BeforeId<T>>;
+  schema: AnyZodSchema;
 
-  constructor(collectionName: string, schema: EstuarySchema, mongoUri: string) {
+  constructor(collectionName: EstuaryMongoCollectionName, schema: S, mongoUri: string) {
     this.#client = new MongoClient(mongoUri);
     this.#db = this.#client.db();
-    this.schema = schema;
     this.collection = this.#db.collection(collectionName);
-    this._recordToObject = this._recordToObject.bind(this);
+    this.schema = schema;
+    // this._recordToObject = this._recordToObject.bind(this); // might remove
   }
 
   _recordToObject(document: MongoRecord<T>): T {
     const { _id, ...rest } = document;
     const morphed = { id: _id.toHexString(), ...rest };
+    // return morphed;
     return this.schema.parse(morphed);
   }
 
-  _validateNew(obj: BeforeId<T>): T {
-    // get the schema without an id
-    return this.schema.parse(obj);
+  _validateNew<O extends OptionalUnlessRequiredId<BeforeId<T>>>(obj: O): O | null {
+    if ('id' in obj) {
+      console.error('Attempted to create a document from an object that contains an id field! Does this document already exist?');
+      return null;
+    }
+    const safeParseResult = this.schema.safeParse({ id: exampleId.toHexString(), ...obj });
+
+    if (!safeParseResult.success) { 
+      console.error(safeParseResult.error);
+      return null; 
+    }
+
+    const { id, ...validated } = safeParseResult.data;
+    return validated;
   }
 
-  // _validateUpdate(obj: PartialUpdate<T>): T {
-  //   const update = (this.schema.optional()).parse(obj);
-  //   if (!('id' in update)) {
-  //     throw new TypeError('Update objects must contain `id`!');
-  //   }
-  //   const {id, ...rest } = update;
-  //   // const morphed = { id, ...rest };
-  //   return update;
-  // }
+  _validateUpdate<U extends RequireOnly<T, 'id'>>(obj: U): U | null {
+    if (!('id' in obj) || typeof obj.id !== 'string') {
+      console.error('Attempted to update a document without including an id field!');
+      return null;
+    }
+    // const restOptional = schemaRequireOnly(this.schema, ['id']);
+    const safeParseResult = getPartialSchema(this.schema).safeParse(obj);
+
+    if (!safeParseResult.success) { 
+      console.error(safeParseResult.error);
+      return null; 
+    }
+
+    return safeParseResult.data;
+  }
+  /**
+   * @returns a hex string representing the new record's ObjectId
+   */
+  async create(newEntry: OptionalUnlessRequiredId<BeforeId<T>>): Promise<string | null> {
+    const validated = this._validateNew(newEntry);
+    if (validated === null) return null;
+    const result = await this.collection.insertOne(validated);
+    return result.insertedId?.toHexString() ?? null;
+  }
+
   /**
    * Get up to `maxCount` documents, or all if not specified
    * @returns a possibly empty array of documents
@@ -58,7 +105,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const resultCursor = this.collection.find({});
     if (maxCount) resultCursor.limit(maxCount);
     const documents = await resultCursor.toArray();
-    const transformed = documents.map((doc) => this._recordToObject(doc));
+    const transformed = documents.map((doc) => this._recordToObject(doc), this);
     return transformed;
   }
   /**
@@ -94,19 +141,13 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     return records.map(this._recordToObject);
   }
   /**
-   * @returns a hex string representing the new record's ObjectId
-   */
-  async create(newEntry: OptionalUnlessRequiredId<BeforeId<T>>): Promise<string | null> {
-
-    const result = await this.collection.insertOne({ ...newEntry });
-    return result.insertedId?.toHexString() ?? null;
-  }
-  /**
    * Updates an existing record
-   * @returns true if a record was updated, or false otherwise
+   * @returns true if a record was updated, null if the object type is invalid, or false otherwise
    */
-  async update(partialEntry: PartialUpdate<T>) {
-    const { id, ...updates } = partialEntry;
+  async update(partialEntry: RequireOnly<T, 'id'>): Promise<boolean | null> {
+    const validated = this._validateUpdate(partialEntry);
+    if (validated === null) return null;
+    const { id, ...updates } = validated;
     const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
     const result = await this.collection.updateOne(filter, [{ $set: updates }]);
     return result.modifiedCount > 0;
@@ -124,7 +165,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    * Pushes to an array within a record
    * @returns true if a record was updated, or false otherwise
    */
-  async push(pushUpdates: PartialUpdate<T>) {
+  async push(pushUpdates: RequireOnly<T, 'id'>) {
     const { id, ...updates } = pushUpdates;
     const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
     const result = await this.collection.updateOne(filter, [{ $push: updates }]);
@@ -134,7 +175,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   //  * Removes an element from a record's array
   //  * @returns true if a record was updated, or false otherwise
   //  */
-  // async pop(pushUpdates: PartialUpdate<T>) {
+  // async pop(pushUpdates: RequireOnly<T, 'id'>) {
   //   const { id, ...updates } = pushUpdates;
   //   const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
   //   const result = await this.collection.updateOne(filter, [{ $push: pushUpdates }]);

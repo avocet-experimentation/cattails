@@ -1,6 +1,4 @@
-import { FeatureFlag, FlagValue } from "@estuary/types";
-import { BeforeId } from "../MongoRepository.types.js";
-import { ObjectId } from "mongodb";
+import { FeatureFlag, FlagValueDef, BeforeId } from "@estuary/types";
 
 export const flagEnvironmentInit = () => ({
   prod: { name: 'prod', enabled: false, overrideRules: [], },
@@ -12,7 +10,7 @@ export const flagEnvironmentInit = () => ({
 export const getExampleFlag = (
   name: string = 'test flag',
   description: string = '',
-  value: FlagValue = {
+  value: FlagValueDef = {
     type: 'boolean',
     default: false,
   },

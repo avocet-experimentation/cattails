@@ -1,9 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { FeatureFlag, OverrideRule } from "@estuary/types";
+import { FeatureFlag, OverrideRule, PartialUpdate } from "@estuary/types";
 import { FlagIdParam, FlagNameParam } from "./routes.types.js";
 import MongoAPI, { DraftRecord, WithMongoStringId } from "../lib/MongoAPI.js";
 import env from "../envalid.js";
-import { PartialUpdate } from "../repository/MongoRepository.types.js";
 import { getAdminRepos } from "../repository/index.js";
 
 // Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
@@ -23,6 +22,47 @@ export const createFFlagHandler = async (
       .send({ error: { code: 409, message: "flag already exists" } }); // return null due to duplicate key (name) error
   }
   return reply.code(201).send({ fflagId: documentId });
+};
+
+export const getFFlagByIdHandler = async (
+  request: FastifyRequest<{ Params: FlagIdParam }>,
+  reply: FastifyReply
+) => {
+  const { fflagId } = request.params;
+  const fflag = await mongoApi.getFlag(fflagId);
+  if (!fflag) {
+    return reply
+      .code(404)
+      .send({ error: { code: 404, message: "flag not found" } });
+  }
+  return reply.code(200).send(fflag);
+};
+
+export const getFFlagByNameHandler = async (
+  request: FastifyRequest<{ Params: FlagNameParam }>,
+  reply: FastifyReply
+): Promise<FeatureFlag> => {
+  const fflagName = request.params.fflagName;
+  const fflag = await mongoApi.findFlag({ name: fflagName });
+  if (!fflag) {
+    return reply
+      .code(404)
+      .send({ error: { code: 404, message: "flag not found" } });
+  }
+  return reply.code(200).send(fflag);
+};
+
+export const getAllFFlagsHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<FeatureFlag[]> => {
+  const fflags = await mongoApi.getFlags();
+  if (!fflags) {
+    return reply
+      .code(404)
+      .send({ error: { code: 404, message: "flags not found" } });
+  }
+  return reply.code(200).send(fflags);
 };
 
 // might remove this in favor of using patch only
@@ -111,45 +151,4 @@ export const deleteFFlagHandler = async (
       } });
   }
   return reply.code(204).send({ fflagId });
-};
-
-export const getFFlagByIdHandler = async (
-  request: FastifyRequest<{ Params: FlagIdParam }>,
-  reply: FastifyReply
-) => {
-  const { fflagId } = request.params;
-  const fflag = await mongoApi.getFlag(fflagId);
-  if (!fflag) {
-    return reply
-      .code(404)
-      .send({ error: { code: 404, message: "flag not found" } });
-  }
-  return reply.code(200).send(fflag);
-};
-
-export const getFFlagByNameHandler = async (
-  request: FastifyRequest<{ Params: FlagNameParam }>,
-  reply: FastifyReply
-): Promise<FeatureFlag> => {
-  const fflagName = request.params.fflagName;
-  const fflag = await mongoApi.findFlag({ name: fflagName });
-  if (!fflag) {
-    return reply
-      .code(404)
-      .send({ error: { code: 404, message: "flag not found" } });
-  }
-  return reply.code(200).send(fflag);
-};
-
-export const getAllFFlagsHandler = async (
-  request: FastifyRequest,
-  reply: FastifyReply
-): Promise<FeatureFlag[]> => {
-  const fflags = await mongoApi.getFlags();
-  if (!fflags) {
-    return reply
-      .code(404)
-      .send({ error: { code: 404, message: "flags not found" } });
-  }
-  return reply.code(200).send(fflags);
 };
