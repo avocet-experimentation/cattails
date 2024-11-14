@@ -66,8 +66,13 @@ function ruleInEffect(rule: OverrideRule): boolean {
   return startTime <= currentTime && currentTime < endTime;
 }
 
+const isExperiment = (arg: unknown): arg is Experiment => {
+  const safeParseResult = experimentSchema.safeParse(arg);
+  return safeParseResult.success;
+}
+
 function getValueFromRule(rule: OverrideRule, identifiers: ClientPropMapping) {
-  if (rule.type === 'Experiment') {
+  if (isExperiment(rule)) {
     const group = getGroupAssignment(experimentSchema.parse(rule), identifiers);
     const block = getBlockAssignment(group);
     const experimentIdHash = expIdHash(rule, group, block);
@@ -104,7 +109,7 @@ function getBlockAssignment(group: ExperimentGroup): ExperimentBlock {
   return experimentBlockSchema.parse(concurrent);
 }
 
-const expIdHash = (experiment: OverrideRule, group: ExperimentGroup, block: ExperimentBlock) => hashStringSet([experiment.id, group.id, block.id]);
+const expIdHash = (experiment: Experiment, group: ExperimentGroup, block: ExperimentBlock) => hashStringSet([experiment.id, group.id, block.id]);
 
 // function expIdHash(experiment: OverrideRule, group: ExperimentGroup, block: ExperimentBlock): number {
 //   const combined = combineIds([experiment.id, group.id, block.id]);
