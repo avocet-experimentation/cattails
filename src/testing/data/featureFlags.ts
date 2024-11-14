@@ -1,4 +1,4 @@
-import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft } from "@estuary/types";
+import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord } from "@estuary/types";
 
 export const flagEnvironmentInit = () => ({
   prod: { name: 'prod', enabled: false, overrideRules: [], },
@@ -14,15 +14,12 @@ export const getExampleFlag = (
     type: 'boolean',
     default: false,
   },
-): BeforeId<FeatureFlag> => {
-  const currentTimeMs = Date.now();
+): DraftRecord<FeatureFlag> => {
   
   const flag = {
     name,
     description,
     value,
-    createdAt: currentTimeMs,
-    updatedAt: currentTimeMs,
     environments: flagEnvironmentInit(),
   }
 
