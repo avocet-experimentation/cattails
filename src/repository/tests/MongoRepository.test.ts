@@ -1,12 +1,15 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import env from '../../envalid.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { exampleFlags, getExampleFlag } from '../../lib/testData.js';
+import { exampleFlags, getExampleFlag } from './testData.js';
 import FeatureFlagRepository from '../FeatureFlagRepository.js'
+import { EstuaryMongoCollectionName } from '@estuary/types';
 // import ExperimentRepository from '../FeatureFlagRepository.js'
 
 const fflagRepo = new FeatureFlagRepository(env.MONGO_TESTING_URI);
 // const experimentRepo = new ExperimentRepository(env.MONGO_TESTING_URI);
+
+const eraseClientDb = new MongoClient(env.MONGO_TESTING_URI).db();
 
 const insertExampleFlags = async (resultsArray: (string | null)[]) => {
   const promises = [
@@ -18,10 +21,10 @@ const insertExampleFlags = async (resultsArray: (string | null)[]) => {
   resultsArray.splice(resultsArray.length, 0, ...resolved);
 }
 
+const eraseCollection = async (collectionName: EstuaryMongoCollectionName) => await eraseClientDb.dropCollection(collectionName);
 const eraseTestData = async () => {
-  const client = new MongoClient(env.MONGO_TESTING_URI);
-  await client.db().dropCollection('flags');
-  await client.db().dropCollection('experiments');
+  await eraseCollection('FeatureFlag');
+  await eraseCollection('Experiment');
 }
 
 beforeAll(eraseTestData);
@@ -47,6 +50,7 @@ describe('Feature Flags', () => {
 
   describe('getMany', () => {
     beforeAll(async () => {
+      await eraseTestData();
       const insertions = new Array(10).fill(null).map(() => fflagRepo.create(getExampleFlag())
         // .then((value) => console.log(value))
       );
