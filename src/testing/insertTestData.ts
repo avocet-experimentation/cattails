@@ -13,7 +13,10 @@ import { staticClientPropDefs } from './data/clientPropDefs.js';
  */
 
 const db = new MongoClient(env.MONGO_TESTING_URI).db();
-
+const colls = {
+  flags: db.collection('FeatureFlag'),
+  clientProps: db.collection('ClientPropDef'),
+}
 
 
 // const fflagRepo = new FeatureFlagRepository(env.MONGO_TESTING_URI);
@@ -41,11 +44,13 @@ const eraseTestData = async () => {
 }
 
 const insertFeatureFlag = async(obj: FeatureFlagDraft) => {
-  await db.collection('FeatureFlag').insertOne(obj);
+  colls.flags.insertOne(obj);
+  console.log(await colls.flags.find().toArray());
 }
 
 const insertClientPropDefs = async(arr: ClientPropDefDraft[]) => {
   await db.collection('ClientPropDef').insertMany(arr);
+  console.log(await colls.clientProps.find().toArray());
 }
 
 await insertFeatureFlag(staticFlags[0]);
