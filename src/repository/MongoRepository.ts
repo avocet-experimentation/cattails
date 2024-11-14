@@ -15,6 +15,7 @@ import {
   RequireOnly,
   AnyZodSchema,
   getPartialSchema,
+  schemaOmit,
 } from '@estuary/types';
 
 /* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
@@ -24,7 +25,6 @@ export type MongoRecord<T extends EstuaryMongoTypes> = WithId<BeforeId<T>>;
 // temporary/WIP
 // type findFilter<T extends InferFromSchema> = { [P in keyof WithId<T>]?: Condition<WithId<T>[P]> | undefined; };
 
-const exampleId = ObjectId.createFromTime(0);
 
 /**
  * Parent class for type-specific CRUD operations in Mongo. 
@@ -60,7 +60,8 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
       console.error('Attempted to create a document from an object that contains an id field! Does this document already exist?');
       return null;
     }
-    const safeParseResult = this.schema.safeParse({ id: exampleId.toHexString(), ...obj });
+    const schemaWithoutId = schemaOmit(this.schema, ['id']);
+    const safeParseResult = schemaWithoutId.safeParse(obj);
 
     if (!safeParseResult.success) { 
       console.error(safeParseResult.error);
