@@ -29,7 +29,7 @@ export const getExampleFlag = (
   return flag;
 };
 
-export const exampleFlags = [
+export const exampleFlags: FeatureFlagDraft[] = [
   getExampleFlag('testing flag'),
   getExampleFlag(
     'live update', 
