@@ -56,6 +56,7 @@ export const staticFlags = [
             type: 'ForcedValue',
             description: 'Always sets this flag to true in the dev environment',
             status: 'active',
+            value: true,
             enrollment: {
               attributes: ['id'],
               proportion: 1,
@@ -81,6 +82,7 @@ export const staticFlags = [
           type: 'ForcedValue',
           description: 'Always sets this flag to true',
           status: 'active',
+          value: true,
           enrollment: {
             attributes: ['id'],
             proportion: 1,

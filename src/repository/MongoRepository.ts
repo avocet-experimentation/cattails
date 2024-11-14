@@ -139,7 +139,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     const resultCursor = await this.collection.find(query);
     if (maxCount) resultCursor.limit(maxCount);
     const records = await resultCursor.toArray();
-    return records.map(this._recordToObject);
+    return records.map(this._recordToObject, this);
   }
   /**
    * Updates an existing record
@@ -162,16 +162,16 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     const result = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
     return result.deletedCount === 1;
   }
-  /**
-   * Pushes to an array within a record
-   * @returns true if a record was updated, or false otherwise
-   */
-  async push(pushUpdates: RequireOnly<T, 'id'>) {
-    const { id, ...updates } = pushUpdates;
-    const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
-    const result = await this.collection.updateOne(filter, [{ $push: updates }]);
-    return result.modifiedCount > 0;
-  }
+  // /**
+  //  * Pushes to an array within a record
+  //  * @returns true if a record was updated, or false otherwise
+  //  */
+  // async push(pushUpdates: RequireOnly<T, 'id'>) {
+  //   const { id, ...updates } = pushUpdates;
+  //   const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
+  //   const result = await this.collection.updateOne(filter, [{ $push: updates }]);
+  //   return result.modifiedCount > 0;
+  // }
   // /**
   //  * Removes an element from a record's array
   //  * @returns true if a record was updated, or false otherwise
