@@ -124,13 +124,13 @@ export const addRuleToFFlagHandler = async (
   //     .code(422)
   //     .send({ error: { code: 422, message: "inconsistent request" } });
   // }
-  const succeeded = await fflagRepo.addRule(fflagId, environment, rule);
-  if (!succeeded) {
-    return reply
-      .code(404)
-      .send({ error: { code: 404, message: "flag not found" } });
-  }
-  return reply.code(200).send({ ruleAdded: succeeded });
+  // const succeeded = await fflagRepo.addRule(fflagId, environment, rule);
+  // if (!succeeded) {
+  //   return reply
+  //     .code(404)
+  //     .send({ error: { code: 404, message: "flag not found" } });
+  // }
+  // return reply.code(200).send({ ruleAdded: succeeded });
 };
 
 export const deleteFFlagHandler = async (
