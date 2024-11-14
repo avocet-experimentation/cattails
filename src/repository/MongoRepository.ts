@@ -50,9 +50,15 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
 
   _recordToObject(document: MongoRecord<T>): T {
     const { _id, ...rest } = document;
-    const morphed = { id: _id.toHexString(), ...rest };
-    // return morphed;
-    return this.schema.parse(morphed);
+    const morphed = { id: document._id.toHexString(), ...rest };
+    return morphed as unknown as T; // todo: find a better solution for type checking without throwing
+    // const safeParseResult = this.schema.safeParse(morphed);
+    // if (safeParseResult.success) {
+    //   return safeParseResult.data;
+    // } else {
+    //   console.error(safeParseResult.error);
+    //   return morphed as unknown as T; 
+    // }
   }
 
   _validateNew<O extends OptionalUnlessRequiredId<BeforeId<T>>>(obj: O): O | null {
