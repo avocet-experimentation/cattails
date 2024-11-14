@@ -21,6 +21,8 @@ import {
 /* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
 
 export type MongoRecord<T extends EstuaryMongoTypes> = WithId<BeforeId<T>>;
+export type MongoRecordDraft<T extends EstuaryMongoTypes> = OptionalUnlessRequiredId<BeforeId<T>>;
+export type WithMongoStringId<T extends EstuaryMongoTypes> = RequireOnly<T, 'id'>;
 
 // temporary/WIP
 // type findFilter<T extends InferFromSchema> = { [P in keyof WithId<T>]?: Condition<WithId<T>[P]> | undefined; };
@@ -61,7 +63,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     // }
   }
 
-  _validateNew<O extends OptionalUnlessRequiredId<BeforeId<T>>>(obj: O): O | null {
+  _validateNew<O extends MongoRecordDraft<T>>(obj: O): O | null {
     if ('id' in obj) {
       console.error('Attempted to create a document from an object that contains an id field! Does this document already exist?');
       return null;
@@ -78,7 +80,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return validated;
   }
 
-  _validateUpdate<U extends RequireOnly<T, 'id'>>(obj: U): U | null {
+  _validateUpdate<U extends WithMongoStringId<T>>(obj: U): U | null {
     if (!('id' in obj) || typeof obj.id !== 'string') {
       console.error('Attempted to update a document without including an id field!');
       return null;
@@ -96,7 +98,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   /**
    * @returns a hex string representing the new record's ObjectId
    */
-  async create(newEntry: OptionalUnlessRequiredId<BeforeId<T>>): Promise<string | null> {
+  async create(newEntry: MongoRecordDraft<T>): Promise<string | null> {
     const validated = this._validateNew(newEntry);
     if (validated === null) return null;
     const result = await this.collection.insertOne(validated);
@@ -151,7 +153,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
    * Updates an existing record
    * @returns true if a record was updated, null if the object type is invalid, or false otherwise
    */
-  async update(partialEntry: RequireOnly<T, 'id'>): Promise<boolean | null> {
+  async update(partialEntry: WithMongoStringId<T>): Promise<boolean | null> {
     const validated = this._validateUpdate(partialEntry);
     if (validated === null) return null;
     const { id, ...updates } = validated;
@@ -168,21 +170,21 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     const result = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
     return result.deletedCount === 1;
   }
-  // /**
-  //  * Pushes to an array within a record
-  //  * @returns true if a record was updated, or false otherwise
-  //  */
-  // async push(pushUpdates: RequireOnly<T, 'id'>) {
-  //   const { id, ...updates } = pushUpdates;
-  //   const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
-  //   const result = await this.collection.updateOne(filter, [{ $push: updates }]);
-  //   return result.modifiedCount > 0;
-  // }
+  /**
+   * Pushes to an array within a record
+   * @returns true if a record was updated, or false otherwise
+   */
+  async push(pushUpdates: WithMongoStringId<T>) {
+    const { id, ...updates } = pushUpdates;
+    const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
+    const result = await this.collection.updateOne(filter, [{ $push: updates }]);
+    return result.modifiedCount > 0;
+  }
   // /**
   //  * Removes an element from a record's array
   //  * @returns true if a record was updated, or false otherwise
   //  */
-  // async pop(pushUpdates: RequireOnly<T, 'id'>) {
+  // async pop(pushUpdates: WithMongoStringId<T>) {
   //   const { id, ...updates } = pushUpdates;
   //   const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
   //   const result = await this.collection.updateOne(filter, [{ $push: pushUpdates }]);
