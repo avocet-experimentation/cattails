@@ -1,8 +1,8 @@
 import { ClientPropDef, clientPropDefSchema } from "@estuary/types";
 import MongoRepository from "./MongoRepository.js";
 
-export default class ClientPropDefRepository extends MongoRepository<ClientPropDef> {
+export default class ClientPropDefRepository extends MongoRepository<ClientPropDef, typeof clientPropDefSchema> {
   constructor(mongoUri: string) {
-    super('clientPropDef', clientPropDefSchema, mongoUri);
+    super('ClientPropDef', clientPropDefSchema, mongoUri);
   }
 }

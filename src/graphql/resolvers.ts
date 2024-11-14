@@ -1,42 +1,33 @@
-import { schema } from './schemas.js';
-import { EstuarySchema } from '@estuary/types';
-import env from "../envalid.js";
-import ClientPropDefRepository from '../repository/ClientPropDefRepository.js';
-import environmentRepository from '../repository/EnvironemntRepo.js';
-import UserRepository from '../repository/UserRepo.js';
-import ClientConnectionRepository from '../repository/ClientConnectionRepo.js';
+import { getTestingRepos } from '../repository/index.js';
 
-
-const clientPropDefRepo = new ClientPropDefRepository(env.MONGO_ADMIN_URI);
-const environmentRepo = new environmentRepository(env.MONGO_ADMIN_URI);
-const clientConnectionRepo = new UserRepository(env.MONGO_ADMIN_URI);
-const userRepo = new ClientConnectionRepository(env.MONGO_ADMIN_URI);
+const repos = getTestingRepos();
 
 export const resolvers = {
   Query: {
     clientPropDef: async (_: any, { id }: { id: string }) => {
-      return await clientPropDefRepo.get(id);
+      const fetched = await repos.clientPropDef.get(id);
+      return fetched;
     },
     allClientPropDefs: async (_: any, { limit }: { limit?: number;}) => {
-      return await clientPropDefRepo.getMany(limit);
+      return await repos.clientPropDef.getMany(limit);
     },
     environment: async (_: any, { id }: { id: string }) => {
-      return await environmentRepo.get(id);
+      return await repos.environment.get(id);
     },
     allEnvironments: async (_: any, { limit }: { limit?: number;}) => {
-      return await environmentRepo.getMany(limit);
+      return await repos.environment.getMany(limit);
     },
     clientConnection: async (_: any, { id }: { id: string }) => {
-      return await clientConnectionRepo.get(id);
+      return await repos.clientConnection.get(id);
     },
     allClientConnections: async (_: any, { limit }: { limit?: number;}) => {
-      return await clientConnectionRepo.getMany(limit);
+      return await repos.clientConnection.getMany(limit);
     },
     user: async (_: any, { id }: { id: string }) => {
-      return await userRepo.get(id);
+      return await repos.user.get(id);
     },
     allUsers: async (_: any, { limit }: { limit?: number;}) => {
-      return await userRepo.getMany(limit);
+      return await repos.user.getMany(limit);
     }
   }
 };

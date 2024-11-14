@@ -1,8 +1,8 @@
 import { User, userSchema } from "@estuary/types";
 import MongoRepository from "./MongoRepository.js";
 
-export default class UserRepository extends MongoRepository<User> {
+export default class UserRepository extends MongoRepository<User, typeof userSchema> {
   constructor(mongoUri: string) {
-    super('user', userSchema, mongoUri);
+    super('User', userSchema, mongoUri);
   }
 }
