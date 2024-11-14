@@ -16,6 +16,7 @@ import {
   AnyZodSchema,
   getPartialSchema,
   schemaOmit,
+  DraftRecord,
 } from '@estuary/types';
 
 /* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
@@ -63,7 +64,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     // }
   }
 
-  _validateNew<O extends MongoRecordDraft<T>>(obj: O): O | null {
+  _validateNew<O extends MongoRecordDraft<T>>(obj: DraftRecord<T>): O | null {
     if ('id' in obj) {
       console.error('Attempted to create a document from an object that contains an id field! Does this document already exist?');
       return null;
@@ -98,8 +99,13 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   /**
    * @returns a hex string representing the new record's ObjectId
    */
-  async create(newEntry: MongoRecordDraft<T>): Promise<string | null> {
-    const validated = this._validateNew(newEntry);
+  async create(newEntry: DraftRecord<T>): Promise<string | null> {
+    const withTimeStamps = {
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      ...newEntry,
+    }
+    const validated = this._validateNew(withTimeStamps);
     if (validated === null) return null;
     const result = await this.collection.insertOne(validated);
     return result.insertedId?.toHexString() ?? null;
@@ -144,7 +150,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
    * @param query A MongoDB query
    */
   async findMany(query: Filter<BeforeId<T>>, maxCount?: number): Promise<T[]> {
-    const resultCursor = await this.collection.find(query);
+    const resultCursor = this.collection.find(query);
     if (maxCount) resultCursor.limit(maxCount);
     const records = await resultCursor.toArray();
     return records.map(this._recordToObject, this);
