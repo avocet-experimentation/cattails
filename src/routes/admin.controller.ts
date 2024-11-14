@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { FeatureFlag, OverrideRule, PartialUpdate } from "@estuary/types";
+import { DraftRecord, FeatureFlag, OverrideRule, PartialUpdate } from "@estuary/types";
 import { FlagIdParam, FlagNameParam } from "./routes.types.js";
 import { getAdminRepos } from "../repository/index.js";
 import { MongoRecordDraft, WithMongoStringId } from "../repository/MongoRepository.js";
@@ -9,7 +9,7 @@ import { MongoRecordDraft, WithMongoStringId } from "../repository/MongoReposito
 const { fflagRepo } = getAdminRepos();
 
 export const createFFlagHandler = async (
-  request: FastifyRequest<{ Body: MongoRecordDraft<FeatureFlag> }>,
+  request: FastifyRequest<{ Body: DraftRecord<FeatureFlag> }>,
   reply: FastifyReply
 ) => {
 
