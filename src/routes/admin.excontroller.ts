@@ -1,8 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Experiment } from "@estuary/types";
+import { Experiment, PartialUpdate } from "@estuary/types";
 import { ExperimentIdParam, ExperimentNameParam } from "./routes.types.js";
 import { DraftRecord, WithMongoStringId } from "../lib/MongoAPI.js";
-import { PartialUpdate } from "../repository/MongoRepository.types.js";
 import { getAdminRepos } from "../repository/index.js";
 
 // Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
