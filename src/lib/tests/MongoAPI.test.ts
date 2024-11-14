@@ -3,7 +3,7 @@ import env from '../../envalid.js';
 import { MongoClient, ObjectId } from 'mongodb';
 import { FeatureFlag } from '@estuary/types';
 import MongoAPI, { DraftRecord } from '../MongoAPI.ts';
-import { exampleFlags, getExampleFlag } from '../../repository/tests/testData.js';
+import { exampleFlags, getExampleFlag } from '../../testing/data/featureFlags.ts';
 
 // create an API for the testing database
 const api = new MongoAPI(env.MONGO_TESTING_URI);

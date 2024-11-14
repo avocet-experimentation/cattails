@@ -9,7 +9,7 @@
     "build": "rm -rf dist && tsup --clean --format esm ./src/index.ts",
     "start": "node dist/index.js",
     "test": "npx vitest",
-    "testData": "./mongodb/init-db.sh && npx tsx ./src/repository/tests/insertTestData.ts",
+    "testData": "./mongodb/init-db.sh && npx tsx ./src/testing/insertTestData.ts",
     "coverage": "npx vitest run --coverage",
     "compose": "(cd mongodb && docker compose up -d && bash init-db.sh)"
   },
