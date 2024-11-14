@@ -162,7 +162,8 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   async update(partialEntry: WithMongoStringId<T>): Promise<boolean | null> {
     const validated = this._validateUpdate(partialEntry);
     if (validated === null) return null;
-    const { id, ...updates } = validated;
+    const { id, ...rest } = validated;
+    const updates = { ...rest, updatedAt: Date.now() };
     const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
     const result = await this.collection.updateOne(filter, [{ $set: updates }]);
     return result.modifiedCount > 0;
