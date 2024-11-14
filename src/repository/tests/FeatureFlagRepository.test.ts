@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import env from '../../envalid.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { exampleFlags, getExampleFlag } from './testData.js';
+import { exampleFlags, getExampleFlag } from '../../testing/data/featureFlags.js';
 import FeatureFlagRepository from '../FeatureFlagRepository.js'
 import { EstuaryMongoCollectionName } from '@estuary/types';
 // import ExperimentRepository from '../FeatureFlagRepository.js'
