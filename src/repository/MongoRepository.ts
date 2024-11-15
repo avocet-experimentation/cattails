@@ -182,20 +182,15 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
    * Pushes to an array within a record
    * @returns true if a record was updated, or false otherwise
    */
-  async push(pushUpdates: WithMongoStringId<T>) {
-    const { id, ...updates } = pushUpdates;
-    const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
-    const result = await this.collection.updateOne(filter, { $push: updates } as unknown as PushOperator<BeforeId<T>>);
+  async push(id: string, keyPath: string, newEntry: unknown) {
+    const op = { [keyPath]: newEntry } as PushOperator<BeforeId<T>>;
+
+    const filter = {
+      _id: ObjectId.createFromHexString(id),
+      [keyPath]: { $exists: true }
+    } as Filter<BeforeId<T>>;
+
+    const result = await this.collection.updateOne(filter, { $push: op });
     return result.modifiedCount > 0;
   }
-  // /**
-  //  * Removes an element from a record's array
-  //  * @returns true if a record was updated, or false otherwise
-  //  */
-  // async pop(pushUpdates: WithMongoStringId<T>) {
-  //   const { id, ...updates } = pushUpdates;
-  //   const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
-  //   const result = await this.collection.updateOne(filter, [{ $push: pushUpdates }]);
-  //   return result.modifiedCount > 0;
-  // }
 }

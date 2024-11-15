@@ -3,7 +3,7 @@ import env from '../../envalid.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
 import { exampleFlags, getExampleFlag } from '../../testing/data/featureFlags.js';
 import FeatureFlagRepository from '../FeatureFlagRepository.js'
-import { EstuaryMongoCollectionName } from '@estuary/types';
+import { EstuaryMongoCollectionName, ForcedValue, OverrideRule } from '@estuary/types';
 // import ExperimentRepository from '../FeatureFlagRepository.js'
 
 const fflagRepo = new FeatureFlagRepository(env.MONGO_TESTING_URI);
@@ -132,7 +132,6 @@ describe('Feature Flags', () => {
     afterAll(eraseTestData);
   });
 
-  // WIP
   describe('update', () => {
     let insertResults: (string | null)[] = [];
     beforeAll(async () => await insertExampleFlags(insertResults));
@@ -180,6 +179,36 @@ describe('Feature Flags', () => {
     it("doesn't overwrite if no document matches the `id`", async () => {
       const result = await fflagRepo.findOne({ name: 'asdfoasihgda'});
       expect(result).toBeNull();
+    });
+    
+    afterAll(eraseTestData);
+  });
+
+  // WIP
+  describe('push', () => {
+    let insertResults: (string | null)[] = [];
+    beforeAll(async () => await insertExampleFlags(insertResults));
+
+    it("Adds an element to an array", async () => {
+      const first = insertResults[0];
+      if (first === null) return;
+      const firstDoc = await fflagRepo.get(first);
+      console.log(firstDoc);
+
+      const newRule: ForcedValue = {
+        type: 'ForcedValue',
+        status: 'draft',
+        value: true,
+        enrollment: {
+          attributes: [],
+          proportion: 1,
+        }
+      };
+      const result = await fflagRepo.push(first, 'environments.staging.overrideRules', newRule);
+      expect(result).toBeTruthy();
+
+      const updatedFirst = await fflagRepo.get(first);
+      expect(updatedFirst?.environments.staging?.overrideRules).toContainEqual(newRule);
     });
     
     afterAll(eraseTestData);
