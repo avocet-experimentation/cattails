@@ -101,7 +101,12 @@ export const patchFFlagHandler = async (
       .send({ error: { code: 422, message: "inconsistent request" } });
   }
   const updatedId = await fflagRepo.update(request.body);
-  if (!updatedId) {
+  if (updatedId === null) {
+    return reply
+      .code(404)
+      .send({ error: { code: 400, message: "the input failed validation" } });
+    
+  } if (updatedId === false) {
     return reply
       .code(404)
       .send({ error: { code: 404, message: "flag not found" } });
