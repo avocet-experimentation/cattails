@@ -44,7 +44,7 @@ const eraseTestData = async () => {
 }
 
 const insertFeatureFlag = async(obj: FeatureFlagDraft) => {
-  colls.flags.insertOne(obj);
+  await colls.flags.insertOne(obj);
   console.log(await colls.flags.find().toArray());
 }
 
