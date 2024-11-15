@@ -1,6 +1,6 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import env from '../../envalid.js';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
 import { exampleFlags, getExampleFlag } from '../../testing/data/featureFlags.js';
 import FeatureFlagRepository from '../FeatureFlagRepository.js'
 import { EstuaryMongoCollectionName } from '@estuary/types';
@@ -164,9 +164,16 @@ describe('Feature Flags', () => {
       const updateName = 'updated testing flag';
       const result = await fflagRepo.update({ id: second, name: updateName });
       expect(result).toBeTruthy();
+
       const updatedFirst = await fflagRepo.get(second);
       expect(updatedFirst).not.toBeNull();
-      const reconstructed = { ...updatedFirst, name: original.name };
+      if (updatedFirst === null) return;
+
+      const { createdAt, updatedAt, ...withoutTimeStamps } = updatedFirst;
+      expectTypeOf(createdAt).toBeNumber();
+      expectTypeOf(updatedAt).toBeNumber();
+      expect(updatedAt).toBeGreaterThanOrEqual(createdAt);
+      const reconstructed = { ...withoutTimeStamps, name: original.name };
       expect(reconstructed).toStrictEqual({ id: second, ...original });
     });
 
