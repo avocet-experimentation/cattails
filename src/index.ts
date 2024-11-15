@@ -1,4 +1,7 @@
 import { fastify, FastifyInstance } from "fastify";
+import mercurius from "mercurius";
+import { schema } from "./graphql/schemas.js"
+import { resolvers } from "./graphql/resolvers.js";
 import env from "./envalid.js";
 import { getClientRoutes } from "./routes/client.routes.js";
 import { getAdminRoutes } from "./routes/admin.routes.js";
@@ -12,6 +15,11 @@ export const buildServer = async (): Promise<FastifyInstance> => {
   // register routes for out flag entity
   await server.register(getClientRoutes, { prefix: "api" });
   await server.register(getAdminRoutes, { prefix: "admin" });
+  await server.register(mercurius, {
+    schema,
+    resolvers,
+    graphiql: true,
+  });
   return server;
 };
 

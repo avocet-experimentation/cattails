@@ -5,15 +5,14 @@ import { getAdminRepos } from "../repository/index.js";
 import { MongoRecordDraft, WithMongoStringId } from "../repository/MongoRepository.js";
 
 // Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
-
-const { fflagRepo } = getAdminRepos();
+const { featureFlag } = getAdminRepos();
 
 export const createFFlagHandler = async (
   request: FastifyRequest<{ Body: DraftRecord<FeatureFlag> }>,
   reply: FastifyReply
 ) => {
 
-  const documentId = await fflagRepo.create(request.body);
+  const documentId = await featureFlag.create(request.body);
   if (!documentId) {
     return reply
       .code(409)
@@ -27,7 +26,7 @@ export const getFFlagByIdHandler = async (
   reply: FastifyReply
 ) => {
   const { fflagId } = request.params;
-  const fflag = await fflagRepo.get(fflagId);
+  const fflag = await featureFlag.get(fflagId);
   if (!fflag) {
     return reply
       .code(404)
@@ -41,7 +40,7 @@ export const getFFlagByNameHandler = async (
   reply: FastifyReply
 ): Promise<FeatureFlag> => {
   const fflagName = request.params.fflagName;
-  const fflag = await fflagRepo.findOne({ name: fflagName });
+  const fflag = await featureFlag.findOne({ name: fflagName });
   if (!fflag) {
     return reply
       .code(404)
@@ -54,7 +53,7 @@ export const getAllFFlagsHandler = async (
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<FeatureFlag[]> => {
-  const fflags = await fflagRepo.getMany();
+  const fflags = await featureFlag.getMany();
   if (!fflags) {
     return reply
       .code(404)
@@ -78,7 +77,7 @@ export const updateFFlagHandler = async (
       .code(422)
       .send({ error: { code: 422, message: "inconsistent request" } });
   }
-  const resultDocId = await fflagRepo.update(request.body);
+  const resultDocId = await featureFlag.update(request.body);
   if (!resultDocId) {
     return reply
       .code(404)
@@ -100,7 +99,7 @@ export const patchFFlagHandler = async (
       .code(422)
       .send({ error: { code: 422, message: "inconsistent request" } });
   }
-  const updatedId = await fflagRepo.update(request.body);
+  const updatedId = await featureFlag.update(request.body);
   if (!updatedId) {
     return reply
       .code(404)
