@@ -6,7 +6,6 @@ import {
   Filter,
   OptionalUnlessRequiredId,
   WithId,
-  PushOperator,
 } from 'mongodb';
 import {
   EstuarySchema,
