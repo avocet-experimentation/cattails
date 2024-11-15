@@ -1,9 +1,9 @@
-export const clientPropDefSchema = `
+export const readPropDefSchema = `
   type ClientPropDef {
     id: ID!          
     name: String!            
     description: String      
-    dataType: ClientPropValue
+    dataType: String
     isIdentifier: Boolean!   
   }
 
@@ -19,6 +19,24 @@ export const clientPropDefSchema = `
 
   type NumberValue {
     value: Float
+  }
+
+  input BooleanValueInput {
+    value: Boolean
+  }
+
+  input StringValueInput {
+    value: String
+  }
+
+  input NumberValueInput {
+    value: Float
+  }
+
+  input ClientPropValueInput {
+    booleanValue: BooleanValueInput
+    stringValue: StringValueInput
+    numberValue: NumberValueInput
   }
 `;
 
@@ -45,6 +63,27 @@ export const clientConnectionSchema = `
     name: String!      
     environmentId: ID! 
     clientKeyHash: String  # Optional, as it is TBD in Zod schema??
+  }
+`;
+
+const mutationSchema = `
+  type Mutation {
+    updateClientPropDef(
+      id: ID!,
+      name: String,
+      description: String,
+      dataType: String,
+      isIdentifier: Boolean
+    ): ClientPropDef
+
+    createClientPropDef(
+      name: String!
+      description: String
+      dataType: String
+      isIdentifier: Boolean
+    ): ID
+
+    deleteClientPropDef(id: ID!): ID
   }
 `;
 
@@ -76,7 +115,8 @@ export const userSchema = `
 `;
 
 export const schema = `
-  ${clientPropDefSchema}
+  ${mutationSchema}
+  ${readPropDefSchema}
   ${environmentSchema}
   ${clientConnectionSchema}
   ${userSchema}
