@@ -102,13 +102,13 @@ const mutationSchemas = `
 
     createUser(
       email: String,
-      permissions: PermissionsLevel!
+      permissions: PermissionLevel!
     ): User
 
     updateUser(
       id: ID!,
       email: String,
-      permissions: PermissionsLevel
+      permissions: PermissionLevel
     ): User
 
     deleteUser(id: ID!): Boolean
@@ -129,28 +129,28 @@ const mutationSchemas = `
     deleteEnvironment(id: ID!): Boolean
 
     createExperiment(
-      name: String!
+      name: String!,
       status: ExperimentStatus!
-      enrollmentAttributes: [String]!
-      enrollmentProportion: Float!
-      flagId: String!
-      description: String
-      hypothesis: String
-      startTimestamp: Float
-      endTimestamp: Float
+      enrollmentAttributes: [String]!,
+      enrollmentProportion: Float!,
+      flagId: String!,
+      description: String,
+      hypothesis: String,
+      startTimestamp: Float,
+      endTimestamp: Float,
     ): Experiment
 
     updateExperiment(
-      id: ID!
-      name: String
-      status: ExperimentStatus
-      enrollmentAttributes: [String]
-      enrollmentProportion: Float
-      flagId: String
-      description: String
-      hypothesis: String
-      startTimestamp: Float
-      endTimestamp: Float
+      id: ID!,
+      name: String,
+      status: ExperimentStatus,
+      enrollmentAttributes: [String],
+      enrollmentProportion: Float,
+      flagId: String,
+      description: String,
+      hypothesis: String,
+      startTimestamp: Float,
+      endTimestamp: Float,
     ): Experiment
 
     deleteExperiment(id: ID!): Boolean
@@ -185,21 +185,24 @@ export const userSchema = `
 `;
 
 const experimentSchema = `
-  experiment(id: ID!): Experiment
-
-  allExperiments(
-    status: ExperimentStatus,    
-    name: String,                                  
-  ): [Experiment]
-
-
-  experimentsByFlag(flagId: String!): [Experiment]
-
   enum ExperimentStatus {
     draft
     active
     paused
     completed
+  }
+
+  type Experiment {
+    id: ID!
+    name: String!
+    status: ExperimentStatus!
+    enrollmentAttributes: [String]!
+    enrollmentProportion: Float!
+    flagId: String!
+    description: String
+    hypothesis: String
+    startTimestamp: Float
+    endTimestamp: Float
   }
 `
 
