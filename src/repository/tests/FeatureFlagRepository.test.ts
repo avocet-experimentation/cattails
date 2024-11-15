@@ -164,7 +164,7 @@ describe('Feature Flags', () => {
       const updateName = 'updated testing flag';
       const result = await fflagRepo.update({ id: second, name: updateName });
       expect(result).toBeTruthy();
-      
+
       const updatedFirst = await fflagRepo.get(second);
       expect(updatedFirst).not.toBeNull();
       if (updatedFirst === null) return;
