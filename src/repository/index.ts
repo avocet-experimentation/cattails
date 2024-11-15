@@ -32,7 +32,7 @@ export function getTestingRepos() {
     experiment: new ExperimentRepository(env.MONGO_TESTING_URI),
     clientPropDef: new ClientPropDefRepository(env.MONGO_TESTING_URI),
     environment: new EnvironmentRepository(env.MONGO_TESTING_URI),
-    clientConnection: new UserRepository(env.MONGO_TESTING_URI),
-    user: new ClientConnectionRepository(env.MONGO_TESTING_URI),
+    user: new UserRepository(env.MONGO_TESTING_URI),
+    clientConnection: new ClientConnectionRepository(env.MONGO_TESTING_URI),
   }
 }
