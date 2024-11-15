@@ -123,19 +123,19 @@ export const addRuleToFFlagHandler = async (
 ) => {
   const { fflagId } = request.params;
   const { environment, rule } = request.body;
-  return reply.code(500).send({ error: { code: 500, message: "Route under maintenance" } });
-  // if (fflagId !== request.body.id) {
-  //   return reply
-  //     .code(422)
-  //     .send({ error: { code: 422, message: "inconsistent request" } });
-  // }
-  // const succeeded = await fflagRepo.addRule(fflagId, environment, rule);
-  // if (!succeeded) {
-  //   return reply
-  //     .code(404)
-  //     .send({ error: { code: 404, message: "flag not found" } });
-  // }
-  // return reply.code(200).send({ ruleAdded: succeeded });
+  // return reply.code(500).send({ error: { code: 500, message: "Route under maintenance" } });
+  if (fflagId !== request.body.id) {
+    return reply
+      .code(422)
+      .send({ error: { code: 422, message: "inconsistent request" } });
+  }
+  const succeeded = await fflagRepo.addRule(fflagId, environment, rule);
+  if (!succeeded) {
+    return reply
+      .code(404)
+      .send({ error: { code: 404, message: "flag not found" } });
+  }
+  return reply.code(200).send({ ruleAdded: succeeded });
 };
 
 export const deleteFFlagHandler = async (
