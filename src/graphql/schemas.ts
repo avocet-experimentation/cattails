@@ -66,7 +66,7 @@ export const clientConnectionSchema = `
   }
 `;
 
-const mutationSchema = `
+const mutationSchemas = `
   type Mutation {
     updateClientPropDef(
       id: ID!,
@@ -102,13 +102,13 @@ const mutationSchema = `
 
     createUser(
       email: String,
-      permissions: PermissionsInput!
+      permissions: PermissionsLevel!
     ): User
 
     updateUser(
       id: ID!,
       email: String,
-      permissions: PermissionsInput
+      permissions: PermissionsLevel
     ): User
 
     deleteUser(id: ID!): Boolean
@@ -127,8 +127,33 @@ const mutationSchema = `
     ): Environment
 
     deleteEnvironment(id: ID!): Boolean
-    
 
+    createExperiment(
+      name: String!
+      status: ExperimentStatus!
+      enrollmentAttributes: [String]!
+      enrollmentProportion: Float!
+      flagId: String!
+      description: String
+      hypothesis: String
+      startTimestamp: Float
+      endTimestamp: Float
+    ): Experiment
+
+    updateExperiment(
+      id: ID!
+      name: String
+      status: ExperimentStatus
+      enrollmentAttributes: [String]
+      enrollmentProportion: Float
+      flagId: String
+      description: String
+      hypothesis: String
+      startTimestamp: Float
+      endTimestamp: Float
+    ): Experiment
+
+    deleteExperiment(id: ID!): Boolean
   }
 `;
 
@@ -159,12 +184,32 @@ export const userSchema = `
   }
 `;
 
+const experimentSchema = `
+  experiment(id: ID!): Experiment
+
+  allExperiments(
+    status: ExperimentStatus,    
+    name: String,                                  
+  ): [Experiment]
+
+
+  experimentsByFlag(flagId: String!): [Experiment]
+
+  enum ExperimentStatus {
+    draft
+    active
+    paused
+    completed
+  }
+`
+
 export const schema = `
-  ${mutationSchema}
+  ${mutationSchemas}
   ${readPropDefSchema}
   ${environmentSchema}
   ${clientConnectionSchema}
   ${userSchema}
+  ${experimentSchema}
   
   type Query {
     clientPropDef(id: ID!): ClientPropDef
@@ -175,5 +220,7 @@ export const schema = `
     allClientConnections(limit: Int, offset: Int): [ClientConnection]
     user(id: ID!): User
     allUsers(limit: Int, offset: Int): [User]
+    experiment(id: ID!): Experiment
+    allExperiments(name: String, status: ExperimentStatus): [Experiment]
   }
 `;
