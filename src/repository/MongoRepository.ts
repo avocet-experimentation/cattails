@@ -6,6 +6,7 @@ import {
   Filter,
   OptionalUnlessRequiredId,
   WithId,
+  PushOperator,
 } from 'mongodb';
 import {
   EstuarySchema,
@@ -184,7 +185,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   async push(pushUpdates: WithMongoStringId<T>) {
     const { id, ...updates } = pushUpdates;
     const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
-    const result = await this.collection.updateOne(filter, { $push: updates });
+    const result = await this.collection.updateOne(filter, { $push: updates } as unknown as PushOperator<BeforeId<T>>);
     return result.modifiedCount > 0;
   }
   // /**
