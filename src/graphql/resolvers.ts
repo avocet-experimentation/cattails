@@ -1,5 +1,5 @@
 import { getTestingRepos } from '../repository/index.js';
-import { ClientPropDef, ClientConnection, User, Environment } from "@estuary/types";
+import { ClientPropDef, ClientConnection, User, Environment, Experiment } from "@estuary/types";
 const repos = getTestingRepos();
 
 export const resolvers = {
@@ -258,7 +258,99 @@ export const resolvers = {
 
       return true;
     },
-    
+    // createExperiment: async (
+    //   _: any,
+    //   { name, status, enrollmentAttributes, enrollmentProportion, flagId, description, hypothesis, startTimestamp, endTimestamp }: {
+    //     name: string;
+    //     status: "draft" | "active" | "paused" | "completed";
+    //     enrollmentAttributes: string[];
+    //     enrollmentProportion: number;
+    //     flagId: string;
+    //     description?: string;
+    //     hypothesis?: string;
+    //     startTimestamp?: number;
+    //     endTimestamp?: number;
+    //   }
+    // ): Promise<Experiment> => {
+    //   const newExperiment = {
+    //     name,
+    //     status,
+    //     enrollment: {
+    //       attributes: enrollmentAttributes,
+    //       proportion: enrollmentProportion,
+    //     },
+    //     flagId,
+    //     description,
+    //     hypothesis,
+    //     startTimestamp,
+    //     endTimestamp,
+    //     createdAt: Date.now(),
+    //     updatedAt: Date.now(),
+    //     type: "Experiment",
+    //     groups: [],
+    //     dependents: [],
+    //   };
+
+    //   const newId = await repos.experiment.create(newExperiment);
+
+    //   if (!newId) {
+    //     throw new Error('Failed to create experiment');
+    //   }
+
+    //   return await repos.experiment.get(newId);
+    // },
+
+    updateExperiment: async (
+      _: any,
+      { id, name, status, enrollmentAttributes, enrollmentProportion, flagId, description, hypothesis, startTimestamp, endTimestamp }: {
+        id: string;
+        name?: string;
+        status?: "draft" | "active" | "paused" | "completed";
+        enrollmentAttributes?: string[];
+        enrollmentProportion?: number;
+        flagId?: string;
+        description?: string;
+        hypothesis?: string;
+        startTimestamp?: number;
+        endTimestamp?: number;
+      }
+    ): Promise<Experiment | null> => {
+      const updates: Partial<Experiment> = {};
+
+      if (name !== undefined) updates.name = name;
+      if (status !== undefined) updates.status = status;
+      if (enrollmentAttributes !== undefined) updates.enrollment = { attributes: enrollmentAttributes, proportion: updates.enrollment?.proportion ?? 0 };
+      if (enrollmentProportion !== undefined) updates.enrollment = { attributes: updates.enrollment?.attributes ?? [], proportion: enrollmentProportion };
+      if (flagId !== undefined) updates.flagId = flagId;
+      if (description !== undefined) updates.description = description;
+      if (hypothesis !== undefined) updates.hypothesis = hypothesis;
+      if (startTimestamp !== undefined) updates.startTimestamp = startTimestamp;
+      if (endTimestamp !== undefined) updates.endTimestamp = endTimestamp;
+
+      updates.updatedAt = Date.now();
+
+      const success = await repos.experiment.update({ id, ...updates });
+
+      if (!success) {
+        throw new Error('Failed to update experiment');
+      }
+
+      return await repos.experiment.get(id);
+    },
+
+
+    deleteExperiment: async (
+      _: any,
+      { id }: { id: string }
+    ): Promise<boolean> => {
+      const success = await repos.experiment.delete(id);
+
+      if (!success) {
+        throw new Error('Failed to delete experiment');
+      }
+
+      return true;
+    },
     
   
   }
