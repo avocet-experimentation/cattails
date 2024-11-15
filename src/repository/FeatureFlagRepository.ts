@@ -18,10 +18,11 @@ export default class FeatureFlagRepository extends MongoRepository<
    * Add an override rule
    */
   async addRule(flagId: string, environment: string, rule: OverrideRule) {
-    const result = await this.push({
-      id: flagId,
-      [`environments.${environment}.overrideRules`]: rule,
-    });
+    const result = await this.push(
+      flagId,
+      `environments.${environment}.overrideRules`,
+        rule,
+    );
     return result;
   }
 
