@@ -84,6 +84,51 @@ const mutationSchema = `
     ): ID
 
     deleteClientPropDef(id: ID!): ID
+
+    createClientConnection(
+      name: String!
+      description: String
+      environmentId: ID!
+    ): ClientConnection
+
+    updateClientConnection(
+      id: ID!
+      name: String
+      description: String
+      environmentId: ID
+    ): ClientConnection
+
+    deleteClientConnection(id: ID!): ID
+
+    createUser(
+      email: String,
+      permissions: PermissionsInput!
+    ): User
+
+    updateUser(
+      id: ID!,
+      email: String,
+      permissions: PermissionsInput
+    ): User
+
+    deleteUser(id: ID!): Boolean
+
+    createEnvironment(
+      name: EnvironmentName!,
+      description: String,
+      defaultEnabled: Boolean!
+    ): Environment
+
+    updateEnvironment(
+      id: ID!,
+      name: EnvironmentName,
+      description: String,
+      defaultEnabled: Boolean
+    ): Environment
+
+    deleteEnvironment(id: ID!): Boolean
+    
+
   }
 `;
 
