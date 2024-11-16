@@ -5,11 +5,12 @@ import {
   FlagClientMapping,
 } from "@estuary/types";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { currentFlagValue } from "../lib/flagValue.js";
 import { getClientRepos } from "../repository/index.js";
 import { printDetail } from "../lib/index.js";
+import ClientFlagManager from "../lib/ClientFlagManager.js";
 
-const { fflagRepo } = getClientRepos();
+const repos = getClientRepos();
+const flagManager = new ClientFlagManager();
 // until we have API keys corresponding to environments
 const PLACEHOLDER_ENVIRONMENT = 'dev';
 
@@ -32,14 +33,15 @@ export const fetchFFlagHandler = async (
 ): Promise<FlagClientValue> => {
   const { fflagName } = request.params;
   const { environment, clientProps } = request.body;
-  const featureFlag = await fflagRepo.findOne({ name: fflagName });
-  if (!featureFlag) {
-    return reply
-      .code(404)
-      .send({ error: { code: 404, message: "flag not found" } });
-  }
+  // const featureFlag = await repos.featureFlag.findOne({ name: fflagName });
+  // if (!featureFlag) {
+  //   return reply
+  //     .code(404)
+  //     .send({ error: { code: 404, message: "flag not found" } });
+  // }
 
-  const currentValue = currentFlagValue(featureFlag, PLACEHOLDER_ENVIRONMENT, clientProps);
+  // const currentValue = currentFlagValue(featureFlag, PLACEHOLDER_ENVIRONMENT, clientProps);
+  const currentValue = await flagManager.currentFlagValue(fflagName, PLACEHOLDER_ENVIRONMENT, clientProps);
 
   return flagClientValueSchema.parse(currentValue);
 };
@@ -49,7 +51,7 @@ export const getEnvironmentFFlagsHandler = async (
   reply: FastifyReply
 ): Promise<FlagClientMapping> => {
   const { environment, clientProps } = request.body;
-  const featureFlags = await fflagRepo.getEnvironmentFlags(environment);
+  const featureFlags = await repos.featureFlag.getEnvironmentFlags(environment);
   if (!featureFlags) {
     return reply
       .code(404)
@@ -59,9 +61,12 @@ export const getEnvironmentFFlagsHandler = async (
   // printDetail({ featureFlags });
   // console.log({ overrideRules: fflags[0].environments.dev?.overrideRules });
 
-  const mapping = featureFlags.reduce((acc, featureFlag) => {
-    Object.assign(acc, { [featureFlag.name]: currentFlagValue(featureFlag, PLACEHOLDER_ENVIRONMENT, clientProps) });
-    return acc;
-  }, {} as FlagClientMapping);
+  let mapping: FlagClientMapping = {};
+  for (let i = 0; i < featureFlags.length; i += 1) {
+    const { name } = featureFlags[i];
+    const value = await flagManager.currentFlagValue(name, PLACEHOLDER_ENVIRONMENT, clientProps);
+    Object.assign(mapping, { [name]: value });
+
+  }
   return mapping;
 };

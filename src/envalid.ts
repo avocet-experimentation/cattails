@@ -8,6 +8,7 @@ const env = cleanEnv(process.env, {
   MONGO_TESTING_DATABASE: str(),
   MONGO_TESTING_URI: str(),
   SERVICE_PORT: num(),
+  SALT_ROUNDS: num(),
 });
 
 export default env;
