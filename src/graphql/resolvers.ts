@@ -1,5 +1,5 @@
 import { getTestingRepos } from '../repository/index.js';
-import { ClientPropDef, ClientConnection, User, Environment, Experiment } from "@estuary/types";
+import { ClientPropDef, ClientConnection, User, Environment, Experiment, ExperimentDraft, UserDraft } from "@estuary/types";
 const repos = getTestingRepos();
 
 export const resolvers = {
@@ -28,7 +28,13 @@ export const resolvers = {
     },
     allUsers: async (_: any, { limit }: { limit?: number;}) => {
       return await repos.user.getMany(limit);
-    }
+    },
+    experiment: async(_: any, { id }: { id: string }) => {
+      return await repos.experiment.get(id);
+    },
+    allExperiments: async (_: any, { limit }: { limit?: number;}) => {
+      return await repos.experiment.getMany(limit);
+    },
   },
   Mutation: {
     updateClientPropDef: async (
@@ -56,14 +62,14 @@ export const resolvers = {
       }
     
       // Return the updated data, meaning it worked
-      // return await repos.clientPropDef.get(id);
-      return true;
+      return await repos.clientPropDef.get(id);
+      // return success;
     },
     createClientPropDef: async (
       _: any,
       { name, description, dataType, isIdentifier }: { 
         name: string; 
-        description?: string; 
+        description?: string; k
         dataType: "string" | "number" | "boolean",
         isIdentifier?: boolean 
       }
@@ -86,12 +92,14 @@ export const resolvers = {
     deleteClientPropDef: async (
       _: any,
       { id }: { id: string }
-    ): Promise<boolean> => {
+    ): Promise<string> => {
       const success = await repos.clientPropDef.delete(id);
-      if (success) {
-        return true;
+
+      if (!success) {
+        throw new Error('Failed to delete ClientConnection');
       }
-      throw new Error('Failed to delete ClientPropDef');
+
+      return id;
     },
 
     updateClientConnection: async (
@@ -157,25 +165,23 @@ export const resolvers = {
 
       return id;
     },
-    // createUser: async (
-    //   _: any,
-    //   { email, permissions }: { email?: string; permissions: Record<string, string> }
-    // ): Promise<User | null> => {
-    //   const newEntry: Partial<User> = {
-    //     email,
-    //     permissions,
-    //     createdAt: Date.now(),
-    //     updatedAt: Date.now(),
-    //   };
+    createUser: async (
+      _: any,
+      { email, permissions }: { email?: string; permissions: Record<string, string> }
+    ): Promise<User | null> => {
+      const newEntry: UserDraft = {
+        email,
+        permissions,
+      };
     
-    //   const userId = await repos.user.create(newEntry);
+      const userId = await repos.user.create(newEntry);
     
-    //   if (!userId) {
-    //     throw new Error('Failed to create User');
-    //   }
+      if (!userId) {
+        throw new Error('Failed to create User');
+      }
     
-    //   return await repos.user.get(userId); // Fetch and return the created user
-    // },
+      return await repos.user.get(userId); // Fetch and return the created user
+    },
     updateUser: async (
       _: any,
       { id, email, permissions }: { id: string; email?: string; permissions?: Record<string, string> }
@@ -258,47 +264,48 @@ export const resolvers = {
 
       return true;
     },
-    // createExperiment: async (
-    //   _: any,
-    //   { name, status, enrollmentAttributes, enrollmentProportion, flagId, description, hypothesis, startTimestamp, endTimestamp }: {
-    //     name: string;
-    //     status: "draft" | "active" | "paused" | "completed";
-    //     enrollmentAttributes: string[];
-    //     enrollmentProportion: number;
-    //     flagId: string;
-    //     description?: string;
-    //     hypothesis?: string;
-    //     startTimestamp?: number;
-    //     endTimestamp?: number;
-    //   }
-    // ): Promise<Experiment> => {
-    //   const newExperiment = {
-    //     name,
-    //     status,
-    //     enrollment: {
-    //       attributes: enrollmentAttributes,
-    //       proportion: enrollmentProportion,
-    //     },
-    //     flagId,
-    //     description,
-    //     hypothesis,
-    //     startTimestamp,
-    //     endTimestamp,
-    //     createdAt: Date.now(),
-    //     updatedAt: Date.now(),
-    //     type: "Experiment",
-    //     groups: [],
-    //     dependents: [],
-    //   };
+    createExperiment: async (
+      _: any,
+      { name, status, enrollmentAttributes, enrollmentProportion, flagId, description, hypothesis, startTimestamp, endTimestamp }: {
+        name: string;
+        status: "draft" | "active" | "paused" | "completed";
+        enrollmentAttributes: string[];
+        enrollmentProportion: number;
+        flagId: string;
+        description?: string;
+        hypothesis?: string;
+        startTimestamp?: number;
+        endTimestamp?: number;
+      }
+    ): Promise<Boolean> => {
+      const newExperiment = {
+        name,
+        status,
+        enrollment: {
+          attribute: enrollmentAttributes,
+          proportion: enrollmentProportion
+        },
+        flagId,
+        description,
+        hypothesis,
+        startTimestamp,
+        endTimestamp,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        type: "Experiment",
+        groups: [],
+        dependents: [],
+      };
 
-    //   const newId = await repos.experiment.create(newExperiment);
+      const newId = await repos.experiment.create(newExperiment);
+      console.log("Experiment created with ID:", newId);
 
-    //   if (!newId) {
-    //     throw new Error('Failed to create experiment');
-    //   }
+      if (!newId) {
+        throw new Error('Failed to create experiment');
+      }
 
-    //   return await repos.experiment.get(newId);
-    // },
+      return true;
+    },
 
     updateExperiment: async (
       _: any,
@@ -314,7 +321,7 @@ export const resolvers = {
         startTimestamp?: number;
         endTimestamp?: number;
       }
-    ): Promise<Experiment | null> => {
+    ): Promise<Boolean> => {
       const updates: Partial<Experiment> = {};
 
       if (name !== undefined) updates.name = name;
@@ -335,7 +342,7 @@ export const resolvers = {
         throw new Error('Failed to update experiment');
       }
 
-      return await repos.experiment.get(id);
+      return true;
     },
 
 

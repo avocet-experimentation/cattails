@@ -15,7 +15,7 @@ export const getExampleFlag = (
     default: false,
   },
 ): DraftRecord<FeatureFlag> => {
-  
+  const currentTimeMs = Date.now();
   const flag = {
     name,
     description,
