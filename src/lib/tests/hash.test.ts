@@ -16,7 +16,7 @@ const exampleUUIDs: readonly string[] = [
 ];
 
 // WIP - need to test many more varied inputs
-describe('hashStringDJB2', async () => {
+describe('Hashing sets of strings', async () => {
   it('Returns a 32-bit integer given an array of strings representing ObjectIds', async () => {
     const hash = hashStringSet(exampleObjectIds);
     expect(hash).toBeGreaterThanOrEqual((-2) ** 31);

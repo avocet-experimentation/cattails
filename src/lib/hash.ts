@@ -1,4 +1,4 @@
-import { ClientPropMapping } from '@estuary/types';
+import { clientIdentifier, ClientPropValue } from '@estuary/types';
 import crypto from 'node:crypto';
 /*
 MD5 vs DJB2:
@@ -50,9 +50,8 @@ export function hashStringSet(strings: readonly string[]) {
   return hashStringDJB2(combined);
 }
 
-export function hashIdentifiers(identifierMap: ClientPropMapping) {
-  const identifiers = Object.entries(identifierMap);
-  const sortedIdentifiers = identifiers.toSorted((a, b) => (a[0] > b[0]) ? 1 : -1);
+export function hashIdentifiers(identifiers: clientIdentifier[]) {
+  const sortedIdentifiers = identifiers.toSorted();
   let string = '';
 
   sortedIdentifiers.forEach(([ name, value ]) => {
@@ -70,21 +69,27 @@ export function hashIdentifiers(identifierMap: ClientPropMapping) {
  * @param assignmentOptions An array of IDs for possible assignments
  * @returns one of the options passed in
  */
-export function hashAndAssign(identifiers: ClientPropMapping, assignmentOptions: readonly string[]): string {
+export function hashAndAssign(
+  identifiers: [string, ClientPropValue][],
+  assignmentOptions: readonly string[]
+): string {
   const hash = hashIdentifiers(identifiers);
   const sortedOptions = [...assignmentOptions].sort();
   const index = Math.abs(hash) % sortedOptions.length;
   return sortedOptions[index];
 }
 
-// const flagValues = ['active', 'inactive', 'pending', 'suspended'];
+export function hashAndCompare(
+  identifiers: [string, ClientPropValue][],
+  proportion: number
+): boolean {
+  if (proportion === 0) return false;
+  const hash = hashIdentifiers(identifiers);
+  const compareValue = (proportion * 2 ** 32) - (2 ** 31) - 1;
+  return hash < compareValue;
+}
 
-// console.log(hashAndAssign({z: 'z',  az: 'a', ab: 'ab', bc: 'b', email: 'sean.a.mentele@gmail.com', name: 'sean'}, flagValues) === hashAndAssign({ email: 'sean.a.mentele@gmail.com', name: 'sean', z: 'z',  az: 'a', ab: 'ab', bc: 'b'}, flagValues));
-// console.log(hashAndAssign({name: 'sean', email: 'sean.a.mentele@gmail.com'}, flagValues) ===  hashAndAssign({email: 'sean.a.mentele@gmail.com', name: 'sean'}, flagValues))
-// console.log(hashAndAssign({userId: "12345", userName: "john_doe"}, flagValues));
-// console.log(hashAndAssign({name: 'sean', email: 'sean.a.mentele@gmail.com'}, flagValues));
-
-// function hashIdentifiersMD5(identifiers: Identifier[]) {
+// function hashIdentifiersMD5(identifiers: string[]) {
 //   const sortedKeys = Object.keys(identifiers).sort();
 //   let string = '';
 
@@ -101,7 +106,7 @@ export function hashAndAssign(identifiers: ClientPropMapping, assignmentOptions:
 //   return hash;
 // }
 
-// function hashAndAssignMD5(identifiers: Identifier[], flagValues=['Control', 'Variant']) {
+// function hashAndAssignMD5(identifiers: string[], flagValues=['Control', 'Variant']) {
 //   const hashInt = hashIdentifiersMD5(identifiers);
 //   const flagArray = Array.from(flagValues).sort();
 
