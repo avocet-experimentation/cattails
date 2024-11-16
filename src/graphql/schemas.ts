@@ -1,4 +1,4 @@
-export const readPropDefSchema = `
+const readPropDefSchema = `
   type ClientPropDef {
     id: ID!          
     name: String!            
@@ -40,7 +40,55 @@ export const readPropDefSchema = `
   }
 `;
 
-export const environmentSchema = `
+const experimentSchema = `
+  enum ExperimentStatus {
+    draft
+    active
+    paused
+    completed
+  }
+
+  type Experiment {
+    id: ID!
+    name: String!
+    status: ExperimentStatus!
+    enrollmentAttributes: [String]!
+    enrollmentProportion: Float!
+    flagId: String!
+    description: String
+    hypothesis: String
+    startTimestamp: Float
+    endTimestamp: Float
+  }
+`
+
+const userSchema = `
+  enum PermissionLevel {
+    none
+    view
+    edit
+    admin
+  }
+
+  type UserPermissions {
+    fflags: PermissionLevel!
+    experiments: PermissionLevel!
+    environments: PermissionLevel!
+    users: PermissionLevel!
+    attributes: PermissionLevel!
+    events: PermissionLevel!
+  }
+
+  type User {
+    id: ID!                
+    username: String!      
+    email: String!         
+    passwordHash: String!  
+    permissions: UserPermissions!
+  }
+`;
+
+const environmentSchema = `
 type Environment {
   id: ID!                  
   name: EnvironmentName!
@@ -56,13 +104,13 @@ enum EnvironmentName {
 }
 `;
 
-export const clientConnectionSchema = `
+const clientConnectionSchema = `
   # ClientConnection Type
   type ClientConnection {
     id: ID!            
     name: String!      
     environmentId: ID! 
-    clientKeyHash: String  # Optional, as it is TBD in Zod schema??
+    description: String!
   }
 `;
 
@@ -157,55 +205,6 @@ const mutationSchemas = `
   }
 `;
 
-export const userSchema = `
-  enum PermissionLevel {
-    none
-    view
-    edit
-    admin
-  }
-
-  type UserPermissions {
-    fflags: PermissionLevel!
-    experiments: PermissionLevel!
-    environments: PermissionLevel!
-    users: PermissionLevel!
-    attributes: PermissionLevel!
-    events: PermissionLevel!
-  }
-
-  # User Type
-  type User {
-    id: ID!                
-    username: String!      
-    email: String!         
-    passwordHash: String!  
-    permissions: UserPermissions!
-  }
-`;
-
-const experimentSchema = `
-  enum ExperimentStatus {
-    draft
-    active
-    paused
-    completed
-  }
-
-  type Experiment {
-    id: ID!
-    name: String!
-    status: ExperimentStatus!
-    enrollmentAttributes: [String]!
-    enrollmentProportion: Float!
-    flagId: String!
-    description: String
-    hypothesis: String
-    startTimestamp: Float
-    endTimestamp: Float
-  }
-`
-
 export const schema = `
   ${mutationSchemas}
   ${readPropDefSchema}
@@ -224,6 +223,6 @@ export const schema = `
     user(id: ID!): User
     allUsers(limit: Int, offset: Int): [User]
     experiment(id: ID!): Experiment
-    allExperiments(name: String, status: ExperimentStatus): [Experiment]
+    allExperiments(limit: Int, offset: Int): [Experiment]
   }
 `;
