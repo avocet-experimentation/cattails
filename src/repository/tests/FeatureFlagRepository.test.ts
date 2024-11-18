@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import env from '../../envalid.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { exampleFlags, getExampleFlag } from '../../testing/data/featureFlags.js';
+import { exampleFlags, getExampleFlag, staticFlags } from '../../testing/data/featureFlags.js';
 import FeatureFlagRepository from '../FeatureFlagRepository.js'
 import { EstuaryMongoCollectionName, ForcedValue, OverrideRule } from '@estuary/types';
 // import ExperimentRepository from '../FeatureFlagRepository.js'
@@ -172,6 +172,7 @@ describe('MongoRepository Methods', () => {
       expectTypeOf(createdAt).toBeNumber();
       expectTypeOf(updatedAt).toBeNumber();
       expect(updatedAt).toBeGreaterThanOrEqual(createdAt);
+
       const reconstructed = { ...withoutTimeStamps, name: original.name };
       expect(reconstructed).toStrictEqual({ id: second, ...original });
     });
@@ -193,7 +194,7 @@ describe('MongoRepository Methods', () => {
       const first = insertResults[0];
       if (first === null) return;
       const firstDoc = await fflagRepo.get(first);
-      console.log(firstDoc);
+      // console.log(firstDoc);
 
       const newRule: ForcedValue = {
         type: 'ForcedValue',
@@ -210,6 +211,31 @@ describe('MongoRepository Methods', () => {
 
       const updatedFirst = await fflagRepo.get(first);
       expect(updatedFirst?.environments.staging?.overrideRules).toContainEqual(newRule);
+    });
+    
+    afterAll(eraseTestData);
+  });
+
+  // WIP
+  describe('pull', () => {
+    let insertResults: (string | null)[] = [];
+    beforeAll(async () => {
+      const result = await fflagRepo.collection.insertOne(staticFlags[0]);
+      insertResults.push(result.insertedId?.toHexString() ?? null);
+    });
+
+    it("Removes an element from an array", async () => {
+      const firstId = insertResults[0];
+      if (firstId === null) return;
+      const firstDoc = await fflagRepo.get(firstId);
+      console.log(firstDoc);
+
+      const ruleToRemove = staticFlags[0].environments.dev?.overrideRules[0];
+      const result = await fflagRepo.pull(firstId, 'environments.dev.overrideRules', ruleToRemove);
+      expect(result).toBeTruthy();
+
+      const updatedFirst = await fflagRepo.get(firstId);
+      expect(updatedFirst?.environments.dev?.overrideRules).not.toContainEqual(ruleToRemove);
     });
     
     afterAll(eraseTestData);

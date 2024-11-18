@@ -15,14 +15,14 @@ export const getExampleFlag = (
     initial: false,
   },
 ): DraftRecord<FeatureFlag> => {
-  const currentTimeMs = Date.now();
+  // const currentTimeMs = Date.now();
   
   const flag = {
     name,
     description,
     value,
-    createdAt: currentTimeMs,
-    updatedAt: currentTimeMs,
+    // createdAt: currentTimeMs,
+    // updatedAt: currentTimeMs,
     environments: flagEnvironmentInit(),
   }
 
