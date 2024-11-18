@@ -1,4 +1,4 @@
-import { ClientPropMapping, EnvironmentName, experimentSchema, FlagClientValue, FlagCurrentValue, forcedValueSchema, OverrideRule, OverrideRuleUnion } from "@estuary/types";
+import { ClientPropMapping, EnvironmentName, experimentSchema, FeatureFlag, FlagClientMapping, FlagClientValue, FlagCurrentValue, forcedValueSchema, OverrideRule, OverrideRuleUnion } from "@estuary/types";
 import env from "../envalid.js";
 import ExperimentRepository from "../repository/ExperimentRepository.js";
 import FeatureFlagRepository from "../repository/FeatureFlagRepository.js";
@@ -48,6 +48,51 @@ export default class ClientFlagManager {
     const flag = await this.flags.findOne({ name: flagName });
     if (!flag) return null;
 
+    return this.computeFlagValue(flag, EnvironmentName, clientProps);
+  }
+
+  /**
+   * Gets currentFlagValue for every flag in the specified environment
+   * 
+   * todo:
+   * - take a client API key instead of an environment name, then:
+   *   - fetch SDK connections
+   *   - find one that corresponds to the received key
+   *   - return null if none match
+   *   - else get the environment for that connection
+   */
+  async environmentFlagValues(
+    environmentName: EnvironmentName,
+    clientProps: ClientPropMapping
+  ): Promise<FlagClientMapping | null> {
+    const featureFlags = await this.flags.getEnvironmentFlags(environmentName);
+    if (!featureFlags) {
+      return null;
+    }
+  
+    // printDetail({ featureFlags });
+    // console.log({ overrideRules: fflags[0].environments.dev?.overrideRules });
+  
+    const promises = [];
+    let mapping: FlagClientMapping = {};
+    for (let i = 0; i < featureFlags.length; i += 1) {
+      const flag = featureFlags[i];
+      const promise = this.computeFlagValue(flag, PLACEHOLDER_ENVIRONMENT, clientProps);
+      // transform the promise to a tuple of [name, FlagClientValue] upon resolution
+      promises.push(promise.then((result) => [flag.name, result]));
+    }
+
+    const resolve = await Promise.all(promises);
+    console.log({resolve});
+    return Object.fromEntries(resolve);
+    
+  }
+
+  private async computeFlagValue(
+    flag: FeatureFlag,
+    EnvironmentName: EnvironmentName,
+    clientProps: ClientPropMapping
+  ): Promise<FlagClientValue> {
     // define a fallback
     const defaultReturn = { value: flag.value.initial, hash: await this.randomHash() };
 
@@ -59,11 +104,13 @@ export default class ClientFlagManager {
     const selectedRule = this.enroll(overrideRules, clientProps);
     if (selectedRule === undefined) return defaultReturn;
       
-    return this.ruleValueAndHash(selectedRule, flag.id, clientProps);
+    const ruleValue = await this.ruleValueAndHash(selectedRule, flag.id, clientProps);
+    return ruleValue ?? defaultReturn;
+
   }
 
   // random enrollment in a rule such as an experiment
-  enroll(
+  private enroll(
     overrideRules: OverrideRuleUnion[],
     clientProps: ClientPropMapping
   ): OverrideRuleUnion | undefined {
@@ -82,7 +129,7 @@ export default class ClientFlagManager {
    * Returns true if a rule is active and either there are no start/end timestamps,
    * or the current time is in the range defined by them
    */
-  ruleInEffect(rule: OverrideRuleUnion): boolean {
+  private ruleInEffect(rule: OverrideRuleUnion): boolean {
     if (rule.status !== 'active') return false;
     const startTime = rule.startTimestamp ?? 0;
     const endTime = rule.endTimestamp ?? Infinity;
@@ -90,7 +137,7 @@ export default class ClientFlagManager {
     return startTime <= currentTime && currentTime < endTime;
   }
 
-  async ruleValueAndHash(
+  private async ruleValueAndHash(
     rule: OverrideRuleUnion,
     flagId: string,
     identifiers: ClientPropMapping
