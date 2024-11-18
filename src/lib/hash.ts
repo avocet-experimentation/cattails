@@ -1,4 +1,4 @@
-import { clientIdentifier, ClientPropValue } from '@estuary/types';
+import { ClientIdentifier, ClientPropValue } from '@estuary/types';
 import crypto from 'node:crypto';
 /*
 MD5 vs DJB2:
@@ -50,7 +50,7 @@ export function hashStringSet(strings: readonly string[]) {
   return hashStringDJB2(combined);
 }
 
-export function hashIdentifiers(identifiers: clientIdentifier[]) {
+export function hashIdentifiers(identifiers: ClientIdentifier[]) {
   const sortedIdentifiers = identifiers.toSorted();
   let string = '';
 
