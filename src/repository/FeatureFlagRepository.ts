@@ -25,6 +25,17 @@ export default class FeatureFlagRepository extends MongoRepository<
     );
     return result;
   }
+  /**
+   * (WIP) Remove an override rule
+   */
+  async removeRule(flagId: string, environment: string, rule: OverrideRule) {
+    const result = await this.pull(
+      flagId,
+      `environments.${environment}.overrideRules`,
+        rule,
+    );
+    return result;
+  }
 
   async getEnvironmentFlags(environment: string) {
     return this.findMany({ [`environments.${environment}.enabled`]: true });

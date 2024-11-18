@@ -7,6 +7,7 @@ import {
   OptionalUnlessRequiredId,
   WithId,
   PushOperator,
+  PullOperator,
 } from 'mongodb';
 import {
   EstuarySchema,
@@ -191,6 +192,21 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     } as Filter<BeforeId<T>>;
 
     const result = await this.collection.updateOne(filter, { $push: op });
+    return result.modifiedCount > 0;
+  }
+  /**
+   * (WIP) Removes an element from an array within a record
+   * @returns true if a record was updated, or false otherwise
+   */
+  async pull(id: string, keyPath: string, toDelete: unknown) {
+    const op = { [keyPath]: toDelete } as PullOperator<BeforeId<T>>;
+
+    const filter = {
+      _id: ObjectId.createFromHexString(id),
+      [keyPath]: { $exists: true }
+    } as Filter<BeforeId<T>>;
+
+    const result = await this.collection.updateOne(filter, { $pull: op });
     return result.modifiedCount > 0;
   }
 }
