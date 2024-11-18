@@ -29,7 +29,7 @@ const eraseTestData = async () => {
 
 beforeAll(eraseTestData);
 
-describe('Feature Flags', () => {
+describe('MongoRepository Methods', () => {
   
   describe('create', () => {
     beforeEach(eraseTestData);
@@ -144,7 +144,7 @@ describe('Feature Flags', () => {
         id: first,
         value: {
           type: 'number' as const,
-          default: 3,
+          initial: 3,
         },
       };
       const result = await fflagRepo.update(updateObject);
@@ -199,6 +199,7 @@ describe('Feature Flags', () => {
         type: 'ForcedValue',
         status: 'draft',
         value: true,
+        environment: 'dev',
         enrollment: {
           attributes: [],
           proportion: 1,
