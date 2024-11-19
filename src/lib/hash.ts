@@ -39,14 +39,14 @@ export function hashStringDJB2(input: string) {
  * Combines a collection of strings presumed to be unique IDs.
  * Used for creating a hash of experiment, group, and block ID for sending to client
  */
-export function combineIds(ids: readonly string[]): string {
+export function sortAndCombineIds(ids: readonly string[]): string {
   const sortedIds = ids.toSorted();
   const combined = sortedIds.join('');
   return combined;
 }
 
 export function hashStringSet(strings: readonly string[]) {
-  const combined = combineIds(strings);
+  const combined = sortAndCombineIds(strings);
   return hashStringDJB2(combined);
 }
 

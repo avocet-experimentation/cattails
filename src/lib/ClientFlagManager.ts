@@ -1,11 +1,19 @@
-import { ClientPropMapping, EnvironmentName, experimentSchema, FeatureFlag, FlagClientMapping, FlagClientValue, FlagCurrentValue, forcedValueSchema, OverrideRule, OverrideRuleUnion } from "@estuary/types";
+import {
+  ClientPropMapping,
+  EnvironmentName,
+  FeatureFlag,
+  FlagClientMapping,
+  FlagClientValue,
+  FlagCurrentValue,
+  forcedValueSchema,
+  OverrideRuleUnion,
+} from "@estuary/types";
 import env from "../envalid.js";
-import ExperimentRepository from "../repository/ExperimentRepository.js";
 import FeatureFlagRepository from "../repository/FeatureFlagRepository.js";
-import { hashAndCompare, hashIdentifiers, hashStringDJB2, hashStringSet } from "./hash.js";
+import { hashAndCompare } from "./hash.js";
 import { randomUUID } from "crypto";
-import * as bcrypt from 'bcrypt';
-import { ExperimentManager } from "./ExperimentManager.js";
+// import * as bcrypt from 'bcrypt';
+import ExperimentManager from "./ExperimentManager.js";
 
 const PLACEHOLDER_ENVIRONMENT = 'dev';
 
@@ -74,7 +82,7 @@ export default class ClientFlagManager {
     // console.log({ overrideRules: fflags[0].environments.dev?.overrideRules });
   
     const promises = [];
-    let mapping: FlagClientMapping = {};
+
     for (let i = 0; i < featureFlags.length; i += 1) {
       const flag = featureFlags[i];
       const promise = this.computeFlagValue(flag, PLACEHOLDER_ENVIRONMENT, clientProps);
@@ -94,7 +102,10 @@ export default class ClientFlagManager {
     clientProps: ClientPropMapping
   ): Promise<FlagClientValue> {
     // define a fallback
-    const defaultReturn = { value: flag.value.initial, hash: await this.randomHash() };
+    const defaultReturn = {
+      value: flag.value.initial,
+      hash: this.defaultIdHash(flag.id),
+    };
 
     if (flag.environments[EnvironmentName] === undefined) {
       return defaultReturn;
@@ -162,7 +173,7 @@ export default class ClientFlagManager {
     } else if (rule.type === 'ForcedValue') {
       return {
         value: forcedValueSchema.parse(rule).value,
-        hash: await this.randomHash(),
+        hash: this.defaultIdHash(flagId),
       };
     } else {
       console.error(`Rule type was invalid!`);
@@ -171,9 +182,17 @@ export default class ClientFlagManager {
     }
   }
   
-  async randomHash() {
-    return bcrypt.hash(randomUUID(), env.SALT_ROUNDS);
+  // async randomHash() {
+  //   return bcrypt.hash(randomUUID(), env.SALT_ROUNDS);
+  // }
+  
+  
+  defaultIdHash(flagId: string) {
+    return flagId + '+' + this.randomIds(2);
+  }
+  
+  async randomIds(count: number) {
+    const idArr = new Array(count).fill(null).map(randomUUID);
+    return idArr.join('+');
   }
 }
-
-
