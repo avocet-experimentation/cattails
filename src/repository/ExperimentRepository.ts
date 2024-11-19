@@ -1,4 +1,4 @@
-import { Experiment, experimentSchema } from "@estuary/types";
+import { Experiment, ExperimentDraft, experimentDraftSchema, experimentSchema } from "@estuary/types";
 import MongoRepository from "./MongoRepository.js";
 
 export default class ExperimentRepository extends MongoRepository<Experiment, typeof experimentSchema> {

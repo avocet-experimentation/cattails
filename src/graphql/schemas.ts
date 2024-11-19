@@ -1,10 +1,10 @@
 const readPropDefSchema = `
-  type ClientPropDef {
-    id: ID!          
-    name: String!            
-    description: String      
-    dataType: String
-    isIdentifier: Boolean!   
+type ClientPropDef {
+  id: ID!          
+  name: String!            
+  description: String      
+  dataType: String
+  isIdentifier: Boolean!   
   }
 
   union ClientPropValue = BooleanValue | StringValue | NumberValue
@@ -38,6 +38,7 @@ const readPropDefSchema = `
     stringValue: StringValueInput
     numberValue: NumberValueInput
   }
+  
 `;
 
 const experimentSchema = `
@@ -67,23 +68,31 @@ const userSchema = `
     none
     view
     edit
-    admin
+    full
   }
+
 
   type UserPermissions {
-    fflags: PermissionLevel!
-    experiments: PermissionLevel!
-    environments: PermissionLevel!
-    users: PermissionLevel!
-    attributes: PermissionLevel!
-    events: PermissionLevel!
+    FeatureFlag: PermissionLevel!
+    Experiment: PermissionLevel!
+    Environment: PermissionLevel!
+    User: PermissionLevel!
+    ClientPropDef: PermissionLevel!
+    ClientConnection: PermissionLevel!
   }
 
+  input UserPermissionsInput {
+    FeatureFlag: PermissionLevel!
+    Experiment: PermissionLevel!
+    Environment: PermissionLevel!
+    User: PermissionLevel!
+    ClientPropDef: PermissionLevel!
+    ClientConnection: PermissionLevel!
+  }
+  
   type User {
-    id: ID!                
-    username: String!      
+    id: ID!                    
     email: String!         
-    passwordHash: String!  
     permissions: UserPermissions!
   }
 `;
@@ -113,6 +122,33 @@ const clientConnectionSchema = `
     description: String!
   }
 `;
+
+const featureFlagSchema = `
+type FeatureFlag {
+  id: ID!             
+  name: String!       
+  description: String 
+  enabled: Boolean!   
+  environment: String!
+  createdAt: String!  
+  updatedAt: String!  
+}
+
+input CreateFeatureFlagInput {
+  name: String!
+  description: String
+  enabled: Boolean!
+  environment: String!
+}
+
+input UpdateFeatureFlagInput {
+  id: ID!
+  name: String
+  description: String
+  enabled: Boolean
+  environment: String
+}
+`
 
 const mutationSchemas = `
   type Mutation {
@@ -149,17 +185,18 @@ const mutationSchemas = `
     deleteClientConnection(id: ID!): ID
 
     createUser(
-      email: String,
-      permissions: PermissionLevel!
+      email: String!,
+      permissions: UserPermissionsInput!
     ): User
+
 
     updateUser(
       id: ID!,
       email: String,
-      permissions: PermissionLevel
+      permissions: UserPermissionsInput!
     ): User
 
-    deleteUser(id: ID!): Boolean
+    deleteUser(id: ID!): ID
 
     createEnvironment(
       name: EnvironmentName!,
@@ -202,6 +239,10 @@ const mutationSchemas = `
     ): Experiment
 
     deleteExperiment(id: ID!): Boolean
+
+    createFeatureFlag(input: CreateFeatureFlagInput!): FeatureFlag!
+    updateFeatureFlag(input: UpdateFeatureFlagInput!): FeatureFlag!
+    deleteFeatureFlag(id: ID!): ID
   }
 `;
 
@@ -212,6 +253,7 @@ export const schema = `
   ${clientConnectionSchema}
   ${userSchema}
   ${experimentSchema}
+  ${featureFlagSchema}
   
   type Query {
     clientPropDef(id: ID!): ClientPropDef
@@ -224,5 +266,8 @@ export const schema = `
     allUsers(limit: Int, offset: Int): [User]
     experiment(id: ID!): Experiment
     allExperiments(limit: Int, offset: Int): [Experiment]
-  }
-`;
+    FeatureFlag(id: ID!): FeatureFlag
+    allFeatureFlags(limit: Int, offset: Int): [FeatureFlag]
+    }
+    `;
+    
