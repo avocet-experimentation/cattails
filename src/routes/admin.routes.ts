@@ -37,8 +37,8 @@ export const getAdminRoutes = async (server: FastifyInstance): Promise<FastifyIn
   // server.put("/experiments/id/:experimentId", updateExperimentHandler); // update entire experiment (do we need this?)
   server.patch("/experiments/id/:experimentId", patchExperimentHandler);
   server.delete("/experiments/id/:experimentId", deleteExperimentHandler); // delete entire experiment record
-  server.get("/experiment/id/:experimentId", getExperimentByIdHandler); // return experiment by its id
-  server.get("/experiment/name/:experimentName", getExperimentByNameHandler); // return experiment by its name
+  server.get("/experiments/id/:experimentId", getExperimentByIdHandler); // return experiment by its id
+  server.get("/experiments/name/:experimentName", getExperimentByNameHandler); // return experiment by its name
   server.get("/experiments", getAllExperimentsHandler); // returns all experiments
   
   return server;
