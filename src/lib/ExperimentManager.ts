@@ -1,20 +1,24 @@
-import { Experiment, experimentSchema, ClientPropMapping, ExperimentGroup, experimentGroupSchema, Treatment, treatmentSchema, FlagClientValue, ExperimentReference } from "@estuary/types";
+import {
+  Experiment,
+  experimentSchema,
+  ClientPropMapping,
+  ExperimentGroup,
+  experimentGroupSchema,
+  Treatment,
+  treatmentSchema,
+  ExperimentReference,
+} from "@estuary/types";
 import * as bcrypt from 'bcrypt';
-import { combineIds, hashAndAssign } from "./hash.js";
+import { hashAndAssign } from "./hash.js";
 import env from "../envalid.js";
 import ExperimentRepository from "../repository/ExperimentRepository.js";
 
 
-export class ExperimentManager {
+export default class ExperimentManager {
   experiments: ExperimentRepository;
 
   constructor() {
     this.experiments = new ExperimentRepository(env.MONGO_API_URI);
-  }
-
-  isExperiment(arg: unknown): arg is Experiment {
-    const safeParseResult = experimentSchema.safeParse(arg);
-    return safeParseResult.success;
   }
 
   async getTreatmentAndHash(
@@ -31,7 +35,7 @@ export class ExperimentManager {
     const treatment = this.currentTreatment(experiment, group);
     if (!treatment) return null;
 
-    const hash = await this.experimentIdHash(experiment, group, treatment);
+    const hash = [experiment.id, group.id, treatment.id].join('+');
     return { treatment, hash };
   }
 
@@ -92,14 +96,5 @@ export class ExperimentManager {
 
     if (!concurrent) return null;
     return treatmentSchema.parse(concurrent);
-  }
-
-  async experimentIdHash(
-    experiment: Experiment,
-    group: ExperimentGroup,
-    treatment: Treatment,
-  ) {
-    const combined = combineIds([experiment.id, group.id, treatment.id]);
-    return bcrypt.hash(combined, env.SALT_ROUNDS);
   }
 }
