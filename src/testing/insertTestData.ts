@@ -80,7 +80,7 @@ const insertUser = async(arg: UserDraft) => {
     console.log(await colls.users.find().toArray());
   }
   // await eraseTestData();
-  await insertUser(staticUser);
+  // await insertUser(staticUser);
   // await insertExperiments(staticExperiment);
   // await insertEnvironment(staticEnvironment);
   // await insertClientConnections(staticClientConnections);
@@ -91,3 +91,4 @@ const insertUser = async(arg: UserDraft) => {
   console.log("Experiment:", await colls.experiments.find().toArray()); 
   console.log("Environment:", await colls.environments.find().toArray());
   console.log("Client Prop Defs: ", await colls.clientProps.find().toArray());
+  console.log("User:", await colls.users.find().toArray());
