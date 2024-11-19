@@ -94,13 +94,13 @@ export const getExperimentByIdHandler = async (
   reply: FastifyReply
 ): Promise<Experiment> => {
   const { experimentId } = request.params;
-  const fflag = await experiment.get(experimentId);
-  if (!fflag) {
+  const foundExperiment = await experiment.get(experimentId);
+  if (!foundExperiment) {
     return reply
       .code(404)
       .send({ error: { code: 404, message: "Experiment not found" } });
   }
-  return fflag;
+  return foundExperiment;
 };
 
 export const getExperimentByNameHandler = async (
