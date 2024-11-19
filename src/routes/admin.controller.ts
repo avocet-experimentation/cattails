@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { DraftRecord, FeatureFlag, OverrideRule, PartialUpdate } from "@estuary/types";
 import { FlagIdParam, FlagNameParam } from "./routes.types.js";
 import { getAdminRepos } from "../repository/index.js";
-import { MongoRecordDraft, WithMongoStringId } from "../repository/MongoRepository.js";
+import { PartialWithStringId } from "../repository/MongoRepository.js";
 
 // Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
 const { featureFlag } = getAdminRepos();
@@ -66,7 +66,7 @@ export const getAllFFlagsHandler = async (
 export const updateFFlagHandler = async (
   request: FastifyRequest<{
     Params: FlagIdParam;
-    Body: WithMongoStringId<FeatureFlag>;
+    Body: PartialWithStringId<FeatureFlag>;
   }>,
   reply: FastifyReply
 ) => {

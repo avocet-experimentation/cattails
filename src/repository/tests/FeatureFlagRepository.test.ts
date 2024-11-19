@@ -39,11 +39,11 @@ describe('MongoRepository CRUD Methods', () => {
       expect(typeof result).toBe('string');
     });
 
-    // it("rejects if passed an object with a `.id`", async () => {
-    //   const input = { ...getExampleFlag(), id: crypto.randomUUID() };
-    //   // const badInsert = async () => await db.createFlag(input);
-    //   expect(async () => await fflagRepo.create(input)).rejects.toThrow();
-    // });
+    it("returns null if passed an object with a `.id`", async () => {
+      const input = { ...getExampleFlag(), id: crypto.randomUUID() };
+      const result = await fflagRepo.create(input);
+      expect(result).toBeNull();
+    });
 
     afterAll(eraseTestData);
   });
@@ -186,7 +186,7 @@ describe('MongoRepository CRUD Methods', () => {
   });
 
   // WIP
-  describe('updateKey', () => {
+  describe('updateKeySafe', () => {
     let insertResults: (string | null)[] = [];
     beforeAll(async () => await insertExampleFlags(insertResults));
 
@@ -194,7 +194,7 @@ describe('MongoRepository CRUD Methods', () => {
       const first = insertResults[0];
       if (first === null) return;
 
-      const result = await fflagRepo.updateKey(first, 'value.initial', true);
+      const result = await fflagRepo.updateKeySafe(first, 'value.initial', true);
       expect(result).toBeTruthy();
 
       const updatedFirst = await fflagRepo.get(first);
@@ -210,7 +210,7 @@ describe('MongoRepository CRUD Methods', () => {
       // console.log(firstDoc);
 
       // const result = await fflagRepo.updateKey(first, 'value.initial', true);
-      const result = await fflagRepo.updateKey(first, 'value.type', 'number') // this might break the schema
+      const result = await fflagRepo.updateKeySafe(first, 'value.type', 'number') // this might break the schema
       // expect(result).toBeFalsy();
       const updatedFirst = await fflagRepo.get(first);
       console.log(updatedFirst)
@@ -301,17 +301,28 @@ describe('MongoRepository CRUD Methods', () => {
 });
 
 describe('MongoRepository Helper Methods', () => {
-  describe('deepMerge', () => {
-    it('Adds all subkeys on nested objects', () => {
-      const obj1 = { value: { type: 'boolean' }};
-      const obj2 = { value: { initial: false }};
-      const merged = fflagRepo._deepMerge(obj1, obj2);
+  describe('keyPathToObject', () => {
+    it('Creates a nested object given a dot-separated keyPath', () => {
+      const path = 'environments.prod.enabled';
+      const newValue = false;
+      const result = fflagRepo._keyPathToObject(path, newValue);
+      expect(result).toMatchObject({
+        environments: {
+          prod: {
+            enabled: false,
+          },
+        },
+      });
+    });
+
+    it.skip('Creates an object given a keyPath with just one key', () => {
+
+    });
+
+    it.skip('Handles empty strings', () => {
 
     });
   });
-    // it('Accepts partial updates on subkeys without losing properties', () => {
-    //   const obj1 = { value: }
-    // });
 });
 
 afterAll(eraseTestData);
