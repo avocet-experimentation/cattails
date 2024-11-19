@@ -29,7 +29,7 @@ const eraseTestData = async () => {
 
 beforeAll(eraseTestData);
 
-describe('MongoRepository Methods', () => {
+describe('MongoRepository CRUD Methods', () => {
   
   describe('create', () => {
     beforeEach(eraseTestData);
@@ -136,7 +136,7 @@ describe('MongoRepository Methods', () => {
     let insertResults: (string | null)[] = [];
     beforeAll(async () => await insertExampleFlags(insertResults));
 
-    it("overwrites specified fields", async () => {
+    it("overwrites specified fields when passed a partial object", async () => {
       const first = insertResults[0];
       if (first === null) return;
 
@@ -186,6 +186,41 @@ describe('MongoRepository Methods', () => {
   });
 
   // WIP
+  describe('updateKey', () => {
+    let insertResults: (string | null)[] = [];
+    beforeAll(async () => await insertExampleFlags(insertResults));
+
+    it("Changes the value on a single property", async () => {
+      const first = insertResults[0];
+      if (first === null) return;
+
+      const result = await fflagRepo.updateKey(first, 'value.initial', true);
+      expect(result).toBeTruthy();
+
+      const updatedFirst = await fflagRepo.get(first);
+      expect(updatedFirst).not.toBeNull();
+      expect(updatedFirst?.value).toMatchObject({ type: 'boolean', initial: true });
+    });
+    
+
+    it.skip("Rejects changes that break the schema", async () => {
+      const first = insertResults[0];
+      if (first === null) return;
+      const firstDoc = await fflagRepo.get(first);
+      // console.log(firstDoc);
+
+      // const result = await fflagRepo.updateKey(first, 'value.initial', true);
+      const result = await fflagRepo.updateKey(first, 'value.type', 'number') // this might break the schema
+      // expect(result).toBeFalsy();
+      const updatedFirst = await fflagRepo.get(first);
+      console.log(updatedFirst)
+      expect(updatedFirst?.value).toMatchObject({ type: 'boolean', initial: true });
+    });
+    
+    afterAll(eraseTestData);
+  });
+
+  // WIP
   describe('push', () => {
     let insertResults: (string | null)[] = [];
     beforeAll(async () => await insertExampleFlags(insertResults));
@@ -228,7 +263,7 @@ describe('MongoRepository Methods', () => {
       const firstId = insertResults[0];
       if (firstId === null) return;
       const firstDoc = await fflagRepo.get(firstId);
-      console.log(firstDoc);
+      // console.log(firstDoc);
 
       const ruleToRemove = staticFlags[0].environments.dev?.overrideRules[0];
       const result = await fflagRepo.pull(firstId, 'environments.dev.overrideRules', ruleToRemove);
@@ -263,6 +298,20 @@ describe('MongoRepository Methods', () => {
     
     afterAll(eraseTestData);
   });
+});
+
+describe('MongoRepository Helper Methods', () => {
+  describe('deepMerge', () => {
+    it('Adds all subkeys on nested objects', () => {
+      const obj1 = { value: { type: 'boolean' }};
+      const obj2 = { value: { initial: false }};
+      const merged = fflagRepo._deepMerge(obj1, obj2);
+
+    });
+  });
+    // it('Accepts partial updates on subkeys without losing properties', () => {
+    //   const obj1 = { value: }
+    // });
 });
 
 afterAll(eraseTestData);

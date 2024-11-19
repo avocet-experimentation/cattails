@@ -8,6 +8,7 @@ import {
   WithId,
   PushOperator,
   PullOperator,
+  MatchKeysAndValues,
 } from 'mongodb';
 import {
   EstuarySchema,
@@ -88,7 +89,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
       console.error('Attempted to update a document without including an id field!');
       return null;
     }
-    // const restOptional = schemaRequireOnly(this.schema, ['id']);
+    
     const safeParseResult = getPartialSchema(this.schema).safeParse(obj);
 
     if (!safeParseResult.success) { 
@@ -171,13 +172,26 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return result.modifiedCount > 0;
   }
   /**
-   * Deletes an existing record
-   * @returns true if a record was deleted, or false otherwise
+   * Updates the passed key on a record, if it exists. Use 
+   * with caution, as it could result in invalid schema!
+   * @returns true if a record was updated, or false otherwise
    */
-  async delete(documentId: string): Promise<boolean> {
-    const filter = { _id: ObjectId.createFromHexString(documentId)};
-    const result = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
-    return result.deletedCount === 1;
+  async updateKey(
+    id: string,
+    keyPath: string,
+    newValue: unknown,
+  ): Promise<boolean> {
+    const updates = { [keyPath]: newValue } as MatchKeysAndValues<BeforeId<T>>;
+    // transform the updates into an object of nested properties
+    // fetch the original document
+    // create an updated document of WithId<T> and validate the schema safely, returning null if it fails
+    // else call this.update
+    const filter = {
+      _id: ObjectId.createFromHexString(id),
+      [keyPath]: { $exists: true }
+    } as Filter<BeforeId<T>>;
+    const result = await this.collection.updateOne(filter, { $set: updates });
+    return result.modifiedCount > 0;
   }
   /**
    * Pushes to an array within a record
@@ -208,5 +222,28 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
 
     const result = await this.collection.updateOne(filter, { $pull: op });
     return result.modifiedCount > 0;
+  }
+  /**
+   * Deletes an existing record
+   * @returns true if a record was deleted, or false otherwise
+   */
+  async delete(documentId: string): Promise<boolean> {
+    const filter = { _id: ObjectId.createFromHexString(documentId)};
+    const result = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
+    return result.deletedCount === 1;
+  }
+
+  _keyPathToObject(keyPath: string, newValue: unknown) {
+
+  }
+
+  _deepMerge(obj1: object, obj2: object) {
+    const jsonString1 = JSON.stringify(obj1);
+    const jsonString2 = JSON.stringify(obj2);
+
+    const mergedJsonString = JSON.stringify({ ...JSON.parse(jsonString1), ...JSON.parse(jsonString2) });
+    const deepMergedObject = JSON.parse(mergedJsonString);
+    
+    return deepMergedObject;
   }
 }
