@@ -11,55 +11,6 @@ MD5 vs DJB2:
 
 */
 
-// function hashIdentifiers <T extends boolean | string | number> (identifiers: { [attributeName: string]: string }, flagValues: Set<T>): T {
-//
-
-
-/**
- * DJB2 Hash function.
- * @param input 
- * @returns a signed 32-bit integer
- */
-export function hashStringDJB2(input: string) {
-  let hash = 0;
-  // iterate over the string, use bitwise left shift operator, which is essentially multiply the value by 32 -- increases significance of the current hash value.
-  // subtract the hash from the result
-  // Add the utf char value
-  for (let i = 0; i < input.length; i++) {
-    hash = (hash << 5) - hash + input.charCodeAt(i); 
-    // console.log('left shifted:', hash)
-    hash |= 0; // Convert to 32bit integer -- bitwise OR operator(?)
-    // console.log('converted to 32 bit:', hash)
-  }
-
-  return hash;
-}
-
-/**
- * Combines a collection of strings presumed to be unique IDs.
- * Used for creating a hash of experiment, group, and block ID for sending to client
- */
-export function sortAndCombineIds(ids: readonly string[]): string {
-  const sortedIds = ids.toSorted();
-  const combined = sortedIds.join('');
-  return combined;
-}
-
-export function hashStringSet(strings: readonly string[]) {
-  const combined = sortAndCombineIds(strings);
-  return hashStringDJB2(combined);
-}
-
-export function hashIdentifiers(identifiers: ClientIdentifier[]) {
-  const sortedIdentifiers = identifiers.toSorted();
-  let string = '';
-
-  sortedIdentifiers.forEach(([ name, value ]) => {
-    string += name + value;
-  });
-
-  return hashStringDJB2(string);
-}
 
 /**
  * Hash identifiers for pseudo-random assignment to one of many options
@@ -87,6 +38,52 @@ export function hashAndCompare(
   const hash = hashIdentifiers(identifiers);
   const compareValue = (proportion * 2 ** 32) - (2 ** 31) - 1;
   return hash < compareValue;
+}
+
+/**
+ * DJB2 Hash function.
+ * @param input 
+ * @returns a signed 32-bit integer
+ */
+function hashStringDJB2(input: string) {
+  let hash = 0;
+  // iterate over the string, use bitwise left shift operator, which is essentially multiply the value by 32 -- increases significance of the current hash value.
+  // subtract the hash from the result
+  // Add the utf char value
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i); 
+    // console.log('left shifted:', hash)
+    hash |= 0; // Convert to 32bit integer -- bitwise OR operator(?)
+    // console.log('converted to 32 bit:', hash)
+  }
+
+  return hash;
+}
+
+/**
+ * Combines a collection of strings presumed to be unique IDs.
+ * Used for creating a hash of experiment, group, and block ID for sending to client
+ */
+function sortAndCombineIds(ids: readonly string[]): string {
+  const sortedIds = ids.toSorted();
+  const combined = sortedIds.join('');
+  return combined;
+}
+
+export function hashStringSet(strings: readonly string[]) {
+  const combined = sortAndCombineIds(strings);
+  return hashStringDJB2(combined);
+}
+
+function hashIdentifiers(identifiers: ClientIdentifier[]) {
+  const sortedIdentifiers = identifiers.toSorted();
+  let string = '';
+
+  sortedIdentifiers.forEach(([ name, value ]) => {
+    string += name + value;
+  });
+
+  return hashStringDJB2(string);
 }
 
 // function hashIdentifiersMD5(identifiers: string[]) {
