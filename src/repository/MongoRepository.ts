@@ -10,6 +10,7 @@ import {
   PullOperator,
   MatchKeysAndValues,
 } from 'mongodb';
+import merge from 'deepmerge';
 import {
   EstuarySchema,
   EstuaryMongoCollectionName,
@@ -25,8 +26,10 @@ import {
 /* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
 
 export type MongoRecord<T extends EstuaryMongoTypes> = WithId<BeforeId<T>>;
-export type MongoRecordDraft<T extends EstuaryMongoTypes> = OptionalUnlessRequiredId<BeforeId<T>>;
-export type WithMongoStringId<T extends EstuaryMongoTypes> = RequireOnly<T, 'id'>;
+/**
+ * A partial type that only requires an `id` field
+ */
+export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<T, 'id'>;
 
 // temporary/WIP
 // type findFilter<T extends InferFromSchema> = { [P in keyof WithId<T>]?: Condition<WithId<T>[P]> | undefined; };
@@ -67,7 +70,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     // }
   }
 
-  _validateNew<O extends MongoRecordDraft<T>>(obj: DraftRecord<T>): O | null {
+  _validateNew(obj: DraftRecord<T>): OptionalUnlessRequiredId<BeforeId<T>> | null {
     if ('id' in obj) {
       console.error('Attempted to create a document from an object that contains an id field! Does this document already exist?');
       return null;
@@ -84,7 +87,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return validated;
   }
 
-  _validateUpdate<U extends WithMongoStringId<T>>(obj: U): U | null {
+  _validateUpdate<U extends PartialWithStringId<T>>(obj: object): U | null {
     if (!('id' in obj) || typeof obj.id !== 'string') {
       console.error('Attempted to update a document without including an id field!');
       return null;
@@ -100,7 +103,8 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return safeParseResult.data;
   }
   /**
-   * @returns a hex string representing the new record's ObjectId
+   * @returns a hex string representing the new record's ObjectId, or `null` if
+   * a document was not created
    */
   async create(newEntry: DraftRecord<T>): Promise<string | null> {
     const withTimeStamps = {
@@ -162,7 +166,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
    * Updates an existing record
    * @returns true if a record was updated, null if the object type is invalid, or false otherwise
    */
-  async update(partialEntry: WithMongoStringId<T>): Promise<boolean | null> {
+  async update(partialEntry: PartialWithStringId<T>): Promise<boolean | null> {
     const validated = this._validateUpdate(partialEntry);
     if (validated === null) return null;
     const { id, ...rest } = validated;
@@ -172,11 +176,46 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return result.modifiedCount > 0;
   }
   /**
+   * Updates the passed key on a record, if it exists. Fetches the document and
+   * validates it with the updates against the schema before attempting to update.
+   * @returns `true` if a record was updated, `null` if the keyPath 
+   * or newValue is invalid, or `false` otherwise
+   */
+  async updateKeySafe(
+    id: string,
+    keyPath: string,
+    newValue: unknown,
+  ): Promise<boolean | null> {
+    if (keyPath.length === 0) return null;
+    // transform the updates into an object of nested properties
+    const parsed = this._keyPathToObject(keyPath, newValue);
+    // console.log({parsed})
+    const original = await this.get(id);
+    if (!original) return null;
+
+    const merged = merge(original, parsed);
+    // console.log({merged})
+    const validated = this._validateUpdate(merged);
+    if (validated === null) return null;
+
+    const { id: _, ...rest } = validated;
+    const updates = { ...rest, updatedAt: Date.now() };
+
+    const filter = {
+      _id: ObjectId.createFromHexString(id),
+      [keyPath]: { $exists: true }
+    } as Filter<BeforeId<T>>;
+
+    const result = await this.collection.updateOne(filter, [{ $set: updates }]);
+    return result.modifiedCount > 0;
+  }
+  /**
    * Updates the passed key on a record, if it exists. Use 
    * with caution, as it could result in invalid schema!
-   * @returns true if a record was updated, or false otherwise
+   * @returns `true` if a record was updated, `null` if the keyPath 
+   * or newValue is invalid, or `false` otherwise
    */
-  async updateKey(
+  private async updateKey(
     id: string,
     keyPath: string,
     newValue: unknown,
@@ -233,17 +272,35 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return result.deletedCount === 1;
   }
 
-  _keyPathToObject(keyPath: string, newValue: unknown) {
+  /**
+   * Parses a key path string into an update object
+   * @param keyPath A dot-separated string representing nested properties
+   * @param newValue The value to assign to the parsed key
+   */
+  _keyPathToObject<V, T extends Record<string, T | V>>(keyPath: string, newValue: V) {
+    const segments = keyPath.split('.');
+    const accumulator = {} as T;
+    let ptr = accumulator;
+    const result = segments.reduce((acc, segment, i) => {
+      const newInner = i === segments.length - 1 ? newValue : {};
+      Object.assign(ptr, { [segment]: newInner });
+      if (ptr[segment] !== newValue) {
+        ptr = ptr[segment] as T;
+      }
 
+      return acc;
+    }, accumulator);
+
+    return result;
   }
 
-  _deepMerge(obj1: object, obj2: object) {
-    const jsonString1 = JSON.stringify(obj1);
-    const jsonString2 = JSON.stringify(obj2);
+  // _deepMerge(obj1: object, obj2: object) {
+  //   const jsonString1 = JSON.stringify(obj1);
+  //   const jsonString2 = JSON.stringify(obj2);
 
-    const mergedJsonString = JSON.stringify({ ...JSON.parse(jsonString1), ...JSON.parse(jsonString2) });
-    const deepMergedObject = JSON.parse(mergedJsonString);
+  //   const mergedJsonString = JSON.stringify({ ...JSON.parse(jsonString1), ...JSON.parse(jsonString2) });
+  //   const deepMergedObject = JSON.parse(mergedJsonString);
     
-    return deepMergedObject;
-  }
+  //   return deepMergedObject;
+  // }
 }
