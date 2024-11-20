@@ -5,10 +5,10 @@ import {
   Db,
   Filter,
   OptionalUnlessRequiredId,
-  WithId,
   PushOperator,
   PullOperator,
   MatchKeysAndValues,
+  WithId,
 } from 'mongodb';
 import merge from 'deepmerge';
 import {
@@ -16,24 +16,24 @@ import {
   EstuaryMongoCollectionName,
   BeforeId,
   EstuaryMongoTypes,
-  RequireOnly,
   AnyZodSchema,
   getPartialSchema,
   schemaOmit,
   DraftRecord,
+  DocumentUpdateFailedError,
+  DocumentNotFoundError,
+  SchemaParseError,
+  RequireOnly,
 } from '@estuary/types';
 
 /* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
+
 
 export type MongoRecord<T extends EstuaryMongoTypes> = WithId<BeforeId<T>>;
 /**
  * A partial type that only requires an `id` field
  */
 export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<T, 'id'>;
-
-// temporary/WIP
-// type findFilter<T extends InferFromSchema> = { [P in keyof WithId<T>]?: Condition<WithId<T>[P]> | undefined; };
-
 
 /**
  * Parent class for type-specific CRUD operations in Mongo. 
@@ -45,77 +45,111 @@ export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<T, 'i
  */
 export default class MongoRepository<T extends EstuaryMongoTypes, S extends EstuarySchema<T>> {
   #client: MongoClient;
-  #db: Db;
   collection: Collection<BeforeId<T>>;
   schema: AnyZodSchema;
 
   constructor(collectionName: EstuaryMongoCollectionName, schema: S, mongoUri: string) {
     this.#client = new MongoClient(mongoUri);
-    this.#db = this.#client.db();
-    this.collection = this.#db.collection(collectionName);
+    this.collection = this.#client.db().collection(collectionName);
     this.schema = schema;
-    // this._recordToObject = this._recordToObject.bind(this); // might remove
   }
 
   _recordToObject(document: MongoRecord<T>): T {
     const { _id, ...rest } = document;
     const morphed = { id: document._id.toHexString(), ...rest };
     return morphed as unknown as T; // todo: find a better solution for type checking without throwing
-    // const safeParseResult = this.schema.safeParse(morphed);
-    // if (safeParseResult.success) {
-    //   return safeParseResult.data;
-    // } else {
-    //   console.error(safeParseResult.error);
-    //   return morphed as unknown as T; 
-    // }
   }
 
-  _validateNew(obj: DraftRecord<T>): OptionalUnlessRequiredId<BeforeId<T>> | null {
+  _validateNew(obj: object): OptionalUnlessRequiredId<BeforeId<T>> {
     if ('id' in obj) {
-      console.error('Attempted to create a document from an object that contains an id field! Does this document already exist?');
-      return null;
+      throw new TypeError('Attempted to create a document from an object that ' + 
+        'contains an id field! Does this document already exist?');
+      // return null;
     }
+
     const schemaWithoutId = schemaOmit(this.schema, ['id']);
     const safeParseResult = schemaWithoutId.safeParse(obj);
 
-    if (!safeParseResult.success) { 
-      console.error(safeParseResult.error);
-      return null; 
+    if (!safeParseResult.success) {
+      throw new SchemaParseError(safeParseResult);
+      // console.error(safeParseResult.error.format());
+      // return null; 
+    }
+    const parsed = safeParseResult.data;
+
+    if (this._holdsEmptyString(parsed, 'name')) {
+      throw new TypeError('Attempted to create an object with an empty name!');
+      // return null;
     }
 
     const { id, ...validated } = safeParseResult.data;
     return validated;
   }
 
-  _validateUpdate<U extends PartialWithStringId<T>>(obj: object): U | null {
+  _validateUpdate<U extends PartialWithStringId<T>>(obj: object): U {
     if (!('id' in obj) || typeof obj.id !== 'string') {
-      console.error('Attempted to update a document without including an id field!');
-      return null;
+      throw new TypeError('Attempted to update a document without including an id field!');
     }
-    
+
     const safeParseResult = getPartialSchema(this.schema).safeParse(obj);
 
     if (!safeParseResult.success) { 
-      console.error(safeParseResult.error);
-      return null; 
+      throw new SchemaParseError(safeParseResult);
     }
 
-    return safeParseResult.data;
+    const parsed = safeParseResult.data;
+
+    if (this._holdsEmptyString(parsed, 'name')) {
+      throw new TypeError('Attempted to set an empty name!');
+    }
+
+    return parsed;
+  }
+
+  _holdsEmptyString(obj: Record<string, unknown>, key: string): boolean {
+    if (key in obj) {
+      return typeof obj[key] === 'string' && obj[key].length === 0;
+    } else return false;
   }
   /**
-   * @returns a hex string representing the new record's ObjectId, or `null` if
-   * a document was not created
+   * @returns a hex string representing the new record's ObjectId
    */
-  async create(newEntry: DraftRecord<T>): Promise<string | null> {
+  async create(newEntry: DraftRecord<T>): Promise<string> {
     const withTimeStamps = {
       createdAt: Date.now(),
       updatedAt: Date.now(),
       ...newEntry,
     }
     const validated = this._validateNew(withTimeStamps);
-    if (validated === null) return null;
-    const result = await this.collection.insertOne(validated);
-    return result.insertedId?.toHexString() ?? null;
+    const result = await this.#client.withSession(async (session) => session
+      .withTransaction(async (session) => {
+        const insertResult = await this.collection.insertOne(validated);
+        if (!insertResult.insertedId) {
+          await session.abortTransaction();
+          throw new DocumentUpdateFailedError('Failed to insert new document');
+        }
+
+        const insertId = insertResult.insertedId.toHexString();
+        const insertedEntry = await this.get(insertId);
+
+        const embedResult = await this._createEmbeds(insertedEntry);
+        if (!embedResult) {
+          await session.abortTransaction();
+          throw new DocumentUpdateFailedError(`Failed to add embeds for document ${insertId}`);
+        }
+
+        return insertId;
+      }));
+
+    return result;
+  }
+  /**
+   * A placeholder to be overridden on sub-classes
+   * @returns true if the embed was successful, `null` if schema validation failed,
+   * or false otherwise
+   */
+  async _createEmbeds(newDocument: T): Promise<boolean> {
+    return true;
   }
 
   /**
@@ -133,10 +167,11 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   /**
    * @param documentId a hex string representing an ObjectId
    */
-  async get(documentId: string): Promise<T | null> {
+  async get(documentId: string): Promise<T> {
     const docId = ObjectId.createFromHexString(documentId);
     // seems like Filter doesn't infer correctly on generics
     const result = await this.findOne({ _id: docId } as Filter<BeforeId<T>>);
+    if (result === null) throw new DocumentNotFoundError({ _id: docId });
     return result;
   }
   /**
@@ -145,9 +180,10 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
    * See https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/query-document/#std-label-node-fundamentals-query-document
    * @param query A MongoDB query
    */
-  async findOne(query: Filter<BeforeId<T>>): Promise<T | null> {
+  async findOne<Q extends Filter<BeforeId<T>>>(query: Q): Promise<T | null> {
     const result = await this.collection.findOne(query);
-    if (result === null) return result;
+    if (result === null) return null;
+
     return this._recordToObject(result);
   }
   /**
@@ -164,11 +200,12 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   }
   /**
    * Updates an existing record
-   * @returns true if a record was updated, null if the object type is invalid, or false otherwise
+   * @returns true if a record was updated, or false otherwise
    */
-  async update(partialEntry: PartialWithStringId<T>): Promise<boolean | null> {
+  async update(partialEntry: PartialWithStringId<T>): Promise<boolean> {
     const validated = this._validateUpdate(partialEntry);
-    if (validated === null) return null;
+    // if (validated === null) return null;
+
     const { id, ...rest } = validated;
     const updates = { ...rest, updatedAt: Date.now() };
     const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
@@ -210,8 +247,8 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return result.modifiedCount > 0;
   }
   /**
-   * Updates the passed key on a record, if it exists. Use 
-   * with caution, as it could result in invalid schema!
+   * Updates the passed key on a record, if it exists. Use with caution, as it
+   *  could result in invalid schema! Try `updateKeySafe` first.
    * @returns `true` if a record was updated, `null` if the keyPath 
    * or newValue is invalid, or `false` otherwise
    */
@@ -248,18 +285,39 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return result.modifiedCount > 0;
   }
   /**
-   * (WIP) Removes an element from an array within a record
+   * Removes an element from an array within a record
    * @returns true if a record was updated, or false otherwise
    */
   async pull(id: string, keyPath: string, toDelete: unknown) {
-    const op = { [keyPath]: toDelete } as PullOperator<BeforeId<T>>;
-
     const filter = {
       _id: ObjectId.createFromHexString(id),
       [keyPath]: { $exists: true }
     } as Filter<BeforeId<T>>;
-
+    
+    const op = { [keyPath]: toDelete } as PullOperator<BeforeId<T>>;
     const result = await this.collection.updateOne(filter, { $pull: op });
+    return result.modifiedCount > 0;
+  }
+  /**
+   * (WIP) Updates an element on an array inside a record
+   * @param searchObj An object of properties to filter elements by
+   * @param updateObj A partial object of properties to overwrite on the 
+   * @returns true if a record was updated, or false otherwise
+   */
+  async updateElement(id: string, keyPath: string, searchObj: PartialWithStringId<T>, updateObj: object) {
+    const validated = this._validateUpdate(searchObj);
+    if (validated === null) return null;
+    
+    const { id: _, ...rest } = validated;
+    
+    const filter = {
+      _id: ObjectId.createFromHexString(id),
+      ...rest,
+      [keyPath]: { $exists: true }
+    } as Filter<BeforeId<T>>;
+    
+    const op = { [`${keyPath}.$`]: updateObj } as MatchKeysAndValues<BeforeId<T>>;
+    const result = await this.collection.updateOne(filter, { $set: op });
     return result.modifiedCount > 0;
   }
   /**
@@ -269,7 +327,11 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   async delete(documentId: string): Promise<boolean> {
     const filter = { _id: ObjectId.createFromHexString(documentId)};
     const result = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
-    return result.deletedCount === 1;
+    if (!result.deletedCount) {
+      throw new DocumentUpdateFailedError(`Failed to delete document with id ${documentId}`);
+    }
+
+    return true;
   }
 
   /**
@@ -294,13 +356,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return result;
   }
 
-  // _deepMerge(obj1: object, obj2: object) {
-  //   const jsonString1 = JSON.stringify(obj1);
-  //   const jsonString2 = JSON.stringify(obj2);
-
-  //   const mergedJsonString = JSON.stringify({ ...JSON.parse(jsonString1), ...JSON.parse(jsonString2) });
-  //   const deepMergedObject = JSON.parse(mergedJsonString);
-    
-  //   return deepMergedObject;
-  // }
+  _getCollection(collectionName: EstuaryMongoCollectionName) {
+    return this.#client.db().collection(collectionName);
+  }
 }
