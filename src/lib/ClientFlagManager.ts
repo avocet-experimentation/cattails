@@ -18,11 +18,11 @@ import ExperimentManager from "./ExperimentManager.js";
 const PLACEHOLDER_ENVIRONMENT = 'dev';
 
 export default class ClientFlagManager {
-  flags: FeatureFlagRepository;
+  featureFlags: FeatureFlagRepository;
   expManager: ExperimentManager;
 
   constructor() {
-    this.flags = new FeatureFlagRepository(env.MONGO_API_URI);
+    this.featureFlags = new FeatureFlagRepository(env.MONGO_API_URI);
     this.expManager = new ExperimentManager();
   }
 
@@ -53,10 +53,16 @@ export default class ClientFlagManager {
     EnvironmentName: EnvironmentName,
     clientProps: ClientPropMapping
   ): Promise<FlagClientValue | null> {
-    const flag = await this.flags.findOne({ name: flagName });
-    if (!flag) return null;
-
-    return this.computeFlagValue(flag, EnvironmentName, clientProps);
+    try {
+      const flag = await this.featureFlags.findOne({ name: flagName });
+      if (!flag) throw new Error();
+      return this.computeFlagValue(flag, EnvironmentName, clientProps);
+    } catch(e: unknown) {
+      // if (e instanceof Error) {
+        return null;
+        // return { value: null, hash: this.defaultIdHash() }; // todo: obscure flag find success/failure by returning this object instead
+      // }
+    }
   }
 
   /**
@@ -73,27 +79,27 @@ export default class ClientFlagManager {
     environmentName: EnvironmentName,
     clientProps: ClientPropMapping
   ): Promise<FlagClientMapping | null> {
-    const featureFlags = await this.flags.getEnvironmentFlags(environmentName);
-    if (!featureFlags) {
+    try {
+      const featureFlags = await this.featureFlags.getEnvironmentFlags(environmentName);
+      // printDetail({ featureFlags });
+      // console.log({ overrideRules: fflags[0].environments.dev?.overrideRules });
+    
+      const promises = [];
+  
+      for (let i = 0; i < featureFlags.length; i += 1) {
+        const flag = featureFlags[i];
+        const promise = this.computeFlagValue(flag, PLACEHOLDER_ENVIRONMENT, clientProps);
+        // transform the promise to a tuple of [name, FlagClientValue] upon resolution
+        promises.push(promise.then((result) => [flag.name, result]));
+      }
+  
+      const resolve = await Promise.all(promises);
+      console.log({resolve});
+      return Object.fromEntries(resolve);
+
+    } catch (e: unknown) {
       return null;
     }
-  
-    // printDetail({ featureFlags });
-    // console.log({ overrideRules: fflags[0].environments.dev?.overrideRules });
-  
-    const promises = [];
-
-    for (let i = 0; i < featureFlags.length; i += 1) {
-      const flag = featureFlags[i];
-      const promise = this.computeFlagValue(flag, PLACEHOLDER_ENVIRONMENT, clientProps);
-      // transform the promise to a tuple of [name, FlagClientValue] upon resolution
-      promises.push(promise.then((result) => [flag.name, result]));
-    }
-
-    const resolve = await Promise.all(promises);
-    console.log({resolve});
-    return Object.fromEntries(resolve);
-    
   }
 
   private async computeFlagValue(
@@ -182,9 +188,9 @@ export default class ClientFlagManager {
     }
   }
   
-  // async randomHash() {
-  //   return bcrypt.hash(randomUUID(), env.SALT_ROUNDS);
-  // }
+  async randomIdHash() {
+    return randomUUID() + '+' + this.randomIds(2);
+  }
   
   
   defaultIdHash(flagId: string) {

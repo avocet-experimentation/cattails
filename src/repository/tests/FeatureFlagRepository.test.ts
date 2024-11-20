@@ -3,7 +3,7 @@ import env from '../../envalid.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
 import { exampleFlags, getExampleFlag, staticFlags } from '../../testing/data/featureFlags.js';
 import FeatureFlagRepository from '../FeatureFlagRepository.js'
-import { EstuaryMongoCollectionName, ForcedValue, OverrideRule } from '@estuary/types';
+import { EstuaryMongoCollectionName, ForcedValue } from '@estuary/types';
 // import ExperimentRepository from '../FeatureFlagRepository.js'
 
 const fflagRepo = new FeatureFlagRepository(env.MONGO_TESTING_URI);
@@ -11,7 +11,7 @@ const fflagRepo = new FeatureFlagRepository(env.MONGO_TESTING_URI);
 
 const eraseClientDb = new MongoClient(env.MONGO_TESTING_URI).db();
 
-const insertExampleFlags = async (resultsArray: (string | null)[]) => {
+const insertExampleFlags = async (resultsArray: string[]) => {
   const promises = [
     fflagRepo.create(exampleFlags[0]),
     fflagRepo.create(exampleFlags[1]),
@@ -39,10 +39,9 @@ describe('MongoRepository CRUD Methods', () => {
       expect(typeof result).toBe('string');
     });
 
-    it("returns null if passed an object with a `.id`", async () => {
+    it("throws an error if passed an object with a `.id`", async () => {
       const input = { ...getExampleFlag(), id: crypto.randomUUID() };
-      const result = await fflagRepo.create(input);
-      expect(result).toBeNull();
+      expect(async () => await fflagRepo.create(input)).rejects.toThrow();
     });
 
     afterAll(eraseTestData);
@@ -76,34 +75,32 @@ describe('MongoRepository CRUD Methods', () => {
   });
 
   describe('get', () => {
-    let insertResult: string | null;
+    let insertResult: string;
     beforeAll(async () => {
-      insertResult = await fflagRepo.create(getExampleFlag());
     });
 
     it("returns a previously inserted flag if provided its ObjectId as a hex string", async () => {
-      expect(insertResult).not.toBeNull();
-      if (insertResult === null) return;
+      const toInsert = getExampleFlag();
+      insertResult = await fflagRepo.create(toInsert);
       const result = await fflagRepo.get(insertResult);
-      expect(result).not.toBeNull();
+      expect(result).toMatchObject(toInsert);
     });
 
     it("throws if provided an invalid ID", async () => {
       expect(fflagRepo.get('invalid-id')).rejects.toThrow();
     });
 
-    it("returns null if provided an incorrect ID", async () => {
-      const randomObjectId = ObjectId.createFromTime(99);
-      const result = await fflagRepo.get(randomObjectId.toHexString());
-      console
-      expect(result).toBeNull();
+    it("throws if provided an incorrect ID", async () => {
+      const randomObjectIdString = ObjectId.createFromTime(99).toHexString();
+      // const result = await fflagRepo.get(randomObjectId.toHexString());
+      expect(async () => await fflagRepo.get(randomObjectIdString)).rejects.toThrow();
     });
     
     afterAll(eraseTestData);
   });
 
   describe('findOne', () => {
-    let insertResults: (string | null)[] = [];
+    let insertResults: string[] = [];
     beforeAll(async () => insertExampleFlags(insertResults));
 
     it("finds the right record from a query on its name", async () => {
@@ -111,7 +108,6 @@ describe('MongoRepository CRUD Methods', () => {
       if (first === null) return;
 
       const result = await fflagRepo.findOne({ name: 'testing flag' });
-      expect(result).not.toBeNull();
       expect(result?.id).toEqual(first);
     });
 
@@ -120,11 +116,10 @@ describe('MongoRepository CRUD Methods', () => {
       if (second === null) return;
 
       const result = await fflagRepo.findOne({ description: { $regex: /server-sent events/ } });
-      expect(result).not.toBeNull();
       expect(result?.id).toEqual(second);
     });
 
-    it("returns null if no records match the query", async () => {
+    it("Returns null if no records match the query", async () => {
       const result = await fflagRepo.findOne({ name: 'asdfoasihgda'});
       expect(result).toBeNull();
     });
@@ -133,12 +128,11 @@ describe('MongoRepository CRUD Methods', () => {
   });
 
   describe('update', () => {
-    let insertResults: (string | null)[] = [];
+    let insertResults: string[] = [];
     beforeAll(async () => await insertExampleFlags(insertResults));
 
     it("overwrites specified fields when passed a partial object", async () => {
       const first = insertResults[0];
-      if (first === null) return;
 
       const updateObject = {
         id: first,
@@ -178,8 +172,8 @@ describe('MongoRepository CRUD Methods', () => {
     });
 
     it("doesn't overwrite if no document matches the `id`", async () => {
-      const result = await fflagRepo.findOne({ name: 'asdfoasihgda'});
-      expect(result).toBeNull();
+      const result = await fflagRepo.update({ id: ObjectId.createFromTime(1).toHexString(), name: 'asdfoasihgda'});
+      expect(result).toBeFalsy();
     });
     
     afterAll(eraseTestData);
@@ -187,12 +181,11 @@ describe('MongoRepository CRUD Methods', () => {
 
   // WIP
   describe('updateKeySafe', () => {
-    let insertResults: (string | null)[] = [];
+    let insertResults: string[] = [];
     beforeAll(async () => await insertExampleFlags(insertResults));
 
     it("Changes the value on a single property", async () => {
       const first = insertResults[0];
-      if (first === null) return;
 
       const result = await fflagRepo.updateKeySafe(first, 'value.initial', true);
       expect(result).toBeTruthy();
@@ -205,7 +198,6 @@ describe('MongoRepository CRUD Methods', () => {
 
     it.skip("Rejects changes that break the schema", async () => {
       const first = insertResults[0];
-      if (first === null) return;
       const firstDoc = await fflagRepo.get(first);
       // console.log(firstDoc);
 
@@ -222,12 +214,11 @@ describe('MongoRepository CRUD Methods', () => {
 
   // WIP
   describe('push', () => {
-    let insertResults: (string | null)[] = [];
+    let insertResults: string[] = [];
     beforeAll(async () => await insertExampleFlags(insertResults));
 
     it("Adds an element to an array", async () => {
       const first = insertResults[0];
-      if (first === null) return;
       const firstDoc = await fflagRepo.get(first);
       // console.log(firstDoc);
 
@@ -235,7 +226,7 @@ describe('MongoRepository CRUD Methods', () => {
         type: 'ForcedValue',
         status: 'draft',
         value: true,
-        environment: 'dev',
+        environmentName: 'dev',
         enrollment: {
           attributes: [],
           proportion: 1,
@@ -277,23 +268,20 @@ describe('MongoRepository CRUD Methods', () => {
   });
 
   describe('delete', () => {
-    let insertResults: (string | null)[] = [];
+    let insertResults: string[] = [];
     beforeAll(async () => insertExampleFlags(insertResults));
 
     it("deletes the right record given a valid id", async () => {
       const first = insertResults[0];
-      if (first === null) return;
 
       const result = await fflagRepo.delete(first);
       expect(result).toBeTruthy();
-      const search = await fflagRepo.get(first);
-      expect(search).toBeNull();
+      expect(async () => await fflagRepo.get(first)).rejects.toThrow();
     });
 
-    it("returns a falsy value if no records matches the passed id", async () => {
+    it("Throws an error if no records matches the passed id", async () => {
       const fakeId = ObjectId.createFromTime(0).toHexString();
-      const result = await fflagRepo.delete(fakeId);
-      expect(result).toBeFalsy();
+      expect(async () => await fflagRepo.delete(fakeId)).rejects.toThrow();
     });
     
     afterAll(eraseTestData);
