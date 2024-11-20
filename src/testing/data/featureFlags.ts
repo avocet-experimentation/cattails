@@ -1,4 +1,5 @@
-import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, FlagEnvironmentMapping } from "@estuary/types";
+import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, FlagEnvironmentMapping, ExperimentReferenceTemplate } from "@estuary/types";
+import { ObjectId } from "mongodb";
 
 export const flagEnvironmentInit = (): FlagEnvironmentMapping => ({
   prod: { name: 'prod', enabled: false, overrideRules: [], },
@@ -53,12 +54,13 @@ export const staticFlagDrafts: FeatureFlagDraft[] = [
           type: 'ForcedValue',
           status: 'active',
           value: true,
-          environment: 'prod',
+          environmentName: 'prod',
           enrollment: {
             attributes: ['id'],
             proportion: 1,
           },
         },
+        new ExperimentReferenceTemplate(ObjectId.createFromTime(1).toHexString(), 'prod')
       ] },
       dev: { name: 'dev', enabled: true, overrideRules: [] },
       testing: { name: 'testing', enabled: true, overrideRules: [] },
@@ -81,7 +83,7 @@ export const staticFlags: FeatureFlag[] = [
             type: 'ForcedValue',
             status: 'active',
             value: true,
-            environment: 'dev',
+            environmentName: 'dev',
             enrollment: {
               attributes: ['id'],
               proportion: 1,
@@ -108,7 +110,7 @@ export const staticFlags: FeatureFlag[] = [
           description: 'Always sets this flag to true',
           status: 'active',
           value: true,
-          environment: 'prod',
+          environmentName: 'prod',
           enrollment: {
             attributes: ['id'],
             proportion: 1,
