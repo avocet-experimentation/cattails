@@ -8,22 +8,21 @@ import {
   forcedValueSchema,
   OverrideRuleUnion,
 } from "@estuary/types";
-import env from "../envalid.js";
-import FeatureFlagRepository from "../repository/FeatureFlagRepository.js";
 import { hashAndCompare } from "./hash.js";
 import { randomUUID } from "crypto";
 // import * as bcrypt from 'bcrypt';
 import ExperimentManager from "./ExperimentManager.js";
+import RepositoryManager from "../repository/RepositoryManager.js";
 
 const PLACEHOLDER_ENVIRONMENT = 'dev';
 
 export default class ClientFlagManager {
-  featureFlags: FeatureFlagRepository;
+  repository: RepositoryManager;
   expManager: ExperimentManager;
 
-  constructor() {
-    this.featureFlags = new FeatureFlagRepository(env.MONGO_API_URI);
-    this.expManager = new ExperimentManager();
+  constructor(repositoryManager: RepositoryManager) {
+    this.repository = repositoryManager;
+    this.expManager = new ExperimentManager(repositoryManager);
   }
 
   /*
@@ -54,7 +53,7 @@ export default class ClientFlagManager {
     clientProps: ClientPropMapping
   ): Promise<FlagClientValue | null> {
     try {
-      const flag = await this.featureFlags.findOne({ name: flagName });
+      const flag = await this.repository.featureFlag.findOne({ name: flagName });
       if (!flag) throw new Error();
       return this.computeFlagValue(flag, EnvironmentName, clientProps);
     } catch(e: unknown) {
@@ -80,7 +79,7 @@ export default class ClientFlagManager {
     clientProps: ClientPropMapping
   ): Promise<FlagClientMapping | null> {
     try {
-      const featureFlags = await this.featureFlags.getEnvironmentFlags(environmentName);
+      const featureFlags = await this.repository.featureFlag.getEnvironmentFlags(environmentName);
       // printDetail({ featureFlags });
       // console.log({ overrideRules: fflags[0].environments.dev?.overrideRules });
     

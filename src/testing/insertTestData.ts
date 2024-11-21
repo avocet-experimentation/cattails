@@ -1,5 +1,5 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import env from '../envalid.js';
+import cfg from '../envalid.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { exampleFlags, getExampleFlag, staticFlags } from './data/featureFlags.js';
 // import FeatureFlagRepository from '../repository/FeatureFlagRepository.js'
@@ -12,7 +12,7 @@ import { staticClientPropDefs } from './data/clientPropDefs.js';
  * - move to using Repository methods only (for consistent parsing and transformation)
  */
 
-const db = new MongoClient(env.MONGO_TESTING_URI).db();
+const db = new MongoClient(cfg.MONGO_TESTING_URI).db();
 const colls = {
   flags: db.collection('FeatureFlag'),
   clientProps: db.collection('ClientPropDef'),

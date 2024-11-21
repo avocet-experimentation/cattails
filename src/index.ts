@@ -2,7 +2,7 @@ import { fastify, FastifyInstance } from "fastify";
 import mercurius from "mercurius";
 import { schema } from "./graphql/schemas.js"
 import { resolvers } from "./graphql/resolvers.js";
-import env from "./envalid.js";
+import cfg from "./envalid.js";
 import { getClientRoutes } from "./routes/client.routes.js";
 import { getAdminRoutes } from "./routes/admin.routes.js";
 
@@ -24,7 +24,7 @@ export const buildServer = async (): Promise<FastifyInstance> => {
 };
 
 const main = async (): Promise<void> => {
-  const PORT = env.SERVICE_PORT;
+  const PORT = cfg.SERVICE_PORT;
   try {
     const server = await buildServer();
     await server.listen({ port: PORT });

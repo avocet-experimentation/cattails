@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { cleanEnv, num, str } from "envalid";
 
-const env = cleanEnv(process.env, {
+const cfg = cleanEnv(process.env, {
   MONGO_DATABASE: str(),
   MONGO_ADMIN_URI: str(),
   MONGO_API_URI: str(),
@@ -11,4 +11,4 @@ const env = cleanEnv(process.env, {
   SALT_ROUNDS: num(),
 });
 
-export default env;
+export default cfg;
