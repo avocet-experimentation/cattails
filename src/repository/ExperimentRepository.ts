@@ -5,10 +5,11 @@ import {
 } from "@estuary/types";
 import MongoRepository from "./MongoRepository.js";
 import { PartialWithStringId } from './MongoRepository.js';
+import RepositoryManager from "./RepositoryManager.js";
 
-export default class ExperimentRepository extends MongoRepository<Experiment, typeof experimentSchema> {
-  constructor(mongoUri: string) {
-    super('Experiment', experimentSchema, mongoUri);
+export default class ExperimentRepository extends MongoRepository<Experiment> {
+  constructor(repositoryManager: RepositoryManager) {
+    super('Experiment', experimentSchema, repositoryManager);
   }
 
   /** WIP

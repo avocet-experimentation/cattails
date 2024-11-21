@@ -6,13 +6,11 @@ import {
   OverrideRule,
 } from "@estuary/types";
 import MongoRepository from "./MongoRepository.js";
+import RepositoryManager from "./RepositoryManager.js";
 
-export default class FeatureFlagRepository extends MongoRepository<
-  FeatureFlag,
-  typeof featureFlagSchema
-> {
-  constructor(mongoUri: string) {
-    super("FeatureFlag", featureFlagSchema, mongoUri);
+export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> {
+  constructor(repositoryManager: RepositoryManager) {
+    super("FeatureFlag", featureFlagSchema, repositoryManager);
   }
   /**
    * Add an override rule
