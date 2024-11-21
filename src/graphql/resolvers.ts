@@ -1,6 +1,8 @@
-import { getTestingRepos } from '../repository/index.js';
 import { ClientPropDef, ClientConnection, User, Environment, Experiment } from "@estuary/types";
-const repos = getTestingRepos();
+import RepositoryManager from '../repository/RepositoryManager.js';
+import cfg from '../envalid.js';
+
+const repos = new RepositoryManager(cfg.MONGO_TESTING_URI);
 
 export const resolvers = {
   Query: {

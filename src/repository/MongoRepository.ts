@@ -9,6 +9,7 @@ import {
   PullOperator,
   MatchKeysAndValues,
   WithId,
+  WithSessionCallback,
 } from 'mongodb';
 import merge from 'deepmerge';
 import {
@@ -24,7 +25,9 @@ import {
   DocumentNotFoundError,
   SchemaParseError,
   RequireOnly,
+  estuaryMongoCollectionNameSchema,
 } from '@estuary/types';
+import RepositoryManager from './RepositoryManager.js';
 
 /* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
 
@@ -43,14 +46,14 @@ export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<T, 'i
  * - solve filter type problem and remove the `as Filter...` assertions
  * - narrow the type of EstuaryObjectSchema so that it is recognized as an object type
  */
-export default class MongoRepository<T extends EstuaryMongoTypes, S extends EstuarySchema<T>> {
-  #client: MongoClient;
+export default class MongoRepository<T extends EstuaryMongoTypes, S extends EstuarySchema<T> = EstuarySchema<T>> {
+  repository: RepositoryManager;
   collection: Collection<BeforeId<T>>;
   schema: AnyZodSchema;
 
-  constructor(collectionName: EstuaryMongoCollectionName, schema: S, mongoUri: string) {
-    this.#client = new MongoClient(mongoUri);
-    this.collection = this.#client.db().collection(collectionName);
+  constructor(collectionName: EstuaryMongoCollectionName, schema: S, repositoryManager: RepositoryManager) {
+    this.repository = repositoryManager;
+    this.collection = repositoryManager.client.db().collection(collectionName);
     this.schema = schema;
   }
 
@@ -121,7 +124,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
       ...newEntry,
     }
     const validated = this._validateNew(withTimeStamps);
-    const result = await this.#client.withSession(async (session) => session
+    const result = await this.repository.client.withSession(async (session) => session
       .withTransaction(async (session) => {
         const insertResult = await this.collection.insertOne(validated);
         if (!insertResult.insertedId) {
@@ -357,6 +360,10 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   }
 
   _getCollection(collectionName: EstuaryMongoCollectionName) {
-    return this.#client.db().collection(collectionName);
+    const validated = estuaryMongoCollectionNameSchema.parse(collectionName);
+    return this.repository.client.db().collection(validated);
+  }
+  async _withSession<R = any>(cb: WithSessionCallback<R>): Promise<R> {
+    return this.repository.client.withSession(cb);
   }
 }

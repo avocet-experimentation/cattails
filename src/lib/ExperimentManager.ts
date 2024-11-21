@@ -10,15 +10,14 @@ import {
 } from "@estuary/types";
 import * as bcrypt from 'bcrypt';
 import { hashAndAssign } from "./hash.js";
-import env from "../envalid.js";
-import ExperimentRepository from "../repository/ExperimentRepository.js";
+import RepositoryManager from "../repository/RepositoryManager.js";
 
 
 export default class ExperimentManager {
-  experiments: ExperimentRepository;
+  repository: RepositoryManager;
 
-  constructor() {
-    this.experiments = new ExperimentRepository(env.MONGO_API_URI);
+  constructor(repositoryManager: RepositoryManager) {
+    this.repository = repositoryManager;
   }
 
   async getTreatmentAndHash(
@@ -28,7 +27,7 @@ export default class ExperimentManager {
     treatment: Treatment,
     hash: string,
   } | null> {
-    const experiment = await this.experiments.get(experimentReference.id);
+    const experiment = await this.repository.experiment.get(experimentReference.id);
     if (!experiment) return null;
     
     const group = this.getGroupAssignment(experimentSchema.parse(experiment), identifiers);
