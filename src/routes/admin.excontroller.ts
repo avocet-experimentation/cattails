@@ -1,21 +1,20 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Experiment, PartialUpdate } from "@estuary/types";
+import { DraftRecord, Experiment, PartialUpdate } from "@estuary/types";
 import { ExperimentIdParam, ExperimentNameParam } from "./routes.types.js";
-import { DraftRecord, WithMongoStringId } from "../lib/MongoAPI.js";
-import { getAdminRepos } from "../repository/index.js";
+import RepositoryManager from "../repository/RepositoryManager.js";
+import cfg from "../envalid.js";
+import { PartialWithStringId } from "../repository/MongoRepository.js";
 
 // Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
 
-// const mongoApi = new MongoAPI(env.MONGO_ADMIN_URI);
-
-const { experiment } = getAdminRepos();
+const repository = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
 export const createExperimentHandler = async (
   request: FastifyRequest<{ Body: DraftRecord<Experiment> }>,
   reply: FastifyReply
 ): Promise<string> => {
 
-  const documentId = await experiment.create(request.body);
+  const documentId = await repository.experiment.create(request.body);
   if (!documentId) {
     return reply
       .code(409)
@@ -28,7 +27,7 @@ export const createExperimentHandler = async (
 export const updateExperimentHandler = async (
   request: FastifyRequest<{
     Params: ExperimentIdParam;
-    Body: WithMongoStringId<Experiment>;
+    Body: PartialWithStringId<Experiment>;
   }>,
   reply: FastifyReply
 ): Promise<string> => {
@@ -39,7 +38,7 @@ export const updateExperimentHandler = async (
       .code(422)
       .send({ error: { code: 422, message: "inconsistent request" } });
   }
-  const resultDocId = await experiment.update(request.body);
+  const resultDocId = await repository.experiment.update(request.body);
   if (!resultDocId) {
     return reply
       .code(404)
@@ -61,7 +60,7 @@ export const patchExperimentHandler = async (
       .code(422)
       .send({ error: { code: 422, message: "inconsistent request" } });
   }
-  const updatedId = await experiment.update(request.body);
+  const updatedId = await repository.experiment.update(request.body);
   if (!updatedId) {
     return reply
       .code(404)
@@ -77,7 +76,7 @@ export const deleteExperimentHandler = async (
   reply: FastifyReply
 ): Promise<void> => {
   const { experimentId } = request.params;
-  const succeeded = await experiment.delete(experimentId);
+  const succeeded = await repository.experiment.delete(experimentId);
   if (!succeeded) {
     return reply
       .code(404)
@@ -94,7 +93,7 @@ export const getExperimentByIdHandler = async (
   reply: FastifyReply
 ): Promise<Experiment> => {
   const { experimentId } = request.params;
-  const foundExperiment = await experiment.get(experimentId);
+  const foundExperiment = await repository.experiment.get(experimentId);
   if (!foundExperiment) {
     return reply
       .code(404)
@@ -108,7 +107,7 @@ export const getExperimentByNameHandler = async (
   reply: FastifyReply
 ): Promise<Experiment> => {
   const { experimentName } = request.params;
-  const foundExperiment = await experiment.findOne({ name: experimentName });
+  const foundExperiment = await repository.experiment.findOne({ name: experimentName });
   if (!foundExperiment) {
     return reply
       .code(404)
@@ -121,7 +120,7 @@ export const getAllExperimentsHandler = async (
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<Experiment[]> => {
-  const foundExperiments = await experiment.getMany();
+  const foundExperiments = await repository.experiment.getMany();
   if (!foundExperiments) {
     return reply
       .code(404)
