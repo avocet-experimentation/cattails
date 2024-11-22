@@ -3,6 +3,7 @@ import {
   Experiment,
   ExperimentReference,
   experimentSchema,
+  FeatureFlagDraft,
 } from "@estuary/types";
 import MongoRepository from "./MongoRepository.js";
 import { PartialWithStringId } from './MongoRepository.js';
@@ -15,6 +16,39 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
     super('Experiment', experimentSchema, repositoryManager);
   }
 
+  async startExperiment(experimentId: string) {
+    // set status to started, set startTimestamp, and create embeds
+    const updates = {
+      id: experimentId,
+      status: 'active' as const,
+      startTimestamp: Date.now(),
+    };
+    
+    const updateResult = await this.update(updates);
+    if (!updateResult) {
+      throw new DocumentUpdateFailedError(`Failed to start experiment ${experimentId}`);
+    }
+
+    const updatedDoc = await this.get(experimentId);
+    this._createEmbeds(updatedDoc);
+
+  }
+
+  async stopExperiment(experimentId: string) {
+    // set status to completed, set endTimestamp, and delete embeds
+    const updates = {
+      id: experimentId,
+      status: 'completed' as const,
+      endTimestamp: Date.now(),
+    };
+    
+    const updateResult = await this.update(updates);
+    if (!updateResult) {
+      throw new DocumentUpdateFailedError(`Failed to stop experiment ${experimentId}`);
+    }
+    const updatedDoc = await this.get(experimentId);
+    this._deleteEmbeds(updatedDoc);
+  }
   /** WIP
    * Store an ExperimentReference on any flags referenced in an experiment
    * todo: maybe return the result and let errors bubble to indicate failure
@@ -32,16 +66,16 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
         _id: { $in: newExperiment.flagIds.map((id) => ObjectId.createFromHexString(id)) }
       };
 
-      const updateResult = await this.repository.featureFlag
+      const embedResult = await this.manager.featureFlag
         .addRule(experimentReference, flagMatcher);
 
-      if (!updateResult) {
+      if (!embedResult) {
         throw new DocumentUpdateFailedError(
           `Failed to add ExperimentReference on flags ${newExperiment.flagIds}!`
         );
       }
 
-      return updateResult;
+      return embedResult;
     } catch (e: unknown) {
       if (e instanceof Error) {
         throw e;
@@ -56,23 +90,24 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
    */
   async _updateEmbeds(
     partialExperiment: PartialWithStringId<Experiment>
+    // partialExperiment: PartialWithStringId<Experiment>
   ): Promise<boolean> {
     try {
-      const result = await this.update(partialExperiment);
-      // if (result === null) return null;
+      const { id } = partialExperiment;
+      const currentFlags = await this.manager.featureFlag.getMany();
+      const flagsWithEmbed = currentFlags.filter((flag) => {
+        const allRules = FeatureFlagDraft.getRules(flag);
+        return !!allRules.find((rule) => rule.id === id);
+      });
 
-      const updatedExperiment = await this.get(partialExperiment.id);
-      // if (updatedExperiment === null) return null;
+      const promises = flagsWithEmbed.map((flag) => this.manager.featureFlag
+        .removeRuleFromId(id, flag.id));
 
-      
-      const updatedReference = new ExperimentReference(updatedExperiment);
-
-      // overwrite the ExperimentReference in environments.${experimentDraft.environmentName}.overrideRules for each flag
+      const results = await Promise.all(promises);
+      return results.every((el) => el);
     } catch (e: unknown) {
       return false;
     }
-
-    return true;
   }
 
   /** WIP
@@ -98,7 +133,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
       // };
       // update all flags matching filter
       
-      const updateResult = await this.repository.featureFlag
+      const updateResult = await this.manager.featureFlag
       .removeRule(embedFilter);
       // if (!result) return null;
   

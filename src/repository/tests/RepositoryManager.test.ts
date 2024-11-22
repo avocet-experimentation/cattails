@@ -1,14 +1,14 @@
 import { ObjectId } from 'mongodb';
 import { afterAll, beforeAll, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
 import { exampleFlagDrafts, getExampleFlag, staticFlagDrafts } from '../../testing/data/featureFlags.js';
-import { FeatureFlagDraftTemplate, ForcedValue, OverrideRuleUnion } from '@estuary/types';
+import { FeatureFlagDraft, FlagValueDefImpl, ForcedValue, OverrideRuleUnion } from '@estuary/types';
 import { randomUUID } from 'crypto';
 import { printDetail } from '../../lib/index.js';
 import {
   repoManager,
   insertFlags,
   eraseTestData,
-} from './testing-helpers.js';
+} from '../../testing/testing-helpers.js';
 
 beforeAll(eraseTestData);
 
@@ -36,7 +36,10 @@ describe('MongoRepository CRUD Methods', () => {
       const insertions = new Array(10)
         .fill(null)
         .map(() => repoManager.featureFlag.create(
-          new FeatureFlagDraftTemplate(`name-${randomUUID()}`, 'boolean')
+          FeatureFlagDraft.template({
+            name: `name-${randomUUID()}`,
+            value: FlagValueDefImpl.templateBoolean(),
+          })
         ));
       await Promise.all(insertions);
     });
@@ -65,7 +68,10 @@ describe('MongoRepository CRUD Methods', () => {
     });
 
     it("returns a previously inserted flag if provided its ObjectId as a hex string", async () => {
-      const toInsert = new FeatureFlagDraftTemplate('get-test', 'boolean');
+      const toInsert = FeatureFlagDraft.template({
+        name: 'get-test',
+        value: FlagValueDefImpl.template('boolean'),
+    });
       // printDetail({toInsert})
       insertResult = await repoManager.featureFlag.create(toInsert);
       const result = await repoManager.featureFlag.get(insertResult);
@@ -216,6 +222,9 @@ describe('MongoRepository CRUD Methods', () => {
       const newRule: ForcedValue = {
         id: randomUUID(),
         type: 'ForcedValue',
+        description: null,
+        startTimestamp: null,
+        endTimestamp: null,
         status: 'draft',
         value: true,
         environmentName: 'dev',

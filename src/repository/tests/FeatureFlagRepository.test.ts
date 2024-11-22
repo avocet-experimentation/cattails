@@ -9,7 +9,7 @@ import {
   repoManager,
   insertFlags,
   eraseTestData,
-} from './testing-helpers.js';
+} from '../../testing/testing-helpers.js';
 
 beforeAll(eraseTestData);
 

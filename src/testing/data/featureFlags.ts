@@ -1,4 +1,4 @@
-import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, FlagEnvironmentMapping, ExperimentReferenceTemplate, FeatureFlagDraftTemplate, ForcedValue, ExperimentReference, OverrideRuleUnion } from "@estuary/types";
+import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, FlagEnvironmentMapping, ExperimentReferenceTemplate, ForcedValue, ExperimentReference, OverrideRuleUnion, FlagValueDefImpl } from "@estuary/types";
 import { ObjectId } from "mongodb";
 
 export const flagEnvironmentInit = (): FlagEnvironmentMapping => ({
@@ -45,6 +45,9 @@ export const exampleFlagDrafts: FeatureFlagDraft[] = [
 export const booleanForcedValue1: ForcedValue = {
   id: crypto.randomUUID(),
   type: 'ForcedValue',
+  description: null,
+  startTimestamp: null,
+  endTimestamp: null,
   status: 'active',
   value: true,
   environmentName: 'prod',
@@ -57,6 +60,8 @@ export const booleanForcedValue1: ForcedValue = {
 export const booleanForcedValue2: ForcedValue = {
   id: crypto.randomUUID(),
   type: 'ForcedValue',
+  startTimestamp: null,
+  endTimestamp: null,
   description: 'Always sets this flag to true',
   status: 'active',
   value: true,
@@ -70,6 +75,8 @@ export const booleanForcedValue2: ForcedValue = {
 export const numberForcedValue1: ForcedValue = {
   id: crypto.randomUUID(),
   type: 'ForcedValue',
+  startTimestamp: null,
+  endTimestamp: null,
   description: 'Sets volume to max',
   status: 'active',
   value: 1,
@@ -80,8 +87,11 @@ export const numberForcedValue1: ForcedValue = {
   },
 };
 
-export const experimentRef1: ExperimentReference = new ExperimentReferenceTemplate(
-  ObjectId.createFromTime(1).toHexString(), 'Example Experiment', 'prod');
+export const experimentRef1: ExperimentReference = new ExperimentReferenceTemplate({
+  id: ObjectId.createFromTime(1).toHexString(),
+  name: 'Example Experiment',
+  environmentName: 'prod',
+});
 
 
 export const staticRules: OverrideRuleUnion[] = [
@@ -107,9 +117,15 @@ export const staticBooleanFlag: FeatureFlagDraft = {
   },
 };
 
-export const staticBooleanFlag2 = new FeatureFlagDraftTemplate('dark-mode', 'boolean');
+export const staticBooleanFlag2 = FeatureFlagDraft.template({
+  name: 'dark-mode',
+  value: FlagValueDefImpl.template('boolean'),
+});
 staticBooleanFlag2.environments.prod.overrideRules.push(booleanForcedValue1);
-export const staticNumberFlag = new FeatureFlagDraftTemplate('default-volume', 'number');
+export const staticNumberFlag = FeatureFlagDraft.template({
+  name: 'default-volume',
+  value: FlagValueDefImpl.template('number'),
+});
 
 export const staticFlagDrafts: FeatureFlagDraft[] = [
   staticBooleanFlag,
