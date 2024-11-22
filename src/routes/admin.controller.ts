@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { DraftRecord, FeatureFlag, OverrideRule, PartialUpdate } from "@estuary/types";
+import { DraftRecord, FeatureFlag, OverrideRuleUnion, PartialUpdate } from "@estuary/types";
 import { FlagIdParam, FlagNameParam } from "./routes.types.js";
 import { PartialWithStringId } from "../repository/MongoRepository.js";
 import RepositoryManager from "../repository/RepositoryManager.js";
@@ -117,13 +117,13 @@ export const patchFFlagHandler = async (
 export const addRuleToFFlagHandler = async (
   request: FastifyRequest<{
     Params: FlagIdParam;
-    Body: { environment: string, rule: OverrideRule };
+    Body: { rule: OverrideRuleUnion };
   }>,
   reply: FastifyReply
 ) => {
   const { fflagId } = request.params;
-  const { environment, rule } = request.body;
-  const succeeded = await repository.featureFlag.addRule(fflagId, environment, rule);
+  const { rule } = request.body;
+  const succeeded = await repository.featureFlag.addRuleToId(rule, fflagId);
   if (!succeeded) {
     return reply
       .code(404)
