@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import cfg from '../envalid.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { exampleFlags, getExampleFlag, staticFlags } from './data/featureFlags.js';
+import { staticFlagDrafts } from './data/featureFlags.js';
 // import FeatureFlagRepository from '../repository/FeatureFlagRepository.js'
 import { ClientPropDef, ClientPropDefDraft, EstuaryMongoCollectionName, FeatureFlag, FeatureFlagDraft } from '@estuary/types';
 import { staticClientPropDefs } from './data/clientPropDefs.js';
@@ -44,7 +44,7 @@ const eraseTestData = async () => {
 }
 
 const insertFeatureFlag = async(obj: FeatureFlagDraft) => {
-  await colls.flags.insertOne(obj);
+  await colls.flags.insertOne({...obj});
   console.log(await colls.flags.find().toArray());
 }
 
@@ -53,5 +53,5 @@ const insertClientPropDefs = async(arr: ClientPropDefDraft[]) => {
   console.log(await colls.clientProps.find().toArray());
 }
 
-await insertFeatureFlag(staticFlags[0]);
+await insertFeatureFlag(staticFlagDrafts[0]);
 await insertClientPropDefs(staticClientPropDefs);

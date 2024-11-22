@@ -1,4 +1,4 @@
-import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, FlagEnvironmentMapping, ExperimentReferenceTemplate } from "@estuary/types";
+import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, FlagEnvironmentMapping, ExperimentReferenceTemplate, FeatureFlagDraftTemplate, ForcedValue, ExperimentReference, OverrideRuleUnion } from "@estuary/types";
 import { ObjectId } from "mongodb";
 
 export const flagEnvironmentInit = (): FlagEnvironmentMapping => ({
@@ -27,10 +27,10 @@ export const getExampleFlag = (
     environments: flagEnvironmentInit(),
   }
 
-  return flag;
+  return Object.freeze(flag);
 };
 
-export const exampleFlags: FeatureFlagDraft[] = [
+export const exampleFlagDrafts: FeatureFlagDraft[] = [
   getExampleFlag('testing flag'),
   getExampleFlag(
     'live update', 
@@ -42,53 +42,92 @@ export const exampleFlags: FeatureFlagDraft[] = [
   ),
 ];
 
-export const staticFlagDrafts: FeatureFlagDraft[] = [
-  {
-    // id: '94328591069f921a07e5bd76',
-    name: 'auto-update-ui',
-    value: { type: 'boolean', initial: false },
-    description: 'Automatically update the page as new data is fetched. Long-lived flag',
-    environments: {
-      prod: { name: 'prod', enabled: false, overrideRules: [
-        {
-          type: 'ForcedValue',
-          status: 'active',
-          value: true,
-          environmentName: 'prod',
-          enrollment: {
-            attributes: ['id'],
-            proportion: 1,
-          },
-        },
-        new ExperimentReferenceTemplate(ObjectId.createFromTime(1).toHexString(), 'prod')
-      ] },
-      dev: { name: 'dev', enabled: true, overrideRules: [] },
-      testing: { name: 'testing', enabled: true, overrideRules: [] },
-      staging: { name: 'staging', enabled: false, overrideRules: [] }
-    },
+export const booleanForcedValue1: ForcedValue = {
+  id: crypto.randomUUID(),
+  type: 'ForcedValue',
+  status: 'active',
+  value: true,
+  environmentName: 'prod',
+  enrollment: {
+    attributes: ['id'],
+    proportion: 1,
   },
-];
+};
+
+export const booleanForcedValue2: ForcedValue = {
+  id: crypto.randomUUID(),
+  type: 'ForcedValue',
+  description: 'Always sets this flag to true',
+  status: 'active',
+  value: true,
+  environmentName: 'prod',
+  enrollment: {
+    attributes: ['id'],
+    proportion: 1,
+  },
+};
+
+export const numberForcedValue1: ForcedValue = {
+  id: crypto.randomUUID(),
+  type: 'ForcedValue',
+  description: 'Sets volume to max',
+  status: 'active',
+  value: 1,
+  environmentName: 'testing',
+  enrollment: {
+    attributes: [],
+    proportion: 1,
+  },
+};
+
+export const experimentRef1: ExperimentReference = new ExperimentReferenceTemplate(
+  ObjectId.createFromTime(1).toHexString(), 'Example Experiment', 'prod');
+
+
+export const staticRules: OverrideRuleUnion[] = [
+  booleanForcedValue1,
+  booleanForcedValue1,
+  experimentRef1,
+  numberForcedValue1,
+].map((rule) => Object.freeze(rule));
+
+export const staticBooleanFlag: FeatureFlagDraft = {
+  // id: '94328591069f921a07e5bd76',
+  name: 'auto-update-ui',
+  value: { type: 'boolean', initial: false },
+  description: 'Automatically update the page as new data is fetched. Long-lived flag',
+  environments: {
+    prod: { name: 'prod', enabled: false, overrideRules: [
+      booleanForcedValue1,
+      experimentRef1,
+    ] },
+    dev: { name: 'dev', enabled: true, overrideRules: [] },
+    testing: { name: 'testing', enabled: true, overrideRules: [] },
+    staging: { name: 'staging', enabled: false, overrideRules: [] }
+  },
+};
+
+export const staticBooleanFlag2 = new FeatureFlagDraftTemplate('dark-mode', 'boolean');
+staticBooleanFlag2.environments.prod.overrideRules.push(booleanForcedValue1);
+export const staticNumberFlag = new FeatureFlagDraftTemplate('default-volume', 'number');
+
+export const staticFlagDrafts: FeatureFlagDraft[] = [
+  staticBooleanFlag,
+  staticBooleanFlag2,
+  staticNumberFlag,
+].map((flag) => Object.freeze(flag));
 
 export const staticFlags: FeatureFlag[] = [
   {
     id: '67328591069f921a07e5bd76',
     name: 'use-new-database',
-    value: { type: 'boolean', initial: false },
+    value: { type: 'boolean' as const, initial: false },
     description: 'use new database',
     environments: {
       prod: { name: 'prod', enabled: false, overrideRules: [] },
       dev: { name: 'dev', enabled: true, 
         overrideRules: [
-          {
-            type: 'ForcedValue',
-            status: 'active',
-            value: true,
-            environmentName: 'dev',
-            enrollment: {
-              attributes: ['id'],
-              proportion: 1,
-            },
-          }
+          booleanForcedValue1,
         ] 
       },
       testing: { name: 'testing', enabled: true, overrideRules: [] },
@@ -100,22 +139,11 @@ export const staticFlags: FeatureFlag[] = [
   {
     id: '94328591069f921a07e5bd76',
     name: 'auto-update-ui',
-    value: { type: 'boolean', initial: false },
+    value: { type: 'boolean' as const, initial: false },
     description: 'Automatically update the page as new data is fetched. Long-lived flag',
     environments: {
       prod: { name: 'prod', enabled: false, overrideRules: [
-        {
-          // id: '58343391069f921a07e5bd89',
-          type: 'ForcedValue',
-          description: 'Always sets this flag to true',
-          status: 'active',
-          value: true,
-          environmentName: 'prod',
-          enrollment: {
-            attributes: ['id'],
-            proportion: 1,
-          },
-        },
+        booleanForcedValue1,
       ] },
       dev: { name: 'dev', enabled: true, overrideRules: [] },
       testing: { name: 'testing', enabled: true, overrideRules: [] },
@@ -124,4 +152,4 @@ export const staticFlags: FeatureFlag[] = [
     createdAt: 1,
     updatedAt: 1731364204812,
   },
-];
+].map((flag) => Object.freeze(flag));

@@ -1,0 +1,184 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { exampleFlagDrafts, staticFlagDrafts } from '../../testing/data/featureFlags.js';
+import { staticExperiments } from '../../testing/data/experiment-data.js';
+import {
+  repoManager,
+  eraseTestData,
+  insertFlags,
+  insertExperiments,
+} from './testing-helpers.js';
+import { printDetail } from '../../lib/index.js';
+import { ObjectId } from 'mongodb';
+import { ExperimentReference, FeatureFlagDraft } from '@estuary/types';
+
+beforeAll(eraseTestData);
+
+describe('Embed methods', () => {
+  describe('createEmbeds', () => {
+    let insertResults: string[] = [];
+    beforeEach(async () => {
+      await eraseTestData();
+      await insertFlags(insertResults, staticFlagDrafts.slice(0, 2));
+      await insertExperiments(insertResults, staticExperiments);
+      // console.log('---- FINISHED INSERTING SETUP DATA -----')
+    });
+
+    it("creates an embedded ExperimentReference on a flag given valid input", async () => {
+      const expDraft = { ...staticExperiments[0] };
+      const flags = await repoManager.featureFlag.getMany(2);
+      if (!flags.length) throw new Error('Flags should exist!');
+      
+      const { groups, environmentName } = expDraft;
+      const expDoc = await repoManager.experiment.findOne({ name: expDraft.name });
+      if (!expDoc) throw new Error(`Experiment ${expDraft.name} should exist!`);
+
+      expDoc.flagIds.push(flags[0].id);
+      // printDetail({expDoc});
+      const embedsCreated = await repoManager.experiment._createEmbeds(expDoc);
+      expect(embedsCreated).toBe(true);
+
+      const findQuery = { _id: ObjectId.createFromHexString(expDoc.flagIds[0]) };
+      const updatedFlags = await repoManager.featureFlag.findMany(findQuery);
+      // printDetail({ updatedFlag: updatedFlags[0] })
+      expect(updatedFlags).toHaveLength(1);
+      const updatedRules = updatedFlags[0].environments[environmentName].overrideRules;
+      // printDetail({updatedRules});
+      const { startTimestamp, endTimestamp, ...rest } = new ExperimentReference(expDoc);
+      const match = updatedRules.find((rule) => 'id' in rule && rule.id === expDoc.id);
+      expect(match).toMatchObject(rest);
+
+    });
+
+    it.skip("returns true if passed a valid experiment with an empty flagIds array", async () => {
+    });
+
+    it.skip("throws an error if any IDs on `flagIds` match no flags", async () => {
+    });
+
+    afterAll(eraseTestData);
+  });
+
+  // WIP
+  describe('deleteEmbeds', () => {
+    let insertResults: string[] = [];
+    beforeEach(async () => {
+      await eraseTestData();
+      const flagInsertResults: string[] = [];
+      await insertFlags(flagInsertResults, staticFlagDrafts.slice(0, 2));
+      
+      const expWithFlag = { ...staticExperiments[0] };
+      expWithFlag.flagIds.push(flagInsertResults[0], flagInsertResults[1]);
+
+      await insertExperiments(insertResults, [expWithFlag]);
+      // console.log('---- FINISHED INSERTING SETUP DATA -----');
+    });
+
+    it("Removes matching embeds from all flags, and returns true", async () => {
+      const experimentId = insertResults[0];
+      // console.log({experimentId})
+      const originalFlags = await repoManager.featureFlag.getMany();
+      // printDetail({originalFlags})
+      const experimentDoc = await repoManager.experiment.get(experimentId);
+      const embedDeleteResult = await repoManager.experiment._deleteEmbeds(experimentDoc);
+      // const insertedExperiment = await repoManager.experiment.get(insertResults[0]);
+      const updatedFlags = await repoManager.featureFlag.getMany();
+      // printDetail({updatedFlags})
+      const ruleSets = updatedFlags.map((flag) => FeatureFlagDraft.getRules(flag));
+      expect(ruleSets).toHaveLength(2);
+      // printDetail({ruleSets});
+      // printDetail({insertedExperiment});
+      expect(ruleSets[0]).not.toContainEqual({ id: experimentId });
+      expect(ruleSets[1]).not.toContainEqual({ id: experimentId });
+      expect(embedDeleteResult).toBe(true);
+    });
+
+    it.skip("Returns false (throws?) when ", async () => {
+    });
+    
+    afterAll(eraseTestData);
+  });
+  // might not implement this method
+  describe.skip('getEmbeds', () => {
+    let insertResults: string[] = [];
+    beforeAll(async () => {
+      await eraseTestData();
+      // const insertions = new Array(10)
+      //   .fill(null)
+      //   .map(() => repo.featureFlag.create(getExampleFlag()));
+      // await Promise.all(insertions);
+      await insertFlags(insertResults, exampleFlagDrafts);
+    });
+
+    it("returns all flags if a `maxCount` isn't passed", async () => {
+      const result = await repoManager.featureFlag.getMany();
+      expect(result).toHaveLength(10);
+    });
+
+    it("returns `maxCount` flags if a valid number is passed <= collection size", async () => {
+      const result = await repoManager.featureFlag.getMany(5);
+      expect(result).toHaveLength(5);
+    });
+
+    it("returns all flags if `maxCount` >= collection size", async () => {
+      const result = await repoManager.featureFlag.getMany(50);
+      expect(result).toHaveLength(10);
+    });
+
+    afterAll(eraseTestData);
+  });
+
+  describe.skip('updateEmbeds', () => {
+    let insertResults: string[] = [];
+    // beforeAll(async () => await insertExampleFlags(insertResults));
+
+    it("overwrites specified fields when passed a partial object", async () => {
+      // const first = insertResults[0];
+
+      // const updateObject = {
+      //   id: first,
+      //   value: {
+      //     type: 'number' as const,
+      //     initial: 3,
+      //   },
+      // };
+      // const result = await repo.featureFlag.update(updateObject);
+      // expect(result).not.toBeNull();
+
+      // const updatedFirst = await repo.featureFlag.get(first);
+      // expect(updatedFirst).not.toBeNull();
+      // expect(updatedFirst).toMatchObject(updateObject);
+    });
+
+    it("doesn't modify fields not passed in the update object", async () => {
+      // const second = insertResults[1];
+      // const original = exampleFlagDrafts[1];
+      // if (second === null) return;
+
+      // const updateName = 'updated testing flag';
+      // const result = await repo.featureFlag.update({ id: second, name: updateName });
+      // expect(result).toBeTruthy();
+
+      // const updatedFirst = await repo.featureFlag.get(second);
+      // expect(updatedFirst).not.toBeNull();
+      // if (updatedFirst === null) return;
+
+      // const { createdAt, updatedAt, ...withoutTimeStamps } = updatedFirst;
+      // expectTypeOf(createdAt).toBeNumber();
+      // expectTypeOf(updatedAt).toBeNumber();
+      // expect(updatedAt).toBeGreaterThanOrEqual(createdAt);
+
+      // const reconstructed = { ...withoutTimeStamps, name: original.name };
+      // expect(reconstructed).toStrictEqual({ id: second, ...original });
+    });
+
+    it("Makes no changes if no embed matches", async () => {
+      // const result = await repo.featureFlag.update({ id: ObjectId.createFromTime(1).toHexString(), name: 'asdfoasihgda'});
+      // expect(result).toBeFalsy();
+    });
+    
+    afterAll(eraseTestData);
+  });
+
+});
+
+afterAll(eraseTestData);

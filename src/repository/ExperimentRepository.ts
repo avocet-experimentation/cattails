@@ -1,4 +1,5 @@
 import {
+  DocumentUpdateFailedError,
   Experiment,
   ExperimentReference,
   experimentSchema,
@@ -6,6 +7,8 @@ import {
 import MongoRepository from "./MongoRepository.js";
 import { PartialWithStringId } from './MongoRepository.js';
 import RepositoryManager from "./RepositoryManager.js";
+import { ObjectId } from "mongodb";
+import { printDetail } from "../lib/index.js";
 
 export default class ExperimentRepository extends MongoRepository<Experiment> {
   constructor(repositoryManager: RepositoryManager) {
@@ -14,31 +17,38 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
 
   /** WIP
    * Store an ExperimentReference on any flags referenced in an experiment
+   * todo: maybe return the result and let errors bubble to indicate failure
    */
   async _createEmbeds(
     newExperiment: Experiment
   ): Promise<boolean> {
     try {
-    // const result = await this.create(experimentDraft);
-    // if (!result === null) return null;
-    const flagColl = this._getCollection('FeatureFlag');
-    const experimentReference = new ExperimentReference(newExperiment);
+      const experimentReference = new ExperimentReference(newExperiment);
+      // const id = newExperiment.flagIds[0]
+      // const flagMatcher = {
+      //   _id: typeof id === 'string' ? ObjectId.createFromHexString(newExperiment.flagIds[0]) : id,
+      // };
+      const flagMatcher = {
+        _id: { $in: newExperiment.flagIds.map((id) => ObjectId.createFromHexString(id)) }
+      };
 
-    const flags = await Promise.all(newExperiment.flagIds.map(this.get));
+      const updateResult = await this.repository.featureFlag
+        .addRule(experimentReference, flagMatcher);
 
-    for (let i = 0; i < newExperiment.flagIds.length; i += 1) {
-      const flagId = newExperiment.flagIds[i];
-      // if the environment property doesn't exist, it needs to be imputed
-      // else push the new rule to environments.${newExperiment.environmentName}.overrideRules
-      // flagColl.updateOne({ _id: flagId },)
-    }
+      if (!updateResult) {
+        throw new DocumentUpdateFailedError(
+          `Failed to add ExperimentReference on flags ${newExperiment.flagIds}!`
+        );
+      }
 
-    // push the ExperimentReference to environments.${experimentDraft.environmentName}.overrideRules for each flag
+      return updateResult;
     } catch (e: unknown) {
+      if (e instanceof Error) {
+        throw e;
+      }
+
       return false;
     }
-
-    return true;
   }
 
   /** WIP
@@ -67,26 +77,40 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
 
   /** WIP
    * Deletes all ExperimentReferences on any flags referenced by an experiment
+   * 
+   * given an experimentId:
+   * - all override rules with the same id
    */
-  async _deleteEmbeds(
-    partialExperiment: PartialWithStringId<Experiment>
-  ): Promise<boolean> {
+  async _deleteEmbeds(experiment: Experiment): Promise<boolean> {
     try {
-      const result = await this.update(partialExperiment);
+      const reference = new ExperimentReference(experiment);
+      const embedFilter = {
+        id: experiment.id,
+        environmentName: experiment.environmentName,
+      }
+      // create filter for flags that contain a rule with the experiment id
+      // const flagFilter = {
+      //   [`environments.*.overrideRules`]: {
+      //     $elemMatch: {
+      //       id: experimentId,
+      //     }
+      //   } 
+      // };
+      // update all flags matching filter
+      
+      const updateResult = await this.repository.featureFlag
+      .removeRule(embedFilter);
       // if (!result) return null;
   
-      const updatedExperiment = await this.get(partialExperiment.id);
       // if (updatedExperiment === null) return null;
   
       
-      const updatedReference = new ExperimentReference(updatedExperiment);
+      // const updatedReference = new ExperimentReference(updatedExperiment);
   
       // delete the ExperimentReference in environments.${experimentDraft.environmentName}.overrideRules for each flag
-
+      return updateResult;
     } catch (e: unknown) {
       return false;
     }
-
-    return true;
   }
 }
