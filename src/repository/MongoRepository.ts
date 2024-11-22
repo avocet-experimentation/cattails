@@ -1,15 +1,14 @@
 import {
-  MongoClient,
   ObjectId,
   Collection,
-  Db,
   Filter,
   OptionalUnlessRequiredId,
   PushOperator,
   PullOperator,
   MatchKeysAndValues,
   WithId,
-  WithSessionCallback,
+  WithTransactionCallback,
+  UpdateResult,
 } from 'mongodb';
 import merge from 'deepmerge';
 import {
@@ -17,7 +16,6 @@ import {
   EstuaryMongoCollectionName,
   BeforeId,
   EstuaryMongoTypes,
-  AnyZodSchema,
   getPartialSchema,
   schemaOmit,
   DraftRecord,
@@ -25,7 +23,6 @@ import {
   DocumentNotFoundError,
   SchemaParseError,
   RequireOnly,
-  estuaryMongoCollectionNameSchema,
 } from '@estuary/types';
 import RepositoryManager from './RepositoryManager.js';
 
@@ -46,12 +43,12 @@ export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<T, 'i
  * - solve filter type problem and remove the `as Filter...` assertions
  * - narrow the type of EstuaryObjectSchema so that it is recognized as an object type
  */
-export default class MongoRepository<T extends EstuaryMongoTypes, S extends EstuarySchema<T> = EstuarySchema<T>> {
+export default class MongoRepository<T extends EstuaryMongoTypes> {
   repository: RepositoryManager;
   collection: Collection<BeforeId<T>>;
-  schema: AnyZodSchema;
+  schema: EstuarySchema<T>;
 
-  constructor(collectionName: EstuaryMongoCollectionName, schema: S, repositoryManager: RepositoryManager) {
+  constructor(collectionName: EstuaryMongoCollectionName, schema: EstuarySchema<T>, repositoryManager: RepositoryManager) {
     this.repository = repositoryManager;
     this.collection = repositoryManager.client.db().collection(collectionName);
     this.schema = schema;
@@ -111,7 +108,8 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
 
   _holdsEmptyString(obj: Record<string, unknown>, key: string): boolean {
     if (key in obj) {
-      return typeof obj[key] === 'string' && obj[key].length === 0;
+      const value = obj[key];
+      return typeof value === 'string' && value.length === 0;
     } else return false;
   }
   /**
@@ -124,9 +122,9 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
       ...newEntry,
     }
     const validated = this._validateNew(withTimeStamps);
-    const result = await this.repository.client.withSession(async (session) => session
-      .withTransaction(async (session) => {
+    const result = await this._withTransaction(async (session) => {
         const insertResult = await this.collection.insertOne(validated);
+        // console.log({insertResult})
         if (!insertResult.insertedId) {
           await session.abortTransaction();
           throw new DocumentUpdateFailedError('Failed to insert new document');
@@ -142,14 +140,12 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
         }
 
         return insertId;
-      }));
+      });
 
     return result;
   }
   /**
    * A placeholder to be overridden on sub-classes
-   * @returns true if the embed was successful, `null` if schema validation failed,
-   * or false otherwise
    */
   async _createEmbeds(newDocument: T): Promise<boolean> {
     return true;
@@ -158,7 +154,6 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   /**
    * Get up to `maxCount` documents, or all if not specified
    * @returns a possibly empty array of documents
-   * Change this to take an array of IDs?
    */
   async getMany(maxCount?: number): Promise<T[]> {
     const resultCursor = this.collection.find({});
@@ -179,7 +174,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
   }
   /**
    * Find a document from any of its properties. An empty object matches the first document.
-   * To find by name, pass { name: <documentName> }
+   * To find by name, pass { name: documentName }
    * See https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/query-document/#std-label-node-fundamentals-query-document
    * @param query A MongoDB query
    */
@@ -213,11 +208,12 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     const updates = { ...rest, updatedAt: Date.now() };
     const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
     const result = await this.collection.updateOne(filter, [{ $set: updates }]);
-    return result.modifiedCount > 0;
+    return result.acknowledged;
   }
   /**
    * Updates the passed key on a record, if it exists. Fetches the document and
    * validates it with the updates against the schema before attempting to update.
+   * @param keyPath a dot-separated string representing successively nested keys
    * @returns `true` if a record was updated, `null` if the keyPath 
    * or newValue is invalid, or `false` otherwise
    */
@@ -227,14 +223,11 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     newValue: unknown,
   ): Promise<boolean | null> {
     if (keyPath.length === 0) return null;
-    // transform the updates into an object of nested properties
     const parsed = this._keyPathToObject(keyPath, newValue);
-    // console.log({parsed})
     const original = await this.get(id);
     if (!original) return null;
 
     const merged = merge(original, parsed);
-    // console.log({merged})
     const validated = this._validateUpdate(merged);
     if (validated === null) return null;
 
@@ -247,15 +240,15 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     } as Filter<BeforeId<T>>;
 
     const result = await this.collection.updateOne(filter, [{ $set: updates }]);
-    return result.modifiedCount > 0;
+    return result.acknowledged;
   }
-  /**
+  /** (WIP)
    * Updates the passed key on a record, if it exists. Use with caution, as it
    *  could result in invalid schema! Try `updateKeySafe` first.
    * @returns `true` if a record was updated, `null` if the keyPath 
    * or newValue is invalid, or `false` otherwise
    */
-  private async updateKey(
+  private async updateKeyUnsafe(
     id: string,
     keyPath: string,
     newValue: unknown,
@@ -270,42 +263,78 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
       [keyPath]: { $exists: true }
     } as Filter<BeforeId<T>>;
     const result = await this.collection.updateOne(filter, { $set: updates });
-    return result.modifiedCount > 0;
+    return result.acknowledged;
   }
   /**
-   * Pushes to an array within a record
-   * @returns true if a record was updated, or false otherwise
+   * Pushes to an array within all matching record
+   * @param matcher a partial document to filter by, or an array of them
+   * @returns the update result. Check .acknowledged to verify it succeeded
    */
-  async push(id: string, keyPath: string, newEntry: unknown) {
+  async push(
+    keyPath: string,
+    newEntry: Record<string, any>,
+    matcher: Filter<T>
+  ): Promise<UpdateResult<T>> {
     const op = { [keyPath]: newEntry } as PushOperator<BeforeId<T>>;
 
     const filter = {
-      _id: ObjectId.createFromHexString(id),
+      ...matcher,
       [keyPath]: { $exists: true }
     } as Filter<BeforeId<T>>;
 
-    const result = await this.collection.updateOne(filter, { $push: op });
-    return result.modifiedCount > 0;
+    const result = await this.collection.updateMany(filter, { $push: op });
+    return result;
   }
+
   /**
-   * Removes an element from an array within a record
-   * @returns true if a record was updated, or false otherwise
+   * Pushes to an array on a document with the passed id
    */
-  async pull(id: string, keyPath: string, toDelete: unknown) {
+  async pushTo(
+    keyPath: string,
+    newEntry: Record<string, any>,
+    documentId: string,
+  ): Promise<UpdateResult<T>> {
+    const matcher = { _id: ObjectId.createFromHexString(documentId) } as Filter<T>;
+    return this.push(keyPath, newEntry, matcher);
+  }
+  
+  /**
+   * Removes an element from an array within all matching records
+   * @param [documentMatcher={}] a partial document to filter by, or an array of them
+   * @returns the updateResult
+   */
+  async pull(
+    keyPath: string,
+    toDelete: Record<string, any>,
+    documentMatcher: Filter<T> = {},
+  ): Promise<UpdateResult<T>> {
+    const op = { [keyPath]: toDelete } as PullOperator<BeforeId<T>>;
+  
     const filter = {
-      _id: ObjectId.createFromHexString(id),
+      ...documentMatcher,
       [keyPath]: { $exists: true }
     } as Filter<BeforeId<T>>;
-    
-    const op = { [keyPath]: toDelete } as PullOperator<BeforeId<T>>;
-    const result = await this.collection.updateOne(filter, { $pull: op });
-    return result.modifiedCount > 0;
+      
+    const result = await this.collection.updateMany(filter, { $pull: op });
+    return result;
   }
+  /**
+   * Pulls from an array on a document with the passed id
+   */
+  async pullFrom(
+    keyPath: string,
+    toDelete: Record<string, any>,
+    documentId: string,
+  ): Promise<UpdateResult<T>> {
+    const matcher = { _id: ObjectId.createFromHexString(documentId) } as Filter<T>;
+    return this.pull(keyPath, toDelete, matcher);
+  }
+  
   /**
    * (WIP) Updates an element on an array inside a record
    * @param searchObj An object of properties to filter elements by
    * @param updateObj A partial object of properties to overwrite on the 
-   * @returns true if a record was updated, or false otherwise
+   * @returns true if the query was successful
    */
   async updateElement(id: string, keyPath: string, searchObj: PartialWithStringId<T>, updateObj: object) {
     const validated = this._validateUpdate(searchObj);
@@ -321,22 +350,56 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     
     const op = { [`${keyPath}.$`]: updateObj } as MatchKeysAndValues<BeforeId<T>>;
     const result = await this.collection.updateOne(filter, { $set: op });
-    return result.modifiedCount > 0;
+    return result.acknowledged;
   }
+  // /**
+  //  * Deletes an existing record
+  //  * @returns true if a record was deleted, or false otherwise
+  //  */
+  // async deleteOld(documentId: string): Promise<boolean> {
+  //   const filter = { _id: ObjectId.createFromHexString(documentId)};
+  //   const result = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
+  //   if (!result.deletedCount) {
+  //     throw new DocumentUpdateFailedError(`Failed to delete document with id ${documentId}`);
+  //   }
+
+  //   return true;
+  // }
   /**
    * Deletes an existing record
-   * @returns true if a record was deleted, or false otherwise
+   * @returns true if a record was deleted, or throws otherwise
    */
   async delete(documentId: string): Promise<boolean> {
     const filter = { _id: ObjectId.createFromHexString(documentId)};
-    const result = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
-    if (!result.deletedCount) {
-      throw new DocumentUpdateFailedError(`Failed to delete document with id ${documentId}`);
-    }
+    const result = this._withTransaction(async (session) => {
+      const existingDocument = await this.get(documentId);
+      const deleteResult = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
+      if (!deleteResult.deletedCount) {
+        throw new DocumentUpdateFailedError(
+          `Failed to delete document with id ${documentId}`
+        );
+      }
 
-    return true;
+      const embedDeleteResult = await this._deleteEmbeds(existingDocument);
+      if (!embedDeleteResult) {
+        await session.abortTransaction();
+        throw new DocumentUpdateFailedError(
+          `Failed to delete embeds for document with id ${documentId}`
+        );
+
+      }
+      return true;
+    });
+
+    return result;
   }
 
+  /**
+   * A placeholder to be overridden on sub-classes
+   */
+  async _deleteEmbeds(document: T): Promise<boolean> {
+    return true;
+  }
   /**
    * Parses a key path string into an update object
    * @param keyPath A dot-separated string representing nested properties
@@ -359,11 +422,12 @@ export default class MongoRepository<T extends EstuaryMongoTypes, S extends Estu
     return result;
   }
 
-  _getCollection(collectionName: EstuaryMongoCollectionName) {
-    const validated = estuaryMongoCollectionNameSchema.parse(collectionName);
-    return this.repository.client.db().collection(validated);
-  }
-  async _withSession<R = any>(cb: WithSessionCallback<R>): Promise<R> {
-    return this.repository.client.withSession(cb);
+  // _getCollection(collectionName: EstuaryMongoCollectionName) {
+  //   const validated = estuaryMongoCollectionNameSchema.parse(collectionName);
+  //   return this.repository.client.db().collection(validated);
+  // }
+
+  async _withTransaction<R = any>(cb: WithTransactionCallback<R>): Promise<R> {
+    return this.repository.client.withSession(async (session) => session.withTransaction(cb));
   }
 }
