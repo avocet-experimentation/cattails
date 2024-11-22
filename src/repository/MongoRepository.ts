@@ -44,12 +44,12 @@ export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<T, 'i
  * - narrow the type of EstuaryObjectSchema so that it is recognized as an object type
  */
 export default class MongoRepository<T extends EstuaryMongoTypes> {
-  repository: RepositoryManager;
+  manager: RepositoryManager;
   collection: Collection<BeforeId<T>>;
   schema: EstuarySchema<T>;
 
   constructor(collectionName: EstuaryMongoCollectionName, schema: EstuarySchema<T>, repositoryManager: RepositoryManager) {
-    this.repository = repositoryManager;
+    this.manager = repositoryManager;
     this.collection = repositoryManager.client.db().collection(collectionName);
     this.schema = schema;
   }
@@ -197,8 +197,22 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     return records.map(this._recordToObject, this);
   }
   /**
-   * Updates an existing record
+   * Updates an existing record. Will be removed once the new implementation is validated.
    * @returns true if a record was updated, or false otherwise
+   */
+  // async updateOld(partialEntry: PartialWithStringId<T>): Promise<boolean> {
+  //   const validated = this._validateUpdate(partialEntry);
+  //   // if (validated === null) return null;
+
+  //   const { id, ...rest } = validated;
+  //   const updates = { ...rest, updatedAt: Date.now() };
+  //   const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
+  //   const result = await this.collection.updateOne(filter, [{ $set: updates }]);
+  //   return result.acknowledged;
+  // }
+  /**
+   * Updates an existing record
+   * @returns true if the update request was successful, or throws otherwise
    */
   async update(partialEntry: PartialWithStringId<T>): Promise<boolean> {
     const validated = this._validateUpdate(partialEntry);
@@ -207,8 +221,28 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const { id, ...rest } = validated;
     const updates = { ...rest, updatedAt: Date.now() };
     const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
-    const result = await this.collection.updateOne(filter, [{ $set: updates }]);
-    return result.acknowledged;
+    // const result = await this.collection.updateOne(filter, [{ $set: updates }]);
+    const result = this._withTransaction(async (session) => {
+      const updateResult = await this.collection.updateOne(filter, [{ $set: updates }]);
+      if (!updateResult.acknowledged) {
+        await session.abortTransaction();
+        throw new DocumentUpdateFailedError(`Failed to update document ${id}`);
+      }
+
+      const embedResult = await this._updateEmbeds(validated);
+      if (!embedResult) {
+        await session.abortTransaction();
+        throw new DocumentUpdateFailedError(`Failed to update embeds for document ${id}`);
+      }
+
+      return true;
+    });
+
+    return result;
+  }
+
+  async _updateEmbeds(partialEntry: PartialWithStringId<T>): Promise<boolean> {
+    return true;
   }
   /**
    * Updates the passed key on a record, if it exists. Fetches the document and
@@ -428,6 +462,6 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   // }
 
   async _withTransaction<R = any>(cb: WithTransactionCallback<R>): Promise<R> {
-    return this.repository.client.withSession(async (session) => session.withTransaction(cb));
+    return this.manager.client.withSession(async (session) => session.withTransaction(cb));
   }
 }

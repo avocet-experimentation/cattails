@@ -1,6 +1,7 @@
 import {
   FeatureFlag,
   featureFlagSchema,
+  FlagEnvironmentMapping,
   OverrideRuleUnion,
   RequireOnly,
 } from "@estuary/types";
@@ -31,6 +32,7 @@ export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> 
     const idMatcher = {
       _id: ObjectId.createFromHexString(id),
     }
+
     return this.addRule(rule, idMatcher);
   }
   /**
@@ -45,20 +47,39 @@ export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> 
       ruleMatcher,
       flagMatcher,
     );
-    console.log({result})
+
     return result.acknowledged;
   }
   /**
    * (WIP) Remove an override rule from a flag given the flag's id
+   * todo: replace this placeholder implementation:
+   * - find the rule array containing `ruleId`
+   * - get the environment name given the rule array
+   * - call `pull`
    */
   async removeRuleFromId(
-    ruleMatcher: RequireOnly<OverrideRuleUnion, 'id' | 'environmentName'>, 
+    ruleId: string,
     flagId: string,
   ) {
     const idMatcher = {
       _id: ObjectId.createFromHexString(flagId),
     }
-    return this.removeRule(ruleMatcher, idMatcher);
+    // return this.removeRule(ruleMatcher, idMatcher);
+    const flag = await this.get(flagId);
+
+    const newEnvironments: FlagEnvironmentMapping = Object.entries(flag.environments)
+      .reduce((acc, [envName, envProps]) => {
+        const ruleIndex = envProps.overrideRules.findIndex((rule) => rule.id === ruleId);
+        if (ruleIndex !== undefined) envProps.overrideRules.splice(ruleIndex, 1);
+        return { ...acc, [envName]: envProps };
+      }, {});
+
+    const result = await this.update({
+      id: flagId,
+      environments: newEnvironments
+    });
+
+    return result;
   }
 
   async getEnvironmentFlags(environment: string) {
