@@ -3,7 +3,6 @@ import {
   flagClientValueSchema,
   FlagClientValue,
   FlagClientMapping,
-  EnvironmentName,
 } from "@estuary/types";
 import { FastifyReply, FastifyRequest } from "fastify";
 import ClientFlagManager from "../lib/ClientFlagManager.js";
@@ -11,7 +10,7 @@ import ClientFlagManager from "../lib/ClientFlagManager.js";
 const clientFlagManager = new ClientFlagManager();
 
 interface FetchFlagsClientBody { 
-  Body: { environment: EnvironmentName, clientProps: ClientPropMapping},
+  Body: { environmentName: string, clientProps: ClientPropMapping},
 }
 
 interface FetchFlagClientRequest extends FetchFlagsClientBody { 
@@ -28,8 +27,8 @@ export const fetchFFlagHandler = async (
   reply: FastifyReply
 ): Promise<FlagClientValue> => {
   const { flagName } = request.params;
-  const { environment, clientProps } = request.body;
-  const currentValue = await clientFlagManager.currentFlagValue(flagName, environment, clientProps);
+  const { environmentName, clientProps } = request.body;
+  const currentValue = await clientFlagManager.getClientFlagValue(flagName, environmentName, clientProps);
 
   // todo: change this parse to only strip out extra properties instead of throwing
   return reply.code(200).send(flagClientValueSchema.parse(currentValue));
@@ -39,8 +38,8 @@ export const getEnvironmentFFlagsHandler = async (
   request: FastifyRequest<FetchFlagsClientBody>,
   reply: FastifyReply
 ): Promise<FlagClientMapping> => {
-  const { environment, clientProps } = request.body;
-  const environmentValues = await clientFlagManager.environmentFlagValues(environment, clientProps);
+  const { environmentName, clientProps } = request.body;
+  const environmentValues = await clientFlagManager.environmentFlagValues(environmentName, clientProps);
   if (environmentValues === null) {
     return reply
       .code(404)
