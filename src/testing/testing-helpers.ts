@@ -1,7 +1,7 @@
 import { FeatureFlagDraft, EstuaryMongoCollectionName, ExperimentDraft, EstuaryMongoTypes, DraftRecord } from "@estuary/types";
-import cfg from "../../envalid.js";
-import RepositoryManager from "../RepositoryManager.js";
-import MongoRepository from "../MongoRepository.js";
+import cfg from "../envalid.js";
+import RepositoryManager from "../repository/RepositoryManager.js";
+import MongoRepository from "../repository/MongoRepository.js";
 
 export const repoManager = new RepositoryManager(cfg.MONGO_TESTING_URI);
 
