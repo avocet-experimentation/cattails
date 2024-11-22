@@ -1,5 +1,5 @@
 import { ClientPropEntries, ClientPropValue } from '@estuary/types';
-import crypto from 'node:crypto';
+import crypto, { randomUUID } from 'node:crypto';
 /*
 MD5 vs DJB2:
 - MD5 is more collision resistant so it is prefereable to be used for larget data sets.
@@ -45,13 +45,14 @@ export function hashAndCompare(
  * @param input 
  * @returns a signed 32-bit integer
  */
-function hashStringDJB2(input: string) {
+export function hashStringDJB2(input: string) {
+  const str = input.length === 0 ? randomUUID() : input;
   let hash = 0;
   // iterate over the string, use bitwise left shift operator, which is essentially multiply the value by 32 -- increases significance of the current hash value.
   // subtract the hash from the result
   // Add the utf char value
-  for (let i = 0; i < input.length; i++) {
-    hash = (hash << 5) - hash + input.charCodeAt(i); 
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i); 
     // console.log('left shifted:', hash)
     hash |= 0; // Convert to 32bit integer -- bitwise OR operator(?)
     // console.log('converted to 32 bit:', hash)
