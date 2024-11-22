@@ -1,6 +1,5 @@
 import {
   ClientPropMapping,
-  EnvironmentName,
   FeatureFlag,
   FlagClientMapping,
   FlagClientValue,
@@ -13,16 +12,15 @@ import { randomUUID } from "crypto";
 // import * as bcrypt from 'bcrypt';
 import ExperimentManager from "./ExperimentManager.js";
 import RepositoryManager from "../repository/RepositoryManager.js";
-
-const PLACEHOLDER_ENVIRONMENT = 'dev';
+import cfg from "../envalid.js";
 
 export default class ClientFlagManager {
   repository: RepositoryManager;
   expManager: ExperimentManager;
 
-  constructor(repositoryManager: RepositoryManager) {
-    this.repository = repositoryManager;
-    this.expManager = new ExperimentManager(repositoryManager);
+  constructor() {
+    this.repository = new RepositoryManager(cfg.MONGO_API_URI);
+    this.expManager = new ExperimentManager(this.repository);
   }
 
   /*
@@ -47,15 +45,20 @@ export default class ClientFlagManager {
     - get the flag's default value
     - hash the flag's ID
    */
-  async currentFlagValue(
+  /**
+   * Get the value of a flag to display to a client as well as identifiers 
+   * corresponding to the override rule applied, or the flag's own ID. Returns
+   * `null` as a fallback value if no corresponding flag is found.
+   */
+  async getClientFlagValue(
     flagName: string,
-    EnvironmentName: EnvironmentName,
+    environmentName: string,
     clientProps: ClientPropMapping
   ): Promise<FlagClientValue | null> {
     try {
       const flag = await this.repository.featureFlag.findOne({ name: flagName });
       if (!flag) throw new Error();
-      return this.computeFlagValue(flag, EnvironmentName, clientProps);
+      return this.computeFlagValue(flag, environmentName, clientProps);
     } catch(e: unknown) {
       // if (e instanceof Error) {
         return null;
@@ -65,7 +68,7 @@ export default class ClientFlagManager {
   }
 
   /**
-   * Gets currentFlagValue for every flag in the specified environment
+   * Gets client values for every flag in the specified environment
    * 
    * todo:
    * - take a client API key instead of an environment name, then:
@@ -75,7 +78,7 @@ export default class ClientFlagManager {
    *   - else get the environment for that connection
    */
   async environmentFlagValues(
-    environmentName: EnvironmentName,
+    environmentName: string,
     clientProps: ClientPropMapping
   ): Promise<FlagClientMapping | null> {
     try {
@@ -87,7 +90,7 @@ export default class ClientFlagManager {
   
       for (let i = 0; i < featureFlags.length; i += 1) {
         const flag = featureFlags[i];
-        const promise = this.computeFlagValue(flag, PLACEHOLDER_ENVIRONMENT, clientProps);
+        const promise = this.computeFlagValue(flag, environmentName, clientProps);
         // transform the promise to a tuple of [name, FlagClientValue] upon resolution
         promises.push(promise.then((result) => [flag.name, result]));
       }
@@ -103,7 +106,7 @@ export default class ClientFlagManager {
 
   private async computeFlagValue(
     flag: FeatureFlag,
-    EnvironmentName: EnvironmentName,
+    environmentName: string,
     clientProps: ClientPropMapping
   ): Promise<FlagClientValue> {
     // define a fallback
@@ -112,11 +115,11 @@ export default class ClientFlagManager {
       hash: this.defaultIdHash(flag.id),
     };
 
-    if (flag.environments[EnvironmentName] === undefined) {
+    if (flag.environments[environmentName] === undefined) {
       return defaultReturn;
     }
 
-    const overrideRules = flag.environments[EnvironmentName].overrideRules;
+    const overrideRules = flag.environments[environmentName].overrideRules;
     const selectedRule = this.enroll(overrideRules, clientProps);
     if (selectedRule === undefined) return defaultReturn;
       
