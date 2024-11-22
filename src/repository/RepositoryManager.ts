@@ -13,8 +13,8 @@ export default class RepositoryManager {
   experiment: ExperimentRepository;
   clientPropDef: ClientPropDefRepository;
   environment: EnvironmentRepository;
-  clientConnection: UserRepository;
-  user: ClientConnectionRepository;
+  clientConnection: ClientConnectionRepository;
+  user: UserRepository;
 
   constructor(mongoUri: string) {
     this.client = new MongoClient(mongoUri);
@@ -23,7 +23,7 @@ export default class RepositoryManager {
     this.experiment = new ExperimentRepository(this);
     this.clientPropDef = new ClientPropDefRepository(this);
     this.environment = new EnvironmentRepository(this);
-    this.clientConnection = new UserRepository(this);
-    this.user = new ClientConnectionRepository(this);
+    this.clientConnection = new ClientConnectionRepository(this);
+    this.user = new UserRepository(this);
   }
 }
