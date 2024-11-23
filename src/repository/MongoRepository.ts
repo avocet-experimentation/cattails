@@ -300,7 +300,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     return result.acknowledged;
   }
   /**
-   * Pushes to an array within all matching record
+   * Pushes to an array within all matching records
    * @param matcher a partial document to filter by, or an array of them
    * @returns the update result. Check .acknowledged to verify it succeeded
    */
@@ -339,10 +339,10 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    */
   async pull(
     keyPath: string,
-    toDelete: Record<string, any>,
+    toDeleteMatcher: Record<string, any>,
     documentMatcher: Filter<T> = {},
   ): Promise<UpdateResult<T>> {
-    const op = { [keyPath]: toDelete } as PullOperator<BeforeId<T>>;
+    const op = { [keyPath]: toDeleteMatcher } as PullOperator<BeforeId<T>>;
   
     const filter = {
       ...documentMatcher,
@@ -406,7 +406,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   async delete(documentId: string): Promise<boolean> {
     const filter = { _id: ObjectId.createFromHexString(documentId)};
     const result = this._withTransaction(async (session) => {
-      const existingDocument = await this.get(documentId);
+      // const existingDocument = await this.get(documentId);
       const deleteResult = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
       if (!deleteResult.deletedCount) {
         throw new DocumentUpdateFailedError(
@@ -414,7 +414,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
         );
       }
 
-      const embedDeleteResult = await this._deleteEmbeds(existingDocument);
+      const embedDeleteResult = await this._deleteEmbeds(documentId);
       if (!embedDeleteResult) {
         await session.abortTransaction();
         throw new DocumentUpdateFailedError(
@@ -431,7 +431,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   /**
    * A placeholder to be overridden on sub-classes
    */
-  async _deleteEmbeds(document: T): Promise<boolean> {
+  async _deleteEmbeds(documentId: string): Promise<boolean> {
     return true;
   }
   /**
