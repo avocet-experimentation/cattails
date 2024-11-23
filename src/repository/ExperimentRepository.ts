@@ -46,8 +46,8 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
     if (!updateResult) {
       throw new DocumentUpdateFailedError(`Failed to stop experiment ${experimentId}`);
     }
-    const updatedDoc = await this.get(experimentId);
-    this._deleteEmbeds(updatedDoc);
+    // const updatedDoc = await this.get(experimentId);
+    return this._deleteEmbeds(experimentId);
   }
   /** WIP
    * Store an ExperimentReference on any flags referenced in an experiment
@@ -67,7 +67,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
       };
 
       const embedResult = await this.manager.featureFlag
-        .addRule(experimentReference, flagMatcher);
+        .push('overrideRules', experimentReference, flagMatcher);
 
       if (!embedResult) {
         throw new DocumentUpdateFailedError(
@@ -75,7 +75,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
         );
       }
 
-      return embedResult;
+      return embedResult.acknowledged;
     } catch (e: unknown) {
       if (e instanceof Error) {
         throw e;
@@ -90,21 +90,63 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
    */
   async _updateEmbeds(
     partialExperiment: PartialWithStringId<Experiment>
-    // partialExperiment: PartialWithStringId<Experiment>
   ): Promise<boolean> {
     try {
-      const { id } = partialExperiment;
-      const currentFlags = await this.manager.featureFlag.getMany();
-      const flagsWithEmbed = currentFlags.filter((flag) => {
-        const allRules = FeatureFlagDraft.getRules(flag);
-        return !!allRules.find((rule) => rule.id === id);
+      const { featureFlag } = this.manager;
+      const updatedExpDoc = await this.get(partialExperiment.id);
+      // const flagsWithEmbed = await this._getDocumentsWithEmbeds(partialExperiment.id);
+      // if (flagsWithEmbed.length === 0) return true;
+      // const existingEmbed = flagsWithEmbed[0].overrideRules
+      //   .find((rule) => rule.id === partialExperiment.id);
+
+      // if (!existingEmbed  || existingEmbed.type !== 'ExperimentReference') {
+      //   throw new Error(
+      //     `Failed to find an ExperimentReference matching id ${partialExperiment.id} ` +
+      //     `on flags that should contain it. This error shouldn't occur`);
+      // }
+
+      const embedMatcher = { id: partialExperiment.id };
+
+      const flagFilter = {
+        _id: { $in: updatedExpDoc.flagIds.map((id) => ObjectId.createFromHexString(id)) },
+        // 'overrideRules.$': 
+      };
+      const matchingFlags = await featureFlag.findMany(flagFilter);
+      // printDetail({updatedExpDoc})
+      printDetail({matchingFlags})
+      // const updateFilter = {
+      //   $set: { 'overrideRules.$': }
+      // }
+      // const updateResult = await featureFlag.collection.updateMany(flagFilter, );
+      const pullResult = await featureFlag.pull('overrideRules', embedMatcher, flagFilter);
+      if (!pullResult) {
+        throw new DocumentUpdateFailedError(
+          'Failed to remove previous ExperimentReference embeds');
+      }
+      // .findMany({
+      //   _id: { $in: flagIds.map(ObjectId.createFromHexString) }
+      // });
+      // const flagsWithEmbed = currentFlags.filter((flag) => {
+      //   const allRules = FeatureFlagDraft.getRules(flag);
+      //   return !!allRules.find((rule) => rule.id === id);
+      // });
+      const updatedEmbed = new ExperimentReference({
+        ...updatedExpDoc,
+        ...partialExperiment
       });
 
-      const promises = flagsWithEmbed.map((flag) => this.manager.featureFlag
-        .removeRuleFromId(id, flag.id));
+      const embedAddResult = await featureFlag.push(
+        'overrideRules', 
+        updatedEmbed,
+        flagFilter,
+      );
+      return embedAddResult.acknowledged;
+      
+      // const promises = flagsWithEmbed.map((flag) => this.manager.featureFlag
+      //   .removeRuleFromId(id, flag.id));
 
-      const results = await Promise.all(promises);
-      return results.every((el) => el);
+      // const results = await Promise.all(promises);
+      // return results.every((el) => el);
     } catch (e: unknown) {
       return false;
     }
@@ -116,12 +158,11 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
    * given an experimentId:
    * - all override rules with the same id
    */
-  async _deleteEmbeds(experiment: Experiment): Promise<boolean> {
+  async _deleteEmbeds(experimentId: string): Promise<boolean> {
     try {
-      const reference = new ExperimentReference(experiment);
+      // const reference = new ExperimentReference(experiment);
       const embedFilter = {
-        id: experiment.id,
-        environmentName: experiment.environmentName,
+        id: { $eq: experimentId },
       }
       // create filter for flags that contain a rule with the experiment id
       // const flagFilter = {
@@ -134,7 +175,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
       // update all flags matching filter
       
       const updateResult = await this.manager.featureFlag
-      .removeRule(embedFilter);
+      .pull('overrideRules', embedFilter);
       // if (!result) return null;
   
       // if (updatedExperiment === null) return null;
@@ -143,9 +184,25 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
       // const updatedReference = new ExperimentReference(updatedExperiment);
   
       // delete the ExperimentReference in environments.${experimentDraft.environmentName}.overrideRules for each flag
-      return updateResult;
+      return updateResult.acknowledged;
     } catch (e: unknown) {
       return false;
     }
+  }
+
+  /**
+   * (WIP) Get an array of documents containing embeds matching the passed ID
+   * Placeholder implementation
+   */
+  async _getDocumentsWithEmbeds(experimentId: string) {
+    // const allFlags = await this.manager.featureFlag.getMany();
+    // const experimentDoc = await this.get(experimentId);
+    // const flagsWithEmbed = allFlags
+    //   .filter((flag) => experimentDoc.flagIds.includes(flag.id));
+    const flagsWithEmbed = await this.manager.featureFlag.findMany({
+      overrideRules: { $elemMatch: { id: experimentId } }
+    });
+
+    return flagsWithEmbed;
   }
 }

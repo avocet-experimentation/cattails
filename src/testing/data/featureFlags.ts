@@ -1,12 +1,7 @@
-import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, FlagEnvironmentMapping, ExperimentReferenceTemplate, ForcedValue, ExperimentReference, OverrideRuleUnion, FlagValueDefImpl } from "@estuary/types";
+import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, ExperimentReferenceTemplate, ForcedValue, ExperimentReference, OverrideRuleUnion, FlagValueDefImpl } from "@estuary/types";
 import { ObjectId } from "mongodb";
 
-export const flagEnvironmentInit = (): FlagEnvironmentMapping => ({
-  prod: { name: 'prod', enabled: false, overrideRules: [], },
-  dev: { name: 'dev', enabled: false, overrideRules: [], },
-  testing: { name: 'testing', enabled: false, overrideRules: [], },
-  staging: { name: 'staging', enabled: false, overrideRules: [], },
-});
+export const flagEnvironmentInit = () => ['prod', 'dev', 'testing', 'staging'];
 
 export const getExampleFlag = (
   name: string = 'test flag',
@@ -24,7 +19,8 @@ export const getExampleFlag = (
     value,
     // createdAt: currentTimeMs,
     // updatedAt: currentTimeMs,
-    environments: flagEnvironmentInit(),
+    environmentNames: flagEnvironmentInit(),
+    overrideRules: [],
   }
 
   return Object.freeze(flag);
@@ -106,22 +102,19 @@ export const staticBooleanFlag: FeatureFlagDraft = {
   name: 'auto-update-ui',
   value: { type: 'boolean', initial: false },
   description: 'Automatically update the page as new data is fetched. Long-lived flag',
-  environments: {
-    prod: { name: 'prod', enabled: false, overrideRules: [
-      booleanForcedValue1,
-      experimentRef1,
-    ] },
-    dev: { name: 'dev', enabled: true, overrideRules: [] },
-    testing: { name: 'testing', enabled: true, overrideRules: [] },
-    staging: { name: 'staging', enabled: false, overrideRules: [] }
-  },
+  environmentNames: ['prod', 'dev', 'testing', 'staging'],
+  overrideRules: [
+    booleanForcedValue1,
+    experimentRef1,
+  ] 
 };
 
 export const staticBooleanFlag2 = FeatureFlagDraft.template({
   name: 'dark-mode',
   value: FlagValueDefImpl.template('boolean'),
 });
-staticBooleanFlag2.environments.prod.overrideRules.push(booleanForcedValue1);
+staticBooleanFlag2.overrideRules.push(booleanForcedValue1);
+
 export const staticNumberFlag = FeatureFlagDraft.template({
   name: 'default-volume',
   value: FlagValueDefImpl.template('number'),
@@ -139,16 +132,10 @@ export const staticFlags: FeatureFlag[] = [
     name: 'use-new-database',
     value: { type: 'boolean' as const, initial: false },
     description: 'use new database',
-    environments: {
-      prod: { name: 'prod', enabled: false, overrideRules: [] },
-      dev: { name: 'dev', enabled: true, 
-        overrideRules: [
-          booleanForcedValue1,
-        ] 
-      },
-      testing: { name: 'testing', enabled: true, overrideRules: [] },
-      staging: { name: 'staging', enabled: false, overrideRules: [] }
-    },
+    environmentNames: flagEnvironmentInit(),
+    overrideRules: [
+      booleanForcedValue1,
+    ],
     createdAt: 1731364209327,
     updatedAt: 1731364209327
   },
@@ -157,14 +144,10 @@ export const staticFlags: FeatureFlag[] = [
     name: 'auto-update-ui',
     value: { type: 'boolean' as const, initial: false },
     description: 'Automatically update the page as new data is fetched. Long-lived flag',
-    environments: {
-      prod: { name: 'prod', enabled: false, overrideRules: [
+    environmentNames: flagEnvironmentInit(),
+    overrideRules: [
         booleanForcedValue1,
-      ] },
-      dev: { name: 'dev', enabled: true, overrideRules: [] },
-      testing: { name: 'testing', enabled: true, overrideRules: [] },
-      staging: { name: 'staging', enabled: false, overrideRules: [] }
-    },
+      ],
     createdAt: 1,
     updatedAt: 1731364204812,
   },

@@ -1,7 +1,6 @@
 import {
   FeatureFlag,
   featureFlagSchema,
-  FlagEnvironmentMapping,
   OverrideRuleUnion,
   RequireOnly,
 } from "@estuary/types";
@@ -35,52 +34,52 @@ export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> 
 
     return this.addRule(rule, idMatcher);
   }
-  /**
-   * (WIP) Remove an override rule given its id and environment
-   */
-  async removeRule(
-    ruleMatcher: RequireOnly<OverrideRuleUnion, 'id' | 'environmentName'>,
-    flagMatcher: Filter<FeatureFlag> = {},
-  ) {
-    const result = await this.pull(
-      `environments.${ruleMatcher.environmentName}.overrideRules`,
-      ruleMatcher,
-      flagMatcher,
-    );
+  // /**
+  //  * (WIP) Remove an override rule given its id and environment
+  //  */
+  // async removeRule(
+  //   ruleMatcher: RequireOnly<OverrideRuleUnion, 'id' | 'environmentName'>,
+  //   flagMatcher: Filter<FeatureFlag> = {},
+  // ) {
+  //   const result = await this.pull(
+  //     `environments.${ruleMatcher.environmentName}.overrideRules`,
+  //     ruleMatcher,
+  //     flagMatcher,
+  //   );
 
-    return result.acknowledged;
-  }
-  /**
-   * (WIP) Remove an override rule from a flag given the flag's id
-   * todo: replace this placeholder implementation:
-   * - find the rule array containing `ruleId`
-   * - get the environment name given the rule array
-   * - call `pull`
-   */
-  async removeRuleFromId(
-    ruleId: string,
-    flagId: string,
-  ) {
-    const idMatcher = {
-      _id: ObjectId.createFromHexString(flagId),
-    }
-    // return this.removeRule(ruleMatcher, idMatcher);
-    const flag = await this.get(flagId);
+  //   return result.acknowledged;
+  // }
+  // /**
+  //  * (WIP) Remove an override rule from a flag given the flag's id
+  //  * todo: replace this placeholder implementation:
+  //  * - find the rule array containing `ruleId`
+  //  * - get the environment name given the rule array
+  //  * - call `pull`
+  //  */
+  // async removeRuleFromId(
+  //   ruleId: string,
+  //   flagId: string,
+  // ) {
+  //   const idMatcher = {
+  //     _id: ObjectId.createFromHexString(flagId),
+  //   }
+  //   // return this.removeRule(ruleMatcher, idMatcher);
+  //   const flag = await this.get(flagId);
 
-    const newEnvironments: FlagEnvironmentMapping = Object.entries(flag.environments)
-      .reduce((acc, [envName, envProps]) => {
-        const ruleIndex = envProps.overrideRules.findIndex((rule) => rule.id === ruleId);
-        if (ruleIndex !== undefined) envProps.overrideRules.splice(ruleIndex, 1);
-        return { ...acc, [envName]: envProps };
-      }, {});
+  //   const newEnvironments: FlagEnvironmentMapping = Object.entries(flag.environments)
+  //     .reduce((acc, [envName, envProps]) => {
+  //       const ruleIndex = envProps.overrideRules.findIndex((rule) => rule.id === ruleId);
+  //       if (ruleIndex !== undefined) envProps.overrideRules.splice(ruleIndex, 1);
+  //       return { ...acc, [envName]: envProps };
+  //     }, {});
 
-    const result = await this.update({
-      id: flagId,
-      environments: newEnvironments
-    });
+  //   const result = await this.update({
+  //     id: flagId,
+  //     environments: newEnvironments
+  //   });
 
-    return result;
-  }
+  //   return result;
+  // }
 
   async getEnvironmentFlags(environment: string) {
     return this.findMany({ [`environments.${environment}.enabled`]: true });

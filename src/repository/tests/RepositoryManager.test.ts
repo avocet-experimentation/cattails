@@ -233,11 +233,11 @@ describe('MongoRepository CRUD Methods', () => {
           proportion: 1,
         }
       };
-      const result = await repoManager.featureFlag.pushTo('environments.staging.overrideRules', newRule, first);
+      const result = await repoManager.featureFlag.pushTo('overrideRules', newRule, first);
       expect(result.acknowledged).toBe(true);
 
       const updatedFirst = await repoManager.featureFlag.get(first);
-      expect(updatedFirst.environments.staging.overrideRules).toContainEqual(newRule);
+      expect(updatedFirst.overrideRules).toContainEqual(newRule);
     });
     
     afterAll(eraseTestData);
@@ -255,30 +255,30 @@ describe('MongoRepository CRUD Methods', () => {
 
     it("Removes an element from an array given a partial version of it", async () => {
       const firstId = insertResults[0];
-      const forcedValueRule: OverrideRuleUnion = staticFlagDrafts[0].environments.prod.overrideRules[0];
+      const forcedValueRule: OverrideRuleUnion = staticFlagDrafts[0].overrideRules[0];
       const firstDoc = await repoManager.featureFlag.get(firstId);
-      const { environments, id, name, ...matcher } = firstDoc;
+      const { id, name, ...matcher } = firstDoc;
 
       const result = await repoManager.featureFlag.pull(
-        'environments.prod.overrideRules', 
+        'overrideRules', 
         forcedValueRule, 
         matcher,
       );
       expect(result.acknowledged).toBe(true);
 
       const updatedFirst = await repoManager.featureFlag.get(firstId);
-      expect(updatedFirst.environments.dev.overrideRules).not.toContainEqual(forcedValueRule);
+      expect(updatedFirst.overrideRules).not.toContainEqual(forcedValueRule);
     });
 
     it('Removes an element from multiple documents', async () => {
-      const forcedValueRule = staticFlagDrafts[0].environments.prod.overrideRules[0];
+      const forcedValueRule = staticFlagDrafts[0].overrideRules[0];
 
       const matcher = {
         'value.type': 'boolean'
       };
 
       const result = await repoManager.featureFlag.pull(
-        'environments.prod.overrideRules', 
+        'overrideRules', 
         forcedValueRule, 
         matcher,
       );
@@ -302,13 +302,13 @@ describe('MongoRepository CRUD Methods', () => {
       const firstDoc = await repoManager.featureFlag.get(firstId);
       // console.log(firstDoc);
 
-      const ruleToRemove = staticFlagDrafts[0].environments.dev.overrideRules[0];
+      const ruleToRemove = staticFlagDrafts[0].overrideRules[0];
 
-      const result = await repoManager.featureFlag.pullFrom('environments.dev.overrideRules', ruleToRemove, firstId);
+      const result = await repoManager.featureFlag.pullFrom('overrideRules', ruleToRemove, firstId);
       expect(result.acknowledged).toBe(true);
 
       const updatedFirst = await repoManager.featureFlag.get(firstId);
-      expect(updatedFirst.environments.dev.overrideRules).not.toContainEqual(ruleToRemove);
+      expect(updatedFirst.overrideRules).not.toContainEqual(ruleToRemove);
     });
 
     afterAll(eraseTestData);
