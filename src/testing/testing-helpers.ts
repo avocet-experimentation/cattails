@@ -39,4 +39,8 @@ export const eraseCollection = async (
 export const eraseTestData = async () => {
   await eraseCollection('featureFlag');
   await eraseCollection('experiment');
+  await eraseCollection('clientPropDef');
+  await eraseCollection('clientConnection');
+  await eraseCollection('environment');
+  await eraseCollection('user');
 }
