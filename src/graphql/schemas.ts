@@ -1,4 +1,4 @@
-const readPropDefSchema = `
+const readPropDefSchema = /* GraphQL */`
 type ClientPropDef {
   id: ID!          
   name: String!            
@@ -41,7 +41,7 @@ type ClientPropDef {
   
 `;
 
-const experimentSchema = `
+const experimentSchema = /* GraphQL */`
   enum ExperimentStatus {
     draft
     active
@@ -63,7 +63,7 @@ const experimentSchema = `
   }
 `
 
-const userSchema = `
+const userSchema = /* GraphQL */`
   enum PermissionLevel {
     none
     view
@@ -97,7 +97,7 @@ const userSchema = `
   }
 `;
 
-const environmentSchema = `
+const environmentSchema = /* GraphQL */`
 type Environment {
   id: ID!                  
   name: EnvironmentName!
@@ -113,7 +113,7 @@ enum EnvironmentName {
 }
 `;
 
-const clientConnectionSchema = `
+const clientConnectionSchema = /* GraphQL */`
   # ClientConnection Type
   type ClientConnection {
     id: ID!            
@@ -123,7 +123,7 @@ const clientConnectionSchema = `
   }
 `;
 
-const featureFlagSchema = `
+const featureFlagSchema = /* GraphQL */`
 type FeatureFlag {
   id: ID!             
   name: String!       
@@ -150,7 +150,7 @@ input UpdateFeatureFlagInput {
 }
 `
 
-const mutationSchemas = `
+const mutationSchemas = /* GraphQL */`
   type Mutation {
     updateClientPropDef(
       id: ID!,
@@ -246,7 +246,7 @@ const mutationSchemas = `
   }
 `;
 
-export const schema = `
+export const schema = /* GraphQL */`
   ${mutationSchemas}
   ${readPropDefSchema}
   ${environmentSchema}
