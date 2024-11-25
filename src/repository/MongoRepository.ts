@@ -456,11 +456,6 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     return result;
   }
 
-  // _getCollection(collectionName: EstuaryMongoCollectionName) {
-  //   const validated = estuaryMongoCollectionNameSchema.parse(collectionName);
-  //   return this.repository.client.db().collection(validated);
-  // }
-
   async _withTransaction<R = any>(cb: WithTransactionCallback<R>): Promise<R> {
     return this.manager.client.withSession(async (session) => session.withTransaction(cb));
   }
