@@ -1,7 +1,8 @@
-import { ClientPropDef, ClientConnection, User, Environment, Experiment } from "@estuary/types";
+import { ClientPropDef, ClientConnection, User, Environment, Experiment, ClientPropDefDraft, ExperimentDraft, ClientConnectionDraft, UserDraft, FeatureFlagDraft, FeatureFlag } from "@estuary/types";
 import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';
-
+import { RequireOnly } from "@estuary/types";
+import { PartialWithStringId } from "../repository/MongoRepository.js";
 const repos = new RepositoryManager(cfg.MONGO_TESTING_URI);
 
 export const resolvers = {
@@ -75,20 +76,11 @@ export const resolvers = {
     },
     createClientPropDef: async (
       _: any,
-      { name, description, dataType, isIdentifier }: { 
-        name: string; 
-        description?: string;
-        dataType: "string" | "number" | "boolean",
-        isIdentifier?: boolean 
-      }
+      input: RequireOnly<ClientPropDefDraft, "name" | "dataType">
     ): Promise<string | null> => {
 
-      const newEntry = {
-        name,
-        description,
-        dataType,
-        isIdentifier: isIdentifier ?? false,  // default to false if not provided
-      };
+      const newEntry = ClientPropDefDraft.template(input);
+
     
       const newId = await repos.clientPropDef.create(newEntry);
       if (!newId) { //if id is undefined throw error
@@ -113,7 +105,7 @@ export const resolvers = {
     updateClientConnection: async (
       _: any,
       { id, name, description, environmentId }: { id: string; name?: string; description?: string; environmentId?: string }
-    ): Promise<ClientConnectionDraft> => {
+    ): Promise<ClientConnection> => {
       const updates: Partial<ClientConnection> = {};
       if (name !== undefined) updates.name = name;
       if (description !== undefined) updates.description = description;
@@ -139,14 +131,11 @@ export const resolvers = {
 
     createClientConnection: async (
       _: any,
-      { name, description, environmentId }: { name: string; description?: string; environmentId: string }
-    ): Promise<ClientConnection> => {
+      input: RequireOnly<ClientConnectionDraft, "name" | "environmentId">
+    ): Promise<string> => {
       const newEntry = {
-        name,
-        description,
-        environmentId,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        description: "",
+        ...input
       };
 
       const newId = await repos.clientConnection.create(newEntry);
@@ -155,10 +144,7 @@ export const resolvers = {
         throw new Error('Failed to create ClientConnection');
       }
 
-      return {
-        id: newId,
-        ...newEntry,
-      };
+      return newId;
     },
 
     deleteClientConnection: async (
@@ -175,12 +161,9 @@ export const resolvers = {
     },
     createUser: async (
       _: any,
-      { email, permissions }: { email: string; permissions: Record<string, string> }
+     input: RequireOnly<UserDraft, "email">
     ): Promise<User | null> => {
-      const newEntry: UserDraft = {
-        email,
-        permissions,
-      };
+      const newEntry = UserDraft.templateAdmin(input);
     
       const userId = await repos.user.create(newEntry);
     
@@ -193,25 +176,21 @@ export const resolvers = {
     
     updateUser: async (
       _: any,
-      { id, email, permissions }: { id: string; email?: string; permissions?: Record<string, string> }
-    ): Promise<User> => {
-      const updates: Partial<User> = {};
-      if (email) updates.email = email;
-      if (permissions) updates.permissions = permissions;
-    
-      const success = await repos.user.update({ id, ...updates });
+      input: PartialWithStringId<User>
+    ): Promise<Boolean> => {
+
+      const success = await repos.user.update(input);
     
       if (!success) {
         throw new Error('Failed to update User');
       }
     
       // Fetch and return the updated user
-      const updatedUser = await repos.user.get(id);
-      if (!updatedUser) {
+      if (!success) {
         throw new Error('Updated User not found');
       }
     
-      return updatedUser; // Ensure this includes `id`
+      return true;
     },
     
     
@@ -278,111 +257,34 @@ export const resolvers = {
 
       return true;
     },
-    // createExperiment: async (
-    //   _: any,
-    //   { name, status, enrollmentAttributes, enrollmentProportion, flagId, description, hypothesis, startTimestamp, endTimestamp }: {
-    //     name: string;
-    //     status: "draft" | "active" | "paused" | "completed";
-    //     enrollmentAttributes: string[];
-    //     enrollmentProportion: number;
-    //     flagId: string;
-    //     description?: string;
-    //     hypothesis?: string;
-    //     startTimestamp?: number;
-    //     endTimestamp?: number;
-    //   }
-    // ): Promise<Boolean> => {
-    //   const newExperiment = {
-    //     name,
-    //     status,
-    //     enrollment: {
-    //       attribute: enrollmentAttributes,
-    //       proportion: enrollmentProportion
-    //     },
-    //     flagId,
-    //     description,
-    //     hypothesis,
-    //     startTimestamp,
-    //     endTimestamp,
-    //     createdAt: Date.now(),
-    //     updatedAt: Date.now(),
-    //     type: "Experiment",
-    //     groups: [],
-    //     dependents: [],
-    //   };
+    createExperiment: async (
+      _: any,
+       input: RequireOnly<ExperimentDraft, "name" | "environmentName"> 
+    ): Promise<Boolean> => {
+      const newExperiment = ExperimentDraft.template(input);
 
-    //   const newId = await repos.experiment.create(newExperiment);
-    //   console.log("Experiment created with ID:", newId);
+      const newId = await repos.experiment.create(newExperiment);
+      console.log("Experiment created with ID:", newId);
 
-    //   if (!newId) {
-    //     throw new Error('Failed to create experiment');
-    //   }
+      if (!newId) {
+        throw new Error('Failed to create experiment');
+      }
 
-    //   return true;
-    // },
+      return true;
+    },
 
-    // updateExperiment: async (
-    //   _: any,
-    //   {
-    //     id,
-    //     name,
-    //     status,
-    //     enrollmentAttributes,
-    //     enrollmentProportion,
-    //     flagId,
-    //     description,
-    //     hypothesis,
-    //     startTimestamp,
-    //     endTimestamp,
-    //   }: {
-    //     id: string;
-    //     name?: string;
-    //     status?: "draft" | "active" | "paused" | "completed";
-    //     enrollmentAttributes?: string[];
-    //     enrollmentProportion?: number;
-    //     flagId?: string;
-    //     description?: string;
-    //     hypothesis?: string;
-    //     startTimestamp?: number;
-    //     endTimestamp?: number;
-    //   }
-    // ): Promise<Experiment> => {
-    //   const updates: Partial<Experiment> = {
-    //     id,
-    //     type: "Experiment",
-    //     createdAt: Date.now(), // Add createdAt if necessary
-    //     updatedAt: Date.now(), // Update timestamp for record
-    //   };
+    updateExperiment: async (
+      _: any,
+      input: PartialWithStringId<Experiment>
+    ): Promise<Boolean> => {
+      
+      const success = await repos.experiment.update(input);
 
-    //   if (name !== undefined) updates.name = name;
-    //   if (status !== undefined) updates.status = status;
-    //   if (enrollmentAttributes !== undefined)
-    //     updates.enrollment = { attributes: enrollmentAttributes, proportion: updates.enrollment?.proportion ?? 0 };
-    //   if (enrollmentProportion !== undefined)
-    //     updates.enrollment = { attributes: updates.enrollment?.attributes ?? [], proportion: enrollmentProportion };
-    //   if (flagId !== undefined) updates.flagId = flagId;
-    //   if (description !== undefined) updates.description = description;
-    //   if (hypothesis !== undefined) updates.hypothesis = hypothesis;
-    //   if (startTimestamp !== undefined) updates.startTimestamp = startTimestamp;
-    //   if (endTimestamp !== undefined) updates.endTimestamp = endTimestamp;
-
-    //   try {
-    //     const validExperiment = experimentSchema.parse(updates);
-
-    //     const success = await repos.experiment.update({...validExperiment });
-    //     if (!success) {
-    //       throw new Error('Failed to update experiment');
-    //     }
-
-    //     const updatedExperiment = await repos.experiment.get(id);
-    //     if (!updatedExperiment) {
-    //       throw new Error(`No experiment found.`);
-    //     }
-    //     return updatedExperiment;
-    //   } catch (error: any) {
-    //     throw new Error(`Validation failed: ${error.message}`);
-    //   }
-    // },
+      if (!success) { 
+        throw new Error('Failed to update the experiment');
+      }
+      return true;
+    },
 
     deleteExperiment: async (
       _: any,
@@ -396,50 +298,36 @@ export const resolvers = {
 
       return true;
     },
-    // createFeatureFlag: async (
-    //   _: any,
-    //   { input }: { input: FeatureFlagDraft }
-    // ): Promise<FeatureFlagDraft | null> => {
-    //   const { name, description } = input;
+    createFeatureFlag: async (
+      _: any,
+      input: RequireOnly<FeatureFlagDraft<"string" | "number" | "boolean">, | "name" | "value">
+    ): Promise<FeatureFlagDraft | null> => {
+      
+      const newFeatureFlag = FeatureFlagDraft.template(input);
     
-    //   const newFeatureFlag: FeatureFlagDraft = {
-    //     name,
-    //     description,
-
-    //   };
+      const flagId = await repos.featureFlag.create(newFeatureFlag);
     
-    //   const flagId = await repos.featureFlag.create(newFeatureFlag);
+      if (!flagId) {
+        throw new Error('Failed to create FeatureFlag');
+      }
     
-    //   if (!flagId) {
-    //     throw new Error('Failed to create FeatureFlag');
-    //   }
-    
-    //   // Assuming the repository returns data conforming to FeatureFlagDraft after creation
-    //   return await repos.featureFlag.get(flagId);
-    // },
+      return await repos.featureFlag.get(flagId);
+    },
     
 
-    // updateFeatureFlag: async (
-    //   _: any,
-    //   { id, name, description, enabled, environment }: {id: string; name?: string; description?: string; enabled?: boolean; environment?: string }
-    // ): Promise<FeatureFlagDraft | null> => {
+    updateFeatureFlag: async (
+      _: any,
+      input: PartialWithStringId<FeatureFlag>
+    ): Promise<Boolean> => {
 
-    //   const updates: Partial<FeatureFlagDraft> = {}
-    //   if (name !== undefined) updates.name = name;
-    //   if (description !== undefined) updates.description = description;
-    //   // if (enabled !== undefined) updates.environments = environment
-    
-    //   const partialEntry = { id, ...updates };
+      const success = await repos.featureFlag.update(input);
 
+      if (!success) {
+        throw new Error(`Failed to update FeatureFlag`);
+      }
 
-    //   const success = await repos.featureFlag.update(partialEntry);
-
-    //   if (!success) {
-    //     throw new Error(`Failed to update FeatureFlag with ID: ${id}`);
-    //   }
-
-    //   return await repos.featureFlag.get(id); // Fetch and return the updated feature flag
-    // },
+      return true;
+    },
 
     deleteFeatureFlag: async (
       _: any,
