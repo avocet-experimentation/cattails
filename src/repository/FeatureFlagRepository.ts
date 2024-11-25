@@ -10,7 +10,7 @@ import { Filter, ObjectId } from "mongodb";
 
 export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> {
   constructor(repositoryManager: RepositoryManager) {
-    super("FeatureFlag", featureFlagSchema, repositoryManager);
+    super("featureFlag", featureFlagSchema, repositoryManager);
   }
   /**
    * Add an override rule. This should fail if the flag doesn't have a property
