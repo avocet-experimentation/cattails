@@ -1,10 +1,10 @@
-export const readPropDefSchema = `
-  type ClientPropDef {
-    id: ID!          
-    name: String!            
-    description: String      
-    dataType: String
-    isIdentifier: Boolean!   
+const readPropDefSchema = `
+type ClientPropDef {
+  id: ID!          
+  name: String!            
+  description: String      
+  dataType: String
+  isIdentifier: Boolean!   
   }
 
   union ClientPropValue = BooleanValue | StringValue | NumberValue
@@ -38,9 +38,66 @@ export const readPropDefSchema = `
     stringValue: StringValueInput
     numberValue: NumberValueInput
   }
+  
 `;
 
-export const environmentSchema = `
+const experimentSchema = `
+  enum ExperimentStatus {
+    draft
+    active
+    paused
+    completed
+  }
+
+  type Experiment {
+    id: ID!
+    name: String!
+    status: ExperimentStatus!
+    enrollmentAttributes: [String]!
+    enrollmentProportion: Float!
+    flagId: String!
+    description: String
+    hypothesis: String
+    startTimestamp: Float
+    endTimestamp: Float
+  }
+`
+
+const userSchema = `
+  enum PermissionLevel {
+    none
+    view
+    edit
+    full
+  }
+
+
+  type UserPermissions {
+    FeatureFlag: PermissionLevel!
+    Experiment: PermissionLevel!
+    Environment: PermissionLevel!
+    User: PermissionLevel!
+    ClientPropDef: PermissionLevel!
+    ClientConnection: PermissionLevel!
+  }
+
+  input UserPermissionsInput {
+    FeatureFlag: PermissionLevel!
+    Experiment: PermissionLevel!
+    Environment: PermissionLevel!
+    User: PermissionLevel!
+    ClientPropDef: PermissionLevel!
+    ClientConnection: PermissionLevel!
+  }
+  
+  type User {
+    id: ID!                    
+    email: String!         
+    permissions: UserPermissions!
+  }
+`;
+
+const environmentSchema = `
 type Environment {
   id: ID!                  
   name: EnvironmentName!
@@ -56,15 +113,42 @@ enum EnvironmentName {
 }
 `;
 
-export const clientConnectionSchema = `
+const clientConnectionSchema = `
   # ClientConnection Type
   type ClientConnection {
     id: ID!            
     name: String!      
     environmentId: ID! 
-    clientKeyHash: String  # Optional, as it is TBD in Zod schema??
+    description: String!
   }
 `;
+
+const featureFlagSchema = `
+type FeatureFlag {
+  id: ID!             
+  name: String!       
+  description: String 
+  enabled: Boolean!   
+  environment: String!
+  createdAt: String!  
+  updatedAt: String!  
+}
+
+input CreateFeatureFlagInput {
+  name: String!
+  description: String
+  enabled: Boolean!
+  environment: String!
+}
+
+input UpdateFeatureFlagInput {
+  id: ID!
+  name: String
+  description: String
+  enabled: Boolean
+  environment: String
+}
+`
 
 const mutationSchemas = `
   type Mutation {
@@ -101,17 +185,18 @@ const mutationSchemas = `
     deleteClientConnection(id: ID!): ID
 
     createUser(
-      email: String,
-      permissions: PermissionLevel!
+      email: String!,
+      permissions: UserPermissionsInput!
     ): User
+
 
     updateUser(
       id: ID!,
       email: String,
-      permissions: PermissionLevel
+      permissions: UserPermissionsInput!
     ): User
 
-    deleteUser(id: ID!): Boolean
+    deleteUser(id: ID!): ID
 
     createEnvironment(
       name: EnvironmentName!,
@@ -154,57 +239,12 @@ const mutationSchemas = `
     ): Experiment
 
     deleteExperiment(id: ID!): Boolean
+
+    createFeatureFlag(input: CreateFeatureFlagInput!): FeatureFlag!
+    updateFeatureFlag(input: UpdateFeatureFlagInput!): FeatureFlag!
+    deleteFeatureFlag(id: ID!): ID
   }
 `;
-
-export const userSchema = `
-  enum PermissionLevel {
-    none
-    view
-    edit
-    admin
-  }
-
-  type UserPermissions {
-    fflags: PermissionLevel!
-    experiments: PermissionLevel!
-    environments: PermissionLevel!
-    users: PermissionLevel!
-    attributes: PermissionLevel!
-    events: PermissionLevel!
-  }
-
-  # User Type
-  type User {
-    id: ID!                
-    username: String!      
-    email: String!         
-    passwordHash: String!  
-    permissions: UserPermissions!
-  }
-`;
-
-const experimentSchema = `
-  enum ExperimentStatus {
-    draft
-    active
-    paused
-    completed
-  }
-
-  type Experiment {
-    id: ID!
-    name: String!
-    status: ExperimentStatus!
-    enrollmentAttributes: [String]!
-    enrollmentProportion: Float!
-    flagId: String!
-    description: String
-    hypothesis: String
-    startTimestamp: Float
-    endTimestamp: Float
-  }
-`
 
 export const schema = `
   ${mutationSchemas}
@@ -213,6 +253,7 @@ export const schema = `
   ${clientConnectionSchema}
   ${userSchema}
   ${experimentSchema}
+  ${featureFlagSchema}
   
   type Query {
     clientPropDef(id: ID!): ClientPropDef
@@ -224,6 +265,9 @@ export const schema = `
     user(id: ID!): User
     allUsers(limit: Int, offset: Int): [User]
     experiment(id: ID!): Experiment
-    allExperiments(name: String, status: ExperimentStatus): [Experiment]
-  }
-`;
+    allExperiments(limit: Int, offset: Int): [Experiment]
+    FeatureFlag(id: ID!): FeatureFlag
+    allFeatureFlags(limit: Int, offset: Int): [FeatureFlag]
+    }
+    `;
+    

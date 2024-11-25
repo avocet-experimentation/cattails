@@ -155,7 +155,7 @@ describe('Embed methods', () => {
       expWithFlag.flagIds.push(flagInsertResults[0], flagInsertResults[1]);
 
       await insertExperiments(insertResults, [expWithFlag]);
-      console.log('---- FINISHED INSERTING SETUP DATA -----');
+      // console.log('---- FINISHED INSERTING SETUP DATA -----');
     });
 
     it("overwrites the specified fields on embeds", async () => {

@@ -1,6 +1,7 @@
 import {
   ClientPropMapping,
   FeatureFlag,
+  FeatureFlagDraft,
   FlagClientMapping,
   FlagClientValue,
   FlagCurrentValue,
@@ -57,7 +58,8 @@ export default class ClientFlagManager {
   ): Promise<FlagClientValue | null> {
     try {
       const flag = await this.repository.featureFlag.findOne({ name: flagName });
-      if (!flag) throw new Error();
+      if (!flag || !flag.environmentNames.includes(environmentName)) throw new Error();
+
       return this.computeFlagValue(flag, environmentName, clientProps);
     } catch(e: unknown) {
       // if (e instanceof Error) {
@@ -114,13 +116,9 @@ export default class ClientFlagManager {
       value: flag.value.initial,
       hash: this.defaultIdHash(flag.id),
     };
-
-    if (flag.environments[environmentName] === undefined) {
-      return defaultReturn;
-    }
-
-    const overrideRules = flag.environments[environmentName].overrideRules;
-    const selectedRule = this.enroll(overrideRules, clientProps);
+    
+    const envRules = FeatureFlagDraft.getEnvironmentRules(flag, environmentName);
+    const selectedRule = this.enroll(envRules, clientProps);
     if (selectedRule === undefined) return defaultReturn;
       
     const ruleValue = await this.ruleValueAndHash(selectedRule, flag.id, clientProps);
