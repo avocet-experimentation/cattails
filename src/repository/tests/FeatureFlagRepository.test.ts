@@ -23,15 +23,14 @@ describe('Rule methods', () => {
     });
 
     it("returns true and adds a rule with valid input", async () => {
-      const { environments, ...matcher } = staticNumberFlag;
+      const { environmentNames, overrideRules, ...matcher } = staticNumberFlag;
       const acknowledged = await repoManager.featureFlag.addRule(numberForcedValue1, matcher);
       const updatedFlag = await repoManager.featureFlag.findOne({ name: staticNumberFlag.name });
       // printDetail({updatedFlag});
       if (updatedFlag === null) throw new Error('Flag should exist!');
 
       expect(acknowledged).toBe(true);
-      const { overrideRules } = updatedFlag.environments.testing;
-      expect(overrideRules).toContainEqual(numberForcedValue1);
+      expect(updatedFlag.overrideRules).toContainEqual(numberForcedValue1);
     });
 
     afterAll(eraseTestData);
@@ -47,22 +46,22 @@ describe('Rule methods', () => {
 
     it("returns true", async () => {
       const flag = staticFlagDrafts[0];
-      const rule = flag.environments.prod.overrideRules[0];
-      const { environments, ...matcher } = flag;
+      const rule = FeatureFlagDraft.getEnvironmentRules(flag, 'prod')[0];
+      const { environmentNames, ...matcher } = flag;
       const acknowledged = await repoManager.featureFlag.removeRule(rule, matcher);
       expect(acknowledged).toBe(true);
     });
 
     it("Removes all occurrences of a rule for its environment", async () => {
       const flag = staticFlagDrafts[0];
-      const rule = flag.environments.prod.overrideRules[0];
+      const rule = FeatureFlagDraft.getEnvironmentRules(flag, 'prod')[0];
       // console.log({rule});
       const acknowledged = await repoManager.featureFlag.removeRule(rule, {});
       // console.log({ruleAfter: rule})
       const updated = await repoManager.featureFlag.getMany();
       const updatedRules = [
-        FeatureFlagDraft.getRules(updated[0]),
-        FeatureFlagDraft.getRules(updated[1]),
+        updated[0].overrideRules,
+        updated[1].overrideRules,
       ];
       // printDetail({updatedRules});
       expect(updatedRules[0]).not.toContainEqual(rule);
@@ -71,7 +70,7 @@ describe('Rule methods', () => {
 
     it("Removes a rule given only a partial rule object", async () => {
       const flagDraft = staticFlagDrafts[0];
-      const rule = flagDraft.environments.prod.overrideRules[0];
+      const rule = FeatureFlagDraft.getEnvironmentRules(flagDraft, 'prod')[0];
       // if (!rule) throw new Error('rule should exist!');
       
       const { status, enrollment, ...ruleMatcher } = rule;
@@ -80,7 +79,7 @@ describe('Rule methods', () => {
       const updatedFlagDoc = await repoManager.featureFlag.findOne({ name });
       if (!updatedFlagDoc) throw new Error('Flag should exist!');
 
-      const remainingRules = FeatureFlagDraft.getRules(updatedFlagDoc);
+      const remainingRules = updatedFlagDoc.overrideRules;
       expect(remainingRules).not.toContainEqual(rule);
     });
 

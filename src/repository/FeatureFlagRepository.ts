@@ -18,11 +18,7 @@ export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> 
    * should only happen when the flag isn't enabled on the environment.
    */
   async addRule(rule: OverrideRuleUnion, matcher: Filter<FeatureFlag>) {
-    const result = await this.push(
-      `environments.${rule.environmentName}.overrideRules`,
-        rule,
-        matcher,
-    );
+    const result = await this.push(`overrideRules`, rule, matcher);
 
     return result.acknowledged;
   }
@@ -34,52 +30,39 @@ export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> 
 
     return this.addRule(rule, idMatcher);
   }
-  // /**
-  //  * (WIP) Remove an override rule given its id and environment
-  //  */
-  // async removeRule(
-  //   ruleMatcher: RequireOnly<OverrideRuleUnion, 'id' | 'environmentName'>,
-  //   flagMatcher: Filter<FeatureFlag> = {},
-  // ) {
-  //   const result = await this.pull(
-  //     `environments.${ruleMatcher.environmentName}.overrideRules`,
-  //     ruleMatcher,
-  //     flagMatcher,
-  //   );
+  /**
+   * (WIP) Remove an override rule given part of its shape, and optionally a flag
+   * filter to remove from specific flags only
+   */
+  async removeRule(
+    ruleMatcher: Partial<OverrideRuleUnion>,
+    flagMatcher: Filter<FeatureFlag> = {},
+  ) {
+    const result = await this.pull(
+      `overrideRules`,
+      ruleMatcher,
+      flagMatcher,
+    );
 
-  //   return result.acknowledged;
-  // }
-  // /**
-  //  * (WIP) Remove an override rule from a flag given the flag's id
-  //  * todo: replace this placeholder implementation:
-  //  * - find the rule array containing `ruleId`
-  //  * - get the environment name given the rule array
-  //  * - call `pull`
-  //  */
-  // async removeRuleFromId(
-  //   ruleId: string,
-  //   flagId: string,
-  // ) {
-  //   const idMatcher = {
-  //     _id: ObjectId.createFromHexString(flagId),
-  //   }
-  //   // return this.removeRule(ruleMatcher, idMatcher);
-  //   const flag = await this.get(flagId);
+    return result.acknowledged;
+  }
+  /**
+   * (WIP) Remove an override rule from a flag given the flag's id=
+   */
+  async removeRuleFromId(
+    ruleId: string,
+    flagId: string,
+  ) {
+    const ruleMatcher = {
+      id: ruleId,
+    }
 
-  //   const newEnvironments: FlagEnvironmentMapping = Object.entries(flag.environments)
-  //     .reduce((acc, [envName, envProps]) => {
-  //       const ruleIndex = envProps.overrideRules.findIndex((rule) => rule.id === ruleId);
-  //       if (ruleIndex !== undefined) envProps.overrideRules.splice(ruleIndex, 1);
-  //       return { ...acc, [envName]: envProps };
-  //     }, {});
+    const idMatcher = {
+      _id: ObjectId.createFromHexString(flagId),
+    }
 
-  //   const result = await this.update({
-  //     id: flagId,
-  //     environments: newEnvironments
-  //   });
-
-  //   return result;
-  // }
+    return this.removeRule(ruleMatcher, idMatcher);
+  }
 
   async getEnvironmentFlags(environment: string) {
     return this.findMany({ [`environments.${environment}.enabled`]: true });
