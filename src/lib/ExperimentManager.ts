@@ -8,7 +8,6 @@ import {
   treatmentSchema,
   ExperimentReference,
 } from "@estuary/types";
-import * as bcrypt from 'bcrypt';
 import { hashAndAssign } from "./hash.js";
 import RepositoryManager from "../repository/RepositoryManager.js";
 
@@ -49,34 +48,10 @@ export default class ExperimentManager {
     const propsToHash = experiment.enrollment.attributes;
     const identifiers = Object.entries(clientProps)
       .filter(([key]) => propsToHash.includes(key));
-    // const clientIdHash = hashIdentifiers(clientProps, propsToHash);
-    // const normalizedHash = Math.abs(clientIdHash) / (2 ** 31); // placeholder while hashes are signed
     const assignmentGroupId = hashAndAssign(identifiers, groupIds);
     const assignedGroup = groups.find((group) => group.id === assignmentGroupId);
     return experimentGroupSchema.parse(assignedGroup);
   }
-
-  // getSequence(experiment: Experiment, sequenceId: string) {
-  //   return experiment.definedSequences.find((seq) => seq.id === sequenceId);
-  // }
-
-  // // todo: change these arrays of IDs into hashes on types
-  // getGroupTreatments(experiment: Experiment, group: ExperimentGroup) {
-  //   const sequenceId = group.sequenceId;
-  //   if (!sequenceId) {
-  //     throw new Error(`Group ${group.id} has no sequence id`);
-  //   }
-
-  //   const sequence = this.getSequence(experiment, sequenceId);
-  //   if (!sequence) {
-  //     throw new Error(`Experiment ${experiment.id} has no sequence matching id ${sequenceId}`);
-  //   }
-
-  //   const treatments = experiment.definedTreatments
-  //     .filter((def) => sequence.treatmentIds.includes(def.id));
-
-  //   return treatments;
-  // }
 
   getGroupTreatments(experiment: Experiment, group: ExperimentGroup) {
     return group.sequence.map((treatmentId) => experiment.definedTreatments[treatmentId]);

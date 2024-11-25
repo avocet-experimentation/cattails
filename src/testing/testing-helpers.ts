@@ -37,6 +37,6 @@ export const eraseCollection = async (
 ) => await repoManager.client.db().dropCollection(collectionName);
 
 export const eraseTestData = async () => {
-  await eraseCollection('FeatureFlag');
-  await eraseCollection('Experiment');
+  await eraseCollection('featureFlag');
+  await eraseCollection('experiment');
 }

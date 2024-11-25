@@ -9,9 +9,17 @@ import {
 } from '../../testing/testing-helpers.js';
 import { printDetail } from '../../lib/index.js';
 import { ObjectId } from 'mongodb';
-import { ExperimentReference, FeatureFlagDraft } from '@estuary/types';
+import { ExperimentGroup, ExperimentReference, FeatureFlagDraft, FlagValueDefImpl, idMap, Treatment } from '@estuary/types';
 
 beforeAll(eraseTestData);
+
+const setupExperimentRepoTests = async (insertResults: string[]) => {
+  await eraseTestData();
+  await insertFlags(insertResults, staticFlagDrafts.slice(0, 2));
+  await insertExperiments(insertResults, staticExperiments);
+  // console.log('---- FINISHED INSERTING SETUP DATA -----');
+};
+
 
 describe('Embed methods', () => {
   describe('createEmbeds', () => {
@@ -58,23 +66,53 @@ describe('Embed methods', () => {
     afterAll(eraseTestData);
   });
 
-  describe.skip('startExperiment', () => {
+  describe('startExperiment', () => {
     let insertResults: string[] = [];
-    beforeEach(async () => {
-      await eraseTestData();
-      await insertFlags(insertResults, staticFlagDrafts.slice(0, 2));
-      await insertExperiments(insertResults, staticExperiments);
-      // console.log('---- FINISHED INSERTING SETUP DATA -----')
-    });
+    beforeEach(async () => setupExperimentRepoTests(insertResults));
 
     it("creates an embedded ExperimentReference on a flag given valid input", async () => {
-      // const expDraft = { ...staticExperiments[0] };
-      // const flags = await repoManager.featureFlag.getMany(2);
-      // if (!flags.length) throw new Error('Flags should exist!');
+      const now = Date.now();
+      const expDraft = { ...staticExperiments[0] };
+      const flags = await repoManager.featureFlag.getMany(2);
+      if (!flags.length) throw new Error('Flags should exist!');
       
-      // const { groups, environmentName } = expDraft;
-      // const expDoc = await repoManager.experiment.findOne({ name: expDraft.name });
-      // if (!expDoc) throw new Error(`Experiment ${expDraft.name} should exist!`);
+      const { groups, environmentName } = expDraft;
+      const expDoc = await repoManager.experiment.findOne({ name: expDraft.name });
+      if (!expDoc) throw new Error(`Experiment ${expDraft.name} should exist!`);
+
+      const newFlag = FeatureFlagDraft.template({
+        name: 'new-feature-toggle',
+        value: FlagValueDefImpl.template('boolean'),
+      });
+
+      const newFlagId = await repoManager.featureFlag.create(newFlag);
+
+      // printDetail({ beforeStarting: expDoc });
+
+      // add the flag and a group with two treatments
+      const treatments = [
+        Treatment.template({ name: 'Control', flagStates: [{ id: newFlagId, value: false }] }),
+        Treatment.template({ name: 'Experimental', flagStates: [{ id: newFlagId, value: true }] }),
+      ];
+      const group = ExperimentGroup.template({ name: 'Users', sequence: [], cycles: 2 });
+      expDoc.flagIds.push(newFlagId);
+      expDoc.definedTreatments = idMap(treatments);
+      expDoc.groups.push(group);
+
+      const updateResult = await repoManager.experiment.update(expDoc);
+      if (!updateResult) throw new Error('Update failed');
+      
+      const startResult = await repoManager.experiment.startExperiment(expDoc.id);
+      expect(startResult).toBe(true);
+      
+      const updatedExpDoc = await repoManager.experiment.get(expDoc.id);
+      // printDetail({updatedExpDoc});
+
+      expect(updatedExpDoc.status).toBe('active');
+      expect(typeof updatedExpDoc.startTimestamp).toBe('number');
+      expect(updatedExpDoc.startTimestamp).toBeGreaterThanOrEqual(now);
+      expect(updatedExpDoc.startTimestamp).toBeLessThanOrEqual(Date.now());
+
 
       // expDoc.flagIds.push(flags[0].id);
       // // printDetail({expDoc});

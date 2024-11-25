@@ -30,7 +30,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
     }
 
     const updatedDoc = await this.get(experimentId);
-    this._createEmbeds(updatedDoc);
+    return this._createEmbeds(updatedDoc);
 
   }
 
@@ -113,7 +113,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
       };
       const matchingFlags = await featureFlag.findMany(flagFilter);
       // printDetail({updatedExpDoc})
-      printDetail({matchingFlags})
+      // printDetail({matchingFlags})
       // const updateFilter = {
       //   $set: { 'overrideRules.$': }
       // }
