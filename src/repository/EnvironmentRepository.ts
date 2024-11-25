@@ -4,6 +4,6 @@ import RepositoryManager from "./RepositoryManager.js";
 
 export default class EnvironmentRepository extends MongoRepository<Environment> {
   constructor(repositoryManager: RepositoryManager) {
-    super('Environment', environmentSchema, repositoryManager);
+    super('environment', environmentSchema, repositoryManager);
   }
 }

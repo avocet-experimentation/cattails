@@ -4,6 +4,6 @@ import RepositoryManager from "./RepositoryManager.js";
 
 export default class ClientConnectionRepository extends MongoRepository<ClientConnection> {
   constructor(repositoryManager: RepositoryManager) {
-    super('ClientConnection', clientConnectionSchema, repositoryManager);
+    super('clientConnection', clientConnectionSchema, repositoryManager);
   }
 }

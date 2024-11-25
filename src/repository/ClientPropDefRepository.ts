@@ -4,6 +4,6 @@ import RepositoryManager from "./RepositoryManager.js";
 
 export default class ClientPropDefRepository extends MongoRepository<ClientPropDef> {
   constructor(repositoryManager: RepositoryManager) {
-    super('ClientPropDef', clientPropDefSchema, repositoryManager);
+    super('clientPropDef', clientPropDefSchema, repositoryManager);
   }
 }

@@ -13,7 +13,7 @@ import { printDetail } from "../lib/index.js";
 
 export default class ExperimentRepository extends MongoRepository<Experiment> {
   constructor(repositoryManager: RepositoryManager) {
-    super('Experiment', experimentSchema, repositoryManager);
+    super('experiment', experimentSchema, repositoryManager);
   }
 
   async startExperiment(experimentId: string) {
