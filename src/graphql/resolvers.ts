@@ -3,9 +3,11 @@ import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';
 import { RequireOnly } from "@estuary/types";
 import { PartialWithStringId } from "../repository/MongoRepository.js";
+
 const repos = new RepositoryManager(cfg.MONGO_TESTING_URI);
 
 export const resolvers = {
+  // #region Reader resolvers
   Query: {
     clientPropDef: async (_: any, { id }: { id: string }) => {
       const fetched = await repos.clientPropDef.get(id);
@@ -46,6 +48,8 @@ export const resolvers = {
     }
   },
   Mutation: {
+    // #endregion
+    // #region clientpropdef mutation resolvers
     updateClientPropDef: async (
       _: any,
       { id, name, description, dataType, isIdentifier }: { 
@@ -101,7 +105,8 @@ export const resolvers = {
 
       return id;
     },
-
+    // #endregion
+    // #region clientconnection resolvers
     updateClientConnection: async (
       _: any,
       { id, name, description, environmentId }: { id: string; name?: string; description?: string; environmentId?: string }
@@ -159,6 +164,8 @@ export const resolvers = {
 
       return id;
     },
+    // #endregion
+    // #region user resolvers
     createUser: async (
       _: any,
      input: RequireOnly<UserDraft, "email">
@@ -203,7 +210,8 @@ export const resolvers = {
     
       return id;
     },
-
+    // #endregion
+    // #region environment resolvers
     createEnvironment: async (
       _: any,
       { name, defaultEnabled }: { name: "prod" | "dev" | "testing" | "staging"; defaultEnabled: boolean }
@@ -257,6 +265,8 @@ export const resolvers = {
 
       return true;
     },
+    // #endregion
+    // #region experiment resolvers
     createExperiment: async (
       _: any,
        input: RequireOnly<ExperimentDraft, "name" | "environmentName"> 
@@ -298,6 +308,8 @@ export const resolvers = {
 
       return true;
     },
+    // #endregion
+    // #region feature flag resolvers
     createFeatureFlag: async (
       _: any,
       input: RequireOnly<FeatureFlagDraft<"string" | "number" | "boolean">, | "name" | "value">
@@ -343,4 +355,5 @@ export const resolvers = {
     },
   
   }
+  // #endregion
 };
