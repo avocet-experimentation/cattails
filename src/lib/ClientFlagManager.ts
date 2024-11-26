@@ -24,38 +24,17 @@ export default class ClientFlagManager {
     this.expManager = new ExperimentManager(this.repository);
   }
 
-  /*
-  given a flag name and client attributes:
-  - fetch the flag
-  - (later) check if the flag is enabled on the environment
-  - (later) narrow down to just identifier attributes
-  - iterate through the rules on the flag to select one:
-    - check its enrollment.attributes array to select the identifiers to use
-    - hash the selected identifiers, normalize to the bounds, then compare against 
-      enrollment.proportion
-  - if a rule was selected:
-    - if the rule is an experiment:
-      - use the Experiment Manager to:
-        - get the current flag state
-        - hash the current treatment
-      - get the right flag value by matching flag IDs
-    - else:
-      - get the flag value from rule.value
-      - hash the flag's ID
-  - else:
-    - get the flag's default value
-    - hash the flag's ID
-   */
   /**
    * Get the value of a flag to display to a client as well as identifiers 
    * corresponding to the override rule applied, or the flag's own ID. Returns
-   * `null` as a fallback value if no corresponding flag is found.
+   * `null` fallback values if no corresponding flag is found or the flag is
+   * not enabled in the client's environment.
    */
   async getClientFlagValue(
     flagName: string,
     environmentName: string,
     clientProps: ClientPropMapping
-  ): Promise<FlagClientValue | null> {
+  ): Promise<FlagClientValue> {
     try {
       const flag = await this.repository.featureFlag.findOne({ name: flagName });
       if (!flag || !flag.environmentNames.includes(environmentName)) throw new Error();
@@ -63,7 +42,7 @@ export default class ClientFlagManager {
       return this.computeFlagValue(flag, environmentName, clientProps);
     } catch(e: unknown) {
       // if (e instanceof Error) {
-        return null;
+        return {value: null, hash: await this.randomIdHash() };
         // return { value: null, hash: this.defaultIdHash() }; // todo: obscure flag find success/failure by returning this object instead
       // }
     }
