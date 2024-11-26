@@ -276,29 +276,6 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const result = await this.collection.updateOne(filter, [{ $set: updates }]);
     return result.acknowledged;
   }
-  /** (WIP)
-   * Updates the passed key on a record, if it exists. Use with caution, as it
-   *  could result in invalid schema! Try `updateKeySafe` first.
-   * @returns `true` if a record was updated, `null` if the keyPath 
-   * or newValue is invalid, or `false` otherwise
-   */
-  private async updateKeyUnsafe(
-    id: string,
-    keyPath: string,
-    newValue: unknown,
-  ): Promise<boolean> {
-    const updates = { [keyPath]: newValue } as MatchKeysAndValues<BeforeId<T>>;
-    // transform the updates into an object of nested properties
-    // fetch the original document
-    // create an updated document of WithId<T> and validate the schema safely, returning null if it fails
-    // else call this.update
-    const filter = {
-      _id: ObjectId.createFromHexString(id),
-      [keyPath]: { $exists: true }
-    } as Filter<BeforeId<T>>;
-    const result = await this.collection.updateOne(filter, { $set: updates });
-    return result.acknowledged;
-  }
   /**
    * Pushes to an array within all matching records
    * @param matcher a partial document to filter by, or an array of them
@@ -386,19 +363,6 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const result = await this.collection.updateOne(filter, { $set: op });
     return result.acknowledged;
   }
-  // /**
-  //  * Deletes an existing record
-  //  * @returns true if a record was deleted, or false otherwise
-  //  */
-  // async deleteOld(documentId: string): Promise<boolean> {
-  //   const filter = { _id: ObjectId.createFromHexString(documentId)};
-  //   const result = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
-  //   if (!result.deletedCount) {
-  //     throw new DocumentUpdateFailedError(`Failed to delete document with id ${documentId}`);
-  //   }
-
-  //   return true;
-  // }
   /**
    * Deletes an existing record
    * @returns true if a record was deleted, or throws otherwise
@@ -422,7 +386,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
         );
 
       }
-      return true;
+      return embedDeleteResult;
     });
 
     return result;

@@ -38,7 +38,7 @@ describe('MongoRepository CRUD Methods', () => {
         .map(() => repoManager.featureFlag.create(
           FeatureFlagDraft.template({
             name: `name-${randomUUID()}`,
-            value: FlagValueDefImpl.templateBoolean(),
+            value: FlagValueDefImpl.template('boolean'),
           })
         ));
       await Promise.all(insertions);

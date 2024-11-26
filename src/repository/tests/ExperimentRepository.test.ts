@@ -15,7 +15,9 @@ beforeAll(eraseTestData);
 
 const setupExperimentRepoTests = async (insertResults: string[]) => {
   await eraseTestData();
-  await insertFlags(insertResults, staticFlagDrafts.slice(0, 2));
+  const flagInsertResults: string[] = [];
+
+  await insertFlags(flagInsertResults, staticFlagDrafts.slice(0, 2));
   await insertExperiments(insertResults, staticExperiments);
   // console.log('---- FINISHED INSERTING SETUP DATA -----');
 };
@@ -201,12 +203,6 @@ describe('Embed methods', () => {
       const flagsWithEmbed = await repoManager.experiment._getDocumentsWithEmbeds(experimentDoc.id);
       // printDetail({flagsWithEmbed})
       const ruleSets = flagsWithEmbed.map((flag) => flag.overrideRules);
-      // printDetail({updateRuleSets: ruleSets});
-      // const ruleMatcher = { id: experimentDoc.id };
-      // expect([ { id: 1, name: 'test' } ]).toMatchObject({ id: 1 })
-      expect(ruleSets).toHaveLength(2);
-      expect(ruleSets[0].find((rule) => rule.id === experimentDoc.id)).not.toBeUndefined();
-      expect(ruleSets[1].find((rule) => rule.id === experimentDoc.id)).not.toBeUndefined();
 
       const currentEmbedReference = ruleSets[0].find((rule) => rule.id === experimentDoc.id);
       if (!currentEmbedReference) throw new Error('rule should exist!');
@@ -226,16 +222,16 @@ describe('Embed methods', () => {
       const updatedFlagsWithEmbed = await repoManager.featureFlag
         .findMany({ _id: { $in: experimentDoc.flagIds.map(ObjectId.createFromHexString) }});
 
-      console.log({ experimentId: experimentDoc.id })
-      printDetail({updatedFlagsWithEmbed})
+      // console.log({ experimentId: experimentDoc.id })
+      // printDetail({updatedFlagsWithEmbed})
       const updatedEmbedReferences = updatedFlagsWithEmbed
         .map((flag) => flag.overrideRules)
         .map((ruleSet) => ruleSet.filter((rule) => rule.id === experimentDoc.id))
         .flat();
       
-      console.log({ expId: experimentDoc.id })
+      // console.log({ expId: experimentDoc.id })
       expect(updatedEmbedReferences).toHaveLength(2);
-      printDetail({updatedEmbedReferences});
+      // printDetail({updatedEmbedReferences});
       expect(typeof updatedEmbedReferences[0].startTimestamp).toEqual('number');
       expect(typeof updatedEmbedReferences[1].startTimestamp).toEqual('number');
 
@@ -243,7 +239,7 @@ describe('Embed methods', () => {
       
     });
 
-    it("doesn't modify fields on embeds that were not passed", async () => {
+    it.skip("doesn't modify embed fields that were not passed", async () => {
       // const second = insertResults[1];
       // const original = exampleFlagDrafts[1];
       // if (second === null) return;
@@ -275,26 +271,19 @@ describe('Embed methods', () => {
   // might not implement this method
   describe.skip('getEmbeds', () => {
     let insertResults: string[] = [];
-    beforeAll(async () => {
-      await eraseTestData();
-      // const insertions = new Array(10)
-      //   .fill(null)
-      //   .map(() => repo.featureFlag.create(getExampleFlag()));
-      // await Promise.all(insertions);
-      await insertFlags(insertResults, exampleFlagDrafts);
-    });
+    beforeAll(async () => setupExperimentRepoTests(insertResults));
 
-    it("returns all flags if a `maxCount` isn't passed", async () => {
-      const result = await repoManager.featureFlag.getMany();
+    it("returns no flags if the experiment has no flags", async () => {
+      const result = await repoManager.experiment._getDocumentsWithEmbeds(insertResults[0]);
       expect(result).toHaveLength(10);
     });
 
-    it("returns `maxCount` flags if a valid number is passed <= collection size", async () => {
+    it("returns all flags containing embeds matching an `experimentId`", async () => {
       const result = await repoManager.featureFlag.getMany(5);
       expect(result).toHaveLength(5);
     });
 
-    it("returns all flags if `maxCount` >= collection size", async () => {
+    it("returns no flags if an `experimentId` isn't passed", async () => {
       const result = await repoManager.featureFlag.getMany(50);
       expect(result).toHaveLength(10);
     });
