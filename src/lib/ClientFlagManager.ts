@@ -14,6 +14,7 @@ import { randomUUID } from "crypto";
 import ExperimentManager from "./ExperimentManager.js";
 import RepositoryManager from "../repository/RepositoryManager.js";
 import cfg from "../envalid.js";
+import { printDetail } from "./index.js";
 
 export default class ClientFlagManager {
   repository: RepositoryManager;
@@ -41,7 +42,7 @@ export default class ClientFlagManager {
 
       return this.computeFlagValue(flag, environmentName, clientProps);
     } catch(e: unknown) {
-        return { value: null, hash: await this.randomIdHash() };
+        return { value: null, hash: await this.defaultIdString() };
     }
   }
 
@@ -91,7 +92,7 @@ export default class ClientFlagManager {
 
     const defaultReturn = {
       value: flag.value.initial,
-      hash: this.defaultIdHash(flag.id),
+      hash: this.singleIdString(flag.id),
     };
     
     const envRules = FeatureFlagDraft.getEnvironmentRules(flag, environmentName);
@@ -158,22 +159,21 @@ export default class ClientFlagManager {
     } else if (rule.type === 'ForcedValue') {
       return {
         value: forcedValueSchema.parse(rule).value,
-        hash: this.defaultIdHash(flagId),
+        hash: this.singleIdString(rule.id),
       };
     } else {
       console.error(`Rule type was invalid!`);
-      console.error(rule);
+      printDetail({ rule });
       return null;
     }
   }
   
-  async randomIdHash() {
-    return randomUUID() + '+' + this.randomIds(2);
+  async defaultIdString() {
+    return this.randomIds(3);
   }
   
-  
-  defaultIdHash(flagId: string) {
-    return flagId + '+' + this.randomIds(2);
+  singleIdString(id: string) {
+    return id + '+' + this.randomIds(2);
   }
   
   async randomIds(count: number) {
