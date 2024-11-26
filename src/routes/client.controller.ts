@@ -39,11 +39,11 @@ export const getEnvironmentFFlagsHandler = async (
 ): Promise<FlagClientMapping> => {
   const { environmentName, clientProps } = request.body;
   const environmentValues = await clientFlagManager.environmentFlagValues(environmentName, clientProps);
-  if (environmentValues === null) {
-    return reply
-      .code(404)
-      .send({ error: { code: 404, message: "flags not found" } });
-  }
+  // if (environmentValues === null) {
+  //   return reply
+  //     .code(404)
+  //     .send({ error: { code: 404, message: "flags not found" } });
+  // }
 
   return reply.code(200).send(environmentValues);
 };

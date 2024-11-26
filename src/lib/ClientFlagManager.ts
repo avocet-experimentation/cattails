@@ -41,10 +41,7 @@ export default class ClientFlagManager {
 
       return this.computeFlagValue(flag, environmentName, clientProps);
     } catch(e: unknown) {
-      // if (e instanceof Error) {
-        return {value: null, hash: await this.randomIdHash() };
-        // return { value: null, hash: this.defaultIdHash() }; // todo: obscure flag find success/failure by returning this object instead
-      // }
+        return { value: null, hash: await this.randomIdHash() };
     }
   }
 
@@ -61,11 +58,9 @@ export default class ClientFlagManager {
   async environmentFlagValues(
     environmentName: string,
     clientProps: ClientPropMapping
-  ): Promise<FlagClientMapping | null> {
+  ): Promise<FlagClientMapping> {
     try {
       const featureFlags = await this.repository.featureFlag.getEnvironmentFlags(environmentName);
-      // printDetail({ featureFlags });
-      // console.log({ overrideRules: fflags[0].environments.dev?.overrideRules });
     
       const promises = [];
   
@@ -77,11 +72,14 @@ export default class ClientFlagManager {
       }
   
       const resolve = await Promise.all(promises);
-      console.log({resolve});
       return Object.fromEntries(resolve);
 
     } catch (e: unknown) {
-      return null;
+      if (e instanceof Error) {
+        console.error(e);
+      }
+
+      return {};
     }
   }
 
@@ -90,7 +88,7 @@ export default class ClientFlagManager {
     environmentName: string,
     clientProps: ClientPropMapping
   ): Promise<FlagClientValue> {
-    // define a fallback
+
     const defaultReturn = {
       value: flag.value.initial,
       hash: this.defaultIdHash(flag.id),
@@ -105,7 +103,9 @@ export default class ClientFlagManager {
 
   }
 
-  // random enrollment in a rule such as an experiment
+  /**
+   * Attempt to randomly enroll a client in each override rule, in order
+   */
   private enroll(
     overrideRules: OverrideRuleUnion[],
     clientProps: ClientPropMapping
