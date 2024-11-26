@@ -10,7 +10,6 @@ import {
 } from "@estuary/types";
 import { hashAndCompare } from "./hash.js";
 import { randomUUID } from "crypto";
-// import * as bcrypt from 'bcrypt';
 import ExperimentManager from "./ExperimentManager.js";
 import RepositoryManager from "../repository/RepositoryManager.js";
 import cfg from "../envalid.js";
@@ -38,7 +37,7 @@ export default class ClientFlagManager {
   ): Promise<FlagClientValue> {
     try {
       const flag = await this.repository.featureFlag.findOne({ name: flagName });
-      if (!flag || !flag.environmentNames.includes(environmentName)) throw new Error();
+      if (!flag || !(environmentName in flag.environmentNames)) throw new Error();
 
       return this.computeFlagValue(flag, environmentName, clientProps);
     } catch(e: unknown) {
