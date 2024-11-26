@@ -19,7 +19,7 @@ interface FetchFlagClientRequest extends FetchFlagsClientBody {
 
 /**
  * Todo:
- * - pass client API key in body
+ * - pass client API key in body instead of environmentName
  * - use key to identify environment
  */
 export const fetchFFlagHandler = async (
@@ -30,8 +30,7 @@ export const fetchFFlagHandler = async (
   const { environmentName, clientProps } = request.body;
   const currentValue = await clientFlagManager.getClientFlagValue(flagName, environmentName, clientProps);
 
-  // todo: change this parse to only strip out extra properties instead of throwing
-  return reply.code(200).send(flagClientValueSchema.parse(currentValue));
+  return reply.code(200).send(flagClientValueSchema.passthrough().parse(currentValue));
 };
 
 export const getEnvironmentFFlagsHandler = async (
