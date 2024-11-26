@@ -1,7 +1,11 @@
 import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, ExperimentReferenceTemplate, ForcedValue, ExperimentReference, OverrideRuleUnion, FlagValueDefImpl } from "@estuary/types";
 import { ObjectId } from "mongodb";
 
-export const flagEnvironmentInit = () => ['prod', 'dev', 'testing', 'staging'];
+export const flagEnvironmentInit = () => ['prod', 'dev', 'testing', 'staging']
+  .reduce(
+    (acc, curr) => Object.assign(acc, { [curr]: true }), 
+    {} as FeatureFlagDraft['environmentNames'],
+  );
 
 export const getExampleFlag = (
   name: string = 'test flag',
@@ -102,7 +106,7 @@ export const staticBooleanFlag: FeatureFlagDraft = {
   name: 'auto-update-ui',
   value: { type: 'boolean', initial: false },
   description: 'Automatically update the page as new data is fetched. Long-lived flag',
-  environmentNames: ['prod', 'dev', 'testing', 'staging'],
+  environmentNames: flagEnvironmentInit(),
   overrideRules: [
     booleanForcedValue1,
     experimentRef1,
