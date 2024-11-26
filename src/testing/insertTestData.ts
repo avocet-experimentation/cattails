@@ -18,12 +18,12 @@ import { staticUser } from './data/user.js';
 
 const db = new MongoClient(cfg.MONGO_TESTING_URI).db();
 const colls = {
-  flags: db.collection('FeatureFlag'),
-  clientProps: db.collection('ClientPropDef'),
-  connections: db.collection('ClientConnection'),
-  experiments: db.collection('Experiment'),
-  environments: db.collection('Environment'),
-  users: db.collection('User'),
+  flags: db.collection('featureFlag'),
+  clientProps: db.collection('clientPropDef'),
+  connections: db.collection('clientConnection'),
+  experiments: db.collection('experiment'),
+  environments: db.collection('environment'),
+  users: db.collection('user'),
 }
 
 
@@ -46,11 +46,11 @@ const colls = {
 const eraseCollection = async (collectionName: EstuaryMongoCollectionName) => await db.dropCollection(collectionName);
 
 const eraseTestData = async () => {
-  await eraseCollection('FeatureFlag');
-  await eraseCollection('Experiment');
-  await eraseCollection('ClientPropDef');
-  await eraseCollection('Environment');
-  await eraseCollection('ClientConnection');
+  await eraseCollection('featureFlag');
+  await eraseCollection('experiment');
+  await eraseCollection('clientPropDef');
+  await eraseCollection('environment');
+  await eraseCollection('clientConnection');
 }
 
 const insertFeatureFlag = async(obj: FeatureFlagDraft) => {
@@ -59,19 +59,19 @@ const insertFeatureFlag = async(obj: FeatureFlagDraft) => {
 }
 
 const insertClientPropDefs = async(arr: ClientPropDefDraft[]) => {
-  await db.collection('ClientPropDef').insertMany(arr);
+  await db.collection('clientPropDef').insertMany(arr);
 }
 
 const insertClientConnections = async(arg: ClientConnectionDraft) => {
-  await db.collection('ClientConnection').insertOne(arg);
+  await db.collection('clientConnection').insertOne(arg);
 }
 
 const insertEnvironment = async(arg: EnvironmentDraft) => {
-  await db.collection('Environment').insertOne(arg);
+  await db.collection('environment').insertOne(arg);
 }
 
 const insertExperiments = async(arg: ExperimentDraft) => {
-  await db.collection('Experiment').insertOne(arg);
+  await db.collection('experiment').insertOne(arg);
 }
 
 // await eraseTestData();
