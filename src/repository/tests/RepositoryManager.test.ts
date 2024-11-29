@@ -123,7 +123,7 @@ describe('MongoRepository CRUD Methods', () => {
     let insertResults: string[] = [];
     beforeAll(async () => insertFlags(insertResults, exampleFlagDrafts.slice(0, 3)));
 
-    it("overwrites specified fields when passed a partial object", async () => {
+    it("overwrites primitive fields", async () => {
       const first = insertResults[0];
 
       const updateObject = {
@@ -137,6 +137,22 @@ describe('MongoRepository CRUD Methods', () => {
       expect(result).toBe(true);
 
       const updatedFirst = await repoManager.featureFlag.get(first);
+      expect(updatedFirst).toMatchObject(updateObject);
+    });
+
+    it("overwrites object fields when the update argument contains nested objects", async () => {
+      const first = insertResults[0];
+
+      const updateObject = {
+        id: first,
+        environmentNames: { novelEnvironment: true as const },
+      };
+      const result = await repoManager.featureFlag.update(updateObject);
+      expect(result).toBe(true);
+
+      const updatedFirst = await repoManager.featureFlag.get(first);
+      printDetail({first: exampleFlagDrafts[0] })
+      printDetail({updatedFirst})
       expect(updatedFirst).toMatchObject(updateObject);
     });
 

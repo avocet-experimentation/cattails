@@ -9,6 +9,7 @@ import {
   WithId,
   WithTransactionCallback,
   UpdateResult,
+  UpdateFilter,
 } from 'mongodb';
 import merge from 'deepmerge';
 import {
@@ -214,16 +215,24 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    * Updates an existing record
    * @returns true if the update request was successful, or throws otherwise
    */
-  async update(partialEntry: PartialWithStringId<T>): Promise<boolean> {
+  async update(
+    partialEntry: PartialWithStringId<T>,
+    mergeProps: boolean = false): Promise<boolean> {
     const validated = this._validateUpdate(partialEntry);
-    // if (validated === null) return null;
 
     const { id, ...rest } = validated;
-    const updates = { ...rest, updatedAt: Date.now() };
-    const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
-    // const result = await this.collection.updateOne(filter, [{ $set: updates }]);
-    const result = this._withTransaction(async (session) => {
-      const updateResult = await this.collection.updateOne(filter, [{ $set: updates }]);
+    const updateObj = { $set: { ...rest, updatedAt: Date.now() } };
+    
+    const filter = {
+      _id: ObjectId.createFromHexString(id)
+    } as Filter<BeforeId<T>>;
+    
+    const updateFilter = mergeProps 
+      ? [updateObj] 
+      : updateObj as UpdateFilter<BeforeId<T>>;
+    
+      const result = this._withTransaction(async (session) => {
+      const updateResult = await this.collection.updateOne(filter, updateFilter);
       if (!updateResult.acknowledged) {
         await session.abortTransaction();
         throw new DocumentUpdateFailedError(`Failed to update document ${id}`);
