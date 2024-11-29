@@ -130,6 +130,7 @@ export const staticFlagDrafts: FeatureFlagDraft[] = [
   staticNumberFlag,
 ].map((flag) => Object.freeze(flag));
 
+// completed records. Only insert these by directly using Mongo
 export const staticFlags: FeatureFlag[] = [
   {
     id: '67328591069f921a07e5bd76',
