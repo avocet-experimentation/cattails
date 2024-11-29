@@ -1,13 +1,13 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import cfg from '../envalid.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { staticFlagDrafts } from './data/featureFlags.js';
+import { exampleFlagDrafts, staticFlagDrafts, staticFlags } from './data/featureFlags.js';
 // import FeatureFlagRepository from '../repository/FeatureFlagRepository.js'
 import { ClientConnectionDraft, ClientPropDef, ClientPropDefDraft, EnvironmentDraft, EstuaryMongoCollectionName, ExperimentDraft, FeatureFlag, FeatureFlagDraft, UserDraft } from '@estuary/types';
 import { staticClientPropDefs } from './data/clientPropDefs.js';
 import { staticClientConnections } from './data/clientConnections.js';
 import { staticEnvironment } from './data/environemnts.js';
-import { staticExperiment } from './data/experiments.js';
+import { exampleExperiment } from './data/experiments.js';
 import { staticUser } from './data/user.js';
 // import ExperimentRepository from '../FeatureFlagRepository.js'
 
@@ -82,11 +82,12 @@ const insertUser = async(arg: UserDraft) => {
   }
   // await eraseTestData();
   // await insertUser(staticUser);
-  // await insertExperiments(staticExperiment);
+  await insertExperiments(exampleExperiment);
   // await insertEnvironment(staticEnvironment);
   // await insertClientConnections(staticClientConnections);
-  // await insertFeatureFlag(staticFlags[0]);
+  await insertFeatureFlag(exampleFlagDrafts[0]);
   // await insertClientPropDefs(staticClientPropDefs);
+
   console.log("Flags:", await colls.flags.find().toArray());
   console.log("Client Connection:", await colls.connections.find().toArray());
   console.log("Experiment:", await colls.experiments.find().toArray()); 
