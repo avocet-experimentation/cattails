@@ -141,7 +141,7 @@ export default class ClientFlagManager {
     value: FlagCurrentValue,
     hash: string,
   } | null> {
-    if (rule.type === 'ExperimentReference') {
+    if (rule.type === 'Experiment') {
       const result = await this.expManager.getTreatmentAndHash(rule, identifiers);
       if (result === null) return null;
       const { treatment, hash } = result;
