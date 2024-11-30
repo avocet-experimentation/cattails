@@ -206,8 +206,8 @@ describe('Embed methods', () => {
 
       const currentEmbedReference = ruleSets[0].find((rule) => rule.id === experimentDoc.id);
       if (!currentEmbedReference) throw new Error('rule should exist!');
-      if (currentEmbedReference.type !== 'ExperimentReference') {
-        throw new Error('rule should be an ExperimentReference!');
+      if (currentEmbedReference.type !== 'Experiment') {
+        throw new Error('rule should be an Experiment!');
       }
 
       const partialUpdate = {
