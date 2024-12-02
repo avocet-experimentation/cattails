@@ -69,6 +69,7 @@ export default class ExperimentManager {
     const concurrent = groupTreatments.find(({ duration }) => {
       const startTimeMs = start + cumulativeDuration;
       const endTimeMs = startTimeMs + duration;
+      cumulativeDuration += duration;
       return (startTimeMs <= currentTimeMs && currentTimeMs < endTimeMs);
     });
 
