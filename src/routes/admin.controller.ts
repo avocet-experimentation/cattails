@@ -1,18 +1,19 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { DraftRecord, FeatureFlag, OverrideRule, PartialUpdate } from "@estuary/types";
+import { DraftRecord, FeatureFlag, OverrideRuleUnion, PartialUpdate } from "@estuary/types";
 import { FlagIdParam, FlagNameParam } from "./routes.types.js";
-import { getAdminRepos } from "../repository/index.js";
-import { MongoRecordDraft, WithMongoStringId } from "../repository/MongoRepository.js";
+import { PartialWithStringId } from "../repository/MongoRepository.js";
+import RepositoryManager from "../repository/RepositoryManager.js";
+import cfg from "../envalid.js";
 
 // Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
-const { featureFlag } = getAdminRepos();
+const repository = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
 export const createFFlagHandler = async (
   request: FastifyRequest<{ Body: DraftRecord<FeatureFlag> }>,
   reply: FastifyReply
 ) => {
 
-  const documentId = await featureFlag.create(request.body);
+  const documentId = await repository.featureFlag.create(request.body);
   if (!documentId) {
     return reply
       .code(409)
@@ -26,7 +27,7 @@ export const getFFlagByIdHandler = async (
   reply: FastifyReply
 ) => {
   const { fflagId } = request.params;
-  const fflag = await featureFlag.get(fflagId);
+  const fflag = await repository.featureFlag.get(fflagId);
   if (!fflag) {
     return reply
       .code(404)
@@ -40,7 +41,7 @@ export const getFFlagByNameHandler = async (
   reply: FastifyReply
 ): Promise<FeatureFlag> => {
   const fflagName = request.params.fflagName;
-  const fflag = await featureFlag.findOne({ name: fflagName });
+  const fflag = await repository.featureFlag.findOne({ name: fflagName });
   if (!fflag) {
     return reply
       .code(404)
@@ -53,7 +54,7 @@ export const getAllFFlagsHandler = async (
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<FeatureFlag[]> => {
-  const fflags = await featureFlag.getMany();
+  const fflags = await repository.featureFlag.getMany();
   if (!fflags) {
     return reply
       .code(404)
@@ -66,7 +67,7 @@ export const getAllFFlagsHandler = async (
 export const updateFFlagHandler = async (
   request: FastifyRequest<{
     Params: FlagIdParam;
-    Body: WithMongoStringId<FeatureFlag>;
+    Body: PartialWithStringId<FeatureFlag>;
   }>,
   reply: FastifyReply
 ) => {
@@ -77,7 +78,7 @@ export const updateFFlagHandler = async (
       .code(422)
       .send({ error: { code: 422, message: "inconsistent request" } });
   }
-  const resultDocId = await featureFlag.update(request.body);
+  const resultDocId = await repository.featureFlag.update(request.body);
   if (!resultDocId) {
     return reply
       .code(404)
@@ -99,7 +100,7 @@ export const patchFFlagHandler = async (
       .code(422)
       .send({ error: { code: 422, message: "inconsistent request" } });
   }
-  const updatedId = await featureFlag.update(request.body);
+  const updatedId = await repository.featureFlag.update(request.body);
   if (updatedId === null) {
     return reply
       .code(404)
@@ -116,13 +117,13 @@ export const patchFFlagHandler = async (
 export const addRuleToFFlagHandler = async (
   request: FastifyRequest<{
     Params: FlagIdParam;
-    Body: { environment: string, rule: OverrideRule };
+    Body: { rule: OverrideRuleUnion };
   }>,
   reply: FastifyReply
 ) => {
   const { fflagId } = request.params;
-  const { environment, rule } = request.body;
-  const succeeded = await featureFlag.addRule(fflagId, environment, rule);
+  const { rule } = request.body;
+  const succeeded = await repository.featureFlag.addRuleToId(rule, fflagId);
   if (!succeeded) {
     return reply
       .code(404)
@@ -138,7 +139,7 @@ export const deleteFFlagHandler = async (
   reply: FastifyReply
 ) => {
   const { fflagId } = request.params;
-  const succeeded = await featureFlag.delete(fflagId);
+  const succeeded = await repository.featureFlag.delete(fflagId);
   if (!succeeded) {
     return reply
       .code(404)

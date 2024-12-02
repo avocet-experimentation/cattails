@@ -1,241 +1,159 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import env from '../../envalid.js';
+import cfg from '../../envalid.js';
 import { afterAll, beforeAll, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { exampleFlags, getExampleFlag } from '../../testing/data/featureFlags.js';
-import FeatureFlagRepository from '../FeatureFlagRepository.js'
-import { EstuaryMongoCollectionName, ForcedValue, OverrideRule } from '@estuary/types';
-// import ExperimentRepository from '../FeatureFlagRepository.js'
-
-const fflagRepo = new FeatureFlagRepository(env.MONGO_TESTING_URI);
-// const experimentRepo = new ExperimentRepository(env.MONGO_TESTING_URI);
-
-const eraseClientDb = new MongoClient(env.MONGO_TESTING_URI).db();
-
-const insertExampleFlags = async (resultsArray: (string | null)[]) => {
-  const promises = [
-    fflagRepo.create(exampleFlags[0]),
-    fflagRepo.create(exampleFlags[1]),
-  ];
-
-  const resolved = await Promise.all(promises);
-  resultsArray.splice(resultsArray.length, 0, ...resolved);
-}
-
-const eraseCollection = async (collectionName: EstuaryMongoCollectionName) => await eraseClientDb.dropCollection(collectionName);
-const eraseTestData = async () => {
-  await eraseCollection('FeatureFlag');
-  await eraseCollection('Experiment');
-}
+import { exampleFlagDrafts, getExampleFlag, numberForcedValue1, staticFlagDrafts, staticFlags, staticNumberFlag, staticRules } from '../../testing/data/featureFlags.js';
+import { EstuaryMongoCollectionName, FeatureFlagDraft, ForcedValue, OverrideRuleUnion } from '@estuary/types';
+import RepositoryManager from '../RepositoryManager.js';
+import { printDetail } from '../../lib/index.js';
+import {
+  repoManager,
+  insertFlags,
+  eraseTestData,
+} from '../../testing/testing-helpers.js';
 
 beforeAll(eraseTestData);
 
-describe('Feature Flags', () => {
+describe('Rule methods', () => {
   
-  describe('create', () => {
-    beforeEach(eraseTestData);
-
-    it("creates a flag and returns its `ObjectId` as a string if passed an object with no `.id`", async () => {
-      const result = await fflagRepo.create(getExampleFlag());
-      expect(typeof result).toBe('string');
-    });
-
-    // it("rejects if passed an object with a `.id`", async () => {
-    //   const input = { ...getExampleFlag(), id: crypto.randomUUID() };
-    //   // const badInsert = async () => await db.createFlag(input);
-    //   expect(async () => await fflagRepo.create(input)).rejects.toThrow();
-    // });
-
-    afterAll(eraseTestData);
-  });
-
-  describe('getMany', () => {
-    beforeAll(async () => {
+  describe('addRule', () => {
+    let insertResults: string[] = [];
+    beforeEach(async () => {
       await eraseTestData();
-      const insertions = new Array(10).fill(null).map(() => fflagRepo.create(getExampleFlag())
-        // .then((value) => console.log(value))
-      );
-      await Promise.all(insertions);
+      await insertFlags(insertResults, staticFlagDrafts.slice(0, 3));
     });
 
-    it("returns all flags if a `maxCount` isn't passed", async () => {
-      const result = await fflagRepo.getMany();
-      expect(result).toHaveLength(10);
+    it("returns true and adds a rule with valid input", async () => {
+      const { environmentNames, overrideRules, ...matcher } = staticNumberFlag;
+      const acknowledged = await repoManager.featureFlag.addRule(numberForcedValue1, matcher);
+      const updatedFlag = await repoManager.featureFlag.findOne({ name: staticNumberFlag.name });
+      // printDetail({updatedFlag});
+      if (updatedFlag === null) throw new Error('Flag should exist!');
+
+      expect(acknowledged).toBe(true);
+      expect(updatedFlag.overrideRules).toContainEqual(numberForcedValue1);
     });
 
-    it("returns `maxCount` flags if a valid number is passed <= collection size", async () => {
-      const result = await fflagRepo.getMany(5);
-      expect(result).toHaveLength(5);
-    });
-
-    it("returns all flags if `maxCount` >= collection size", async () => {
-      const result = await fflagRepo.getMany(50);
-      expect(result).toHaveLength(10);
-    });
-
-    afterAll(eraseTestData);
-  });
-
-  describe('get', () => {
-    let insertResult: string | null;
-    beforeAll(async () => {
-      insertResult = await fflagRepo.create(getExampleFlag());
-    });
-
-    it("returns a previously inserted flag if provided its ObjectId as a hex string", async () => {
-      expect(insertResult).not.toBeNull();
-      if (insertResult === null) return;
-      const result = await fflagRepo.get(insertResult);
-      expect(result).not.toBeNull();
-    });
-
-    it("throws if provided an invalid ID", async () => {
-      expect(fflagRepo.get('invalid-id')).rejects.toThrow();
-    });
-
-    it("returns null if provided an incorrect ID", async () => {
-      const randomObjectId = ObjectId.createFromTime(99);
-      const result = await fflagRepo.get(randomObjectId.toHexString());
-      console
-      expect(result).toBeNull();
-    });
-    
-    afterAll(eraseTestData);
-  });
-
-  describe('findOne', () => {
-    let insertResults: (string | null)[] = [];
-    beforeAll(async () => insertExampleFlags(insertResults));
-
-    it("finds the right record from a query on its name", async () => {
-      const first = insertResults[0];
-      if (first === null) return;
-
-      const result = await fflagRepo.findOne({ name: 'testing flag' });
-      expect(result).not.toBeNull();
-      expect(result?.id).toEqual(first);
-    });
-
-    it("finds the right record from a substring match on description", async () => {
-      const second = insertResults[1];
-      if (second === null) return;
-
-      const result = await fflagRepo.findOne({ description: { $regex: /server-sent events/ } });
-      expect(result).not.toBeNull();
-      expect(result?.id).toEqual(second);
-    });
-
-    it("returns null if no records match the query", async () => {
-      const result = await fflagRepo.findOne({ name: 'asdfoasihgda'});
-      expect(result).toBeNull();
-    });
-    
-    afterAll(eraseTestData);
-  });
-
-  describe('update', () => {
-    let insertResults: (string | null)[] = [];
-    beforeAll(async () => await insertExampleFlags(insertResults));
-
-    it("overwrites specified fields", async () => {
-      const first = insertResults[0];
-      if (first === null) return;
-
-      const updateObject = {
-        id: first,
-        value: {
-          type: 'number' as const,
-          default: 3,
-        },
-      };
-      const result = await fflagRepo.update(updateObject);
-      expect(result).not.toBeNull();
-
-      const updatedFirst = await fflagRepo.get(first);
-      expect(updatedFirst).not.toBeNull();
-      expect(updatedFirst).toMatchObject(updateObject);
-    });
-
-    it("doesn't modify fields not passed in the update object", async () => {
-      const second = insertResults[1];
-      const original = exampleFlags[1];
-      if (second === null) return;
-
-      const updateName = 'updated testing flag';
-      const result = await fflagRepo.update({ id: second, name: updateName });
-      expect(result).toBeTruthy();
-
-      const updatedFirst = await fflagRepo.get(second);
-      expect(updatedFirst).not.toBeNull();
-      if (updatedFirst === null) return;
-
-      const { createdAt, updatedAt, ...withoutTimeStamps } = updatedFirst;
-      expectTypeOf(createdAt).toBeNumber();
-      expectTypeOf(updatedAt).toBeNumber();
-      expect(updatedAt).toBeGreaterThanOrEqual(createdAt);
-      const reconstructed = { ...withoutTimeStamps, name: original.name };
-      expect(reconstructed).toStrictEqual({ id: second, ...original });
-    });
-
-    it("doesn't overwrite if no document matches the `id`", async () => {
-      const result = await fflagRepo.findOne({ name: 'asdfoasihgda'});
-      expect(result).toBeNull();
-    });
-    
     afterAll(eraseTestData);
   });
 
   // WIP
-  describe('push', () => {
-    let insertResults: (string | null)[] = [];
-    beforeAll(async () => await insertExampleFlags(insertResults));
+  describe('removeRule', () => {
+    let insertResults: string[] = [];
+    beforeEach(async () => {
+      await eraseTestData();
+      await insertFlags(insertResults, staticFlagDrafts.slice(0, 2));
+    });
 
-    it("Adds an element to an array", async () => {
-      const first = insertResults[0];
-      if (first === null) return;
-      const firstDoc = await fflagRepo.get(first);
-      console.log(firstDoc);
+    it("returns true", async () => {
+      const flag = staticFlagDrafts[0];
+      const rule = FeatureFlagDraft.getEnvironmentRules(flag, 'prod')[0];
+      const { environmentNames, ...matcher } = flag;
+      const acknowledged = await repoManager.featureFlag.removeRule(rule, matcher);
+      expect(acknowledged).toBe(true);
+    });
 
-      const newRule: ForcedValue = {
-        type: 'ForcedValue',
-        status: 'draft',
-        value: true,
-        enrollment: {
-          attributes: [],
-          proportion: 1,
-        }
-      };
-      const result = await fflagRepo.push(first, 'environments.staging.overrideRules', newRule);
-      expect(result).toBeTruthy();
+    it("Removes all occurrences of a rule for its environment", async () => {
+      const flag = staticFlagDrafts[0];
+      const rule = FeatureFlagDraft.getEnvironmentRules(flag, 'prod')[0];
+      // console.log({rule});
+      const acknowledged = await repoManager.featureFlag.removeRule(rule, {});
+      // console.log({ruleAfter: rule})
+      const updated = await repoManager.featureFlag.getMany();
+      const updatedRules = [
+        updated[0].overrideRules,
+        updated[1].overrideRules,
+      ];
+      // printDetail({updatedRules});
+      expect(updatedRules[0]).not.toContainEqual(rule);
+      expect(updatedRules[1]).not.toContainEqual(rule);
+    });
 
-      const updatedFirst = await fflagRepo.get(first);
-      expect(updatedFirst?.environments.staging?.overrideRules).toContainEqual(newRule);
+    it("Removes a rule given only a partial rule object", async () => {
+      const flagDraft = staticFlagDrafts[0];
+      const rule = FeatureFlagDraft.getEnvironmentRules(flagDraft, 'prod')[0];
+      // if (!rule) throw new Error('rule should exist!');
+      
+      const { status, enrollment, ...ruleMatcher } = rule;
+      const { name, ...rest } = flagDraft;
+      const acknowledged = await repoManager.featureFlag.removeRule(ruleMatcher, { name });
+      const updatedFlagDoc = await repoManager.featureFlag.findOne({ name });
+      if (!updatedFlagDoc) throw new Error('Flag should exist!');
+
+      const remainingRules = updatedFlagDoc.overrideRules;
+      expect(remainingRules).not.toContainEqual(rule);
+    });
+
+    // remove?
+    it.skip("Returns false (throws?) when ", async () => {
     });
     
     afterAll(eraseTestData);
   });
 
-  describe('delete', () => {
-    let insertResults: (string | null)[] = [];
-    beforeAll(async () => insertExampleFlags(insertResults));
-
-    it("deletes the right record given a valid id", async () => {
-      const first = insertResults[0];
-      if (first === null) return;
-
-      const result = await fflagRepo.delete(first);
-      expect(result).toBeTruthy();
-      const search = await fflagRepo.get(first);
-      expect(search).toBeNull();
+  describe.skip('getEnvironmentFlags', () => {
+    beforeAll(async () => {
+      await eraseTestData();
+      const insertions = new Array(10)
+        .fill(null)
+        .map(() => repoManager.featureFlag.create(getExampleFlag()));
+      await Promise.all(insertions);
     });
 
-    it("returns a falsy value if no records matches the passed id", async () => {
-      const fakeId = ObjectId.createFromTime(0).toHexString();
-      const result = await fflagRepo.delete(fakeId);
-      expect(result).toBeFalsy();
+    it("", async () => {
     });
-    
+
+
     afterAll(eraseTestData);
   });
+
+  // WIP; might not implement
+  describe.skip('updateRule', () => {
+    let insertResults: string[] = [];
+    beforeAll(async () => await insertFlags(insertResults, exampleFlagDrafts.slice(0, 2)));
+
+    it("overwrites specified fields when passed a partial object", async () => {
+      // const first = insertResults[0];
+
+      // const updateObject = {
+      //   id: first,
+      //   value: {
+      //     type: 'number' as const,
+      //     initial: 3,
+      //   },
+      // };
+      // const result = await repo.featureFlag.update(updateObject);
+      // expect(result).not.toBeNull();
+
+      // const updatedFirst = await repo.featureFlag.get(first);
+      // expect(updatedFirst).not.toBeNull();
+      // expect(updatedFirst).toMatchObject(updateObject);
+    });
+
+    it("doesn't modify fields not passed in the update object", async () => {
+      // const second = insertResults[1];
+      // const original = exampleFlags[1];
+      // if (second === null) return;
+
+      // const updateName = 'updated testing flag';
+      // const result = await repo.featureFlag.update({ id: second, name: updateName });
+      // expect(result).toBe(true);
+
+      // const updatedFirst = await repo.featureFlag.get(second);
+      // expect(updatedFirst).not.toBeNull();
+      // if (updatedFirst === null) return;
+
+      // const { createdAt, updatedAt, ...withoutTimeStamps } = updatedFirst;
+      // expectTypeOf(createdAt).toBeNumber();
+      // expectTypeOf(updatedAt).toBeNumber();
+      // expect(updatedAt).toBeGreaterThanOrEqual(createdAt);
+
+      // const reconstructed = { ...withoutTimeStamps, name: original.name };
+      // expect(reconstructed).toStrictEqual({ id: second, ...original });
+    });
+
+    afterAll(eraseTestData);
+  });
+
 });
 
 afterAll(eraseTestData);

@@ -6,6 +6,7 @@ export default defineConfig({
     environment: 'node',
     typecheck: {
       tsconfig: './tsconfig.json',
-    }
+    },
+    fileParallelism: false,
   },
 });

@@ -5,63 +5,45 @@ import {
   FlagClientMapping,
 } from "@estuary/types";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { currentFlagValue } from "../lib/flagValue.js";
-import { getClientRepos } from "../repository/index.js";
-import { printDetail } from "../lib/index.js";
+import ClientFlagManager from "../lib/ClientFlagManager.js";
 
-const { fflagRepo } = getClientRepos();
-// until we have API keys corresponding to environments
-const PLACEHOLDER_ENVIRONMENT = 'dev';
+const clientFlagManager = new ClientFlagManager();
 
 interface FetchFlagsClientBody { 
-  Body: { environment: string, clientProps: ClientPropMapping},
+  Body: { environmentName: string, clientProps: ClientPropMapping},
 }
 
 interface FetchFlagClientRequest extends FetchFlagsClientBody { 
-  Params: { fflagName: string, }, 
+  Params: { flagName: string }, 
 }
 
 /**
  * Todo:
- * - pass client API key in body
+ * - pass client API key in body instead of environmentName
  * - use key to identify environment
  */
 export const fetchFFlagHandler = async (
   request: FastifyRequest<FetchFlagClientRequest>,
   reply: FastifyReply
 ): Promise<FlagClientValue> => {
-  const { fflagName } = request.params;
-  const { environment, clientProps } = request.body;
-  const featureFlag = await fflagRepo.findOne({ name: fflagName });
-  if (!featureFlag) {
-    return reply
-      .code(404)
-      .send({ error: { code: 404, message: "flag not found" } });
-  }
+  const { flagName } = request.params;
+  const { environmentName, clientProps } = request.body;
+  const currentValue = await clientFlagManager.getClientFlagValue(flagName, environmentName, clientProps);
 
-  const currentValue = currentFlagValue(featureFlag, PLACEHOLDER_ENVIRONMENT, clientProps);
-
-  return flagClientValueSchema.parse(currentValue);
+  return reply.code(200).send(flagClientValueSchema.passthrough().parse(currentValue));
 };
 
 export const getEnvironmentFFlagsHandler = async (
   request: FastifyRequest<FetchFlagsClientBody>,
   reply: FastifyReply
 ): Promise<FlagClientMapping> => {
-  const { environment, clientProps } = request.body;
-  const featureFlags = await fflagRepo.getEnvironmentFlags(environment);
-  if (!featureFlags) {
-    return reply
-      .code(404)
-      .send({ error: { code: 404, message: "flags not found" } });
-  }
+  const { environmentName, clientProps } = request.body;
+  const environmentValues = await clientFlagManager.environmentFlagValues(environmentName, clientProps);
+  // if (environmentValues === null) {
+  //   return reply
+  //     .code(404)
+  //     .send({ error: { code: 404, message: "flags not found" } });
+  // }
 
-  // printDetail({ featureFlags });
-  // console.log({ overrideRules: fflags[0].environments.dev?.overrideRules });
-
-  const mapping = featureFlags.reduce((acc, featureFlag) => {
-    Object.assign(acc, { [featureFlag.name]: currentFlagValue(featureFlag, PLACEHOLDER_ENVIRONMENT, clientProps) });
-    return acc;
-  }, {} as FlagClientMapping);
-  return mapping;
+  return reply.code(200).send(environmentValues);
 };
