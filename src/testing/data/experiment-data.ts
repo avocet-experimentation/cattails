@@ -1,14 +1,14 @@
-import { ABExperimentTemplate, ExperimentDraft, ExperimentDraftTemplate, SwitchbackTemplate } from "@estuary/types";
+import { ExperimentDraft } from "@estuary/types";
 
-export const experiment1 = new ExperimentDraftTemplate({
+export const experiment1 = ExperimentDraft.template({
   name: 'example experiment to embed',
   environmentName: 'prod',
 });
-export const switchbackExperiment1 = new SwitchbackTemplate({
+export const switchbackExperiment1 = ExperimentDraft.templateSwitchback({
   name: 'my switchback',
   environmentName: 'prod',
 });
-export const abExperiment1 = new ABExperimentTemplate({
+export const abExperiment1 = ExperimentDraft.templateAB({
   name: 'two group test',
   environmentName: 'prod',
 });

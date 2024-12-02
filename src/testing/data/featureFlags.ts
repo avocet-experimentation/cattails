@@ -1,4 +1,4 @@
-import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, ExperimentReferenceTemplate, ForcedValue, ExperimentReference, OverrideRuleUnion, FlagValueDefImpl } from "@estuary/types";
+import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, ForcedValue, ExperimentReference, OverrideRuleUnion, FlagValueDefImpl } from "@estuary/types";
 import { ObjectId } from "mongodb";
 
 export const flagEnvironmentInit = () => ['prod', 'dev', 'testing', 'staging']
@@ -87,7 +87,7 @@ export const numberForcedValue1: ForcedValue = {
   },
 };
 
-export const experimentRef1: ExperimentReference = new ExperimentReferenceTemplate({
+export const experimentRef1: ExperimentReference = ExperimentReference.template({
   id: ObjectId.createFromTime(1).toHexString(),
   name: 'Example Experiment',
   environmentName: 'prod',

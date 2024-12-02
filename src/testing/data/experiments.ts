@@ -1,7 +1,7 @@
-import { Experiment, ExperimentDraft, ExperimentDraftTemplate } from "@estuary/types";
+import { ExperimentDraft } from "@estuary/types";
 
 
-export const exampleExperiment: ExperimentDraft = new ExperimentDraftTemplate({
+export const exampleExperiment: ExperimentDraft = ExperimentDraft.template({
   "type": "Experiment",
   "name": "Experiment A",
   "status": "draft",
