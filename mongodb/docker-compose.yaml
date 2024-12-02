@@ -14,9 +14,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=1234
+    env_file: "mongo.env"
     healthcheck:
       test: mongosh
       interval: 2s
