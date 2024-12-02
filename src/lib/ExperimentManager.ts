@@ -28,7 +28,7 @@ export default class ExperimentManager {
   } | null> {
     const experiment = await this.repository.experiment.get(experimentReference.id);
     if (!experiment) return null;
-    
+
     const group = this.getGroupAssignment(experimentSchema.parse(experiment), identifiers);
     const treatment = this.currentTreatment(experiment, group);
     if (!treatment) return null;
