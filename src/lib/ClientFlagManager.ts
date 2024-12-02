@@ -41,7 +41,7 @@ export default class ClientFlagManager {
 
       return this.computeFlagValue(flag, environmentName, clientProps);
     } catch(e: unknown) {
-        return { value: null, hash: await this.defaultIdString() };
+      return { value: null, hash: await this.defaultIdString() };
     }
   }
 

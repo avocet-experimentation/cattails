@@ -4,7 +4,7 @@ import cfg from '../envalid.js';
 import { RequireOnly } from "@estuary/types";
 import { PartialWithStringId } from "../repository/MongoRepository.js";
 
-const repos = new RepositoryManager(cfg.MONGO_TESTING_URI);
+const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
 export const resolvers = {
   // #region Reader resolvers
