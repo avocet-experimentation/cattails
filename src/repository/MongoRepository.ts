@@ -113,9 +113,10 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    * @returns a hex string representing the new record's ObjectId
    */
   async create(newEntry: DraftRecord<T>): Promise<string> {
+    const now = Date.now();
     const withTimeStamps = {
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
       ...newEntry,
     }
     const validated = this.validateNew(withTimeStamps);
