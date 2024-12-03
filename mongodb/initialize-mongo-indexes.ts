@@ -4,7 +4,7 @@ import cfg from "../src/envalid.js";
 const colls = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
 await colls.featureFlag.collection.createIndex({ 'name': 1 }, { unique: true });
-// if changing flag schema:
+
 await colls.featureFlag.collection.createIndex({ 'environmentNames': 1 });
 await colls.featureFlag.collection.createIndex({ 'overrideRules.environmentName': 1 });
   

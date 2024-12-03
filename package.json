@@ -11,7 +11,7 @@
     "test": "npx vitest",
     "testData": "npx tsx ./src/testing/insertTestData.ts",
     "coverage": "npx vitest run --coverage",
-    "initMongo": "(cd mongodb && docker compose up -d && bash init-db.sh)"
+    "initMongo": "(cd mongodb && docker compose up -d && bash init-db.sh .)"
   },
   "keywords": [],
   "author": "",

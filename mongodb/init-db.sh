@@ -1,4 +1,10 @@
 #!/bin/bash
+
+if [ $# -lt 1 ]; then
+  echo "Error: pass a relative or absolute path to the cattails root directory"
+  exit 1
+fi
+
 until [ "$(docker inspect -f {{.State.Health.Status}} estuary-mongodb)" = "healthy" ]; do
   sleep 1;
 done;
@@ -21,7 +27,7 @@ docker exec estuary-mongodb mongosh --quiet \
 # mongosh --username root --password 1234 --authenticationDatabase admin --quiet
 
 
-ROOT=$(dirname $(realpath "../$0"))
+ROOT=$(dirname $(realpath "$1"))
 # Create indexes and insert initial documents
 (cd $ROOT && \
 npx tsx ./mongodb/initialize-mongo-indexes.ts && \
