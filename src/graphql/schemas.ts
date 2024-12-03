@@ -196,7 +196,7 @@ const mutationSchemas = /* GraphQL */`
     deleteUser(id: ID!): ID
 
     createEnvironment(
-      name: String,
+      name: String!,
       description: String,
       defaultEnabled: Boolean!
     ): Environment
@@ -257,7 +257,7 @@ export const schema = /* GraphQL */`
     allClientPropDefs(limit: Int, offset: Int): [ClientPropDef]
     environment(id: ID!): Environment
     allEnvironments(limit: Int, offset: Int): [Environment]
-    findAllEnvironments(query: partialEnvironment, limit: Int): [Environment]
+    findMatchingEnvironments(partial: partialEnvironment, limit: Int): [Environment]
     clientConnection(id: ID!): ClientConnection
     allClientConnections(limit: Int, offset: Int): [ClientConnection]
     user(id: ID!): User

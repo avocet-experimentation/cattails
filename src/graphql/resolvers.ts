@@ -1,8 +1,9 @@
-import { ClientPropDef, ClientConnection, User, Environment, Experiment, ClientPropDefDraft, ExperimentDraft, ClientConnectionDraft, UserDraft, FeatureFlagDraft, FeatureFlag } from "@estuary/types";
+import { ClientPropDef, ClientConnection, User, Environment, Experiment, ClientPropDefDraft, ExperimentDraft, ClientConnectionDraft, UserDraft, FeatureFlagDraft, FeatureFlag, BeforeId, stripKeysWithUndefined } from "@estuary/types";
 import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';
 import { RequireOnly } from "@estuary/types";
 import { PartialWithStringId } from "../repository/MongoRepository.js";
+import { Filter } from "mongodb";
 
 const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
@@ -22,11 +23,8 @@ export const resolvers = {
     allEnvironments: async (_: any, { limit }: { limit?: number;}) => {
       return await repos.environment.getMany(limit);
     },
-    findAllEnvironments: async (_: any, { environmentName, defaultEnabled }: { environmentName?: string, defaultEnabled?: boolean }, limit?: number) => {
-      const query = {
-        ...(environmentName && { name: environmentName }),
-        defaultEnabled: defaultEnabled ?? false,
-      };
+    findMatchingEnvironments: async (_: any, { partial, limit}: { partial?: Filter<BeforeId<Environment>>, limit?: number}) => {
+      const query = partial ? stripKeysWithUndefined(partial) : {};
       return repos.environment.findMany(query, limit);
     },
     clientConnection: async (_: any, { id }: { id: string }) => {
@@ -122,7 +120,6 @@ export const resolvers = {
       if (name !== undefined) updates.name = name;
       if (description !== undefined) updates.description = description;
       if (environmentId !== undefined) updates.environmentId = environmentId;
-      updates.updatedAt = Date.now();
     
       const partialEntry = { id, ...updates };
     
@@ -226,8 +223,6 @@ export const resolvers = {
       const newEnvironment = {
         name,
         defaultEnabled,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       };
 
       const newId = await repos.environment.create(newEnvironment);
@@ -247,7 +242,6 @@ export const resolvers = {
 
       if (name !== undefined) updates.name = name;
       if (defaultEnabled !== undefined) updates.defaultEnabled = defaultEnabled;
-      updates.updatedAt = Date.now();
 
       const partialEntry = { id, ...updates };
 
