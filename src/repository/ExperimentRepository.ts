@@ -27,7 +27,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
     }
 
     const updatedDoc = await this.get(experimentId);
-    return this._createEmbeds(updatedDoc);
+    return this.createEmbeds(updatedDoc);
 
   }
 
@@ -43,13 +43,13 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
       throw new DocumentUpdateFailedError(`Failed to stop experiment ${experimentId}`);
     }
 
-    return this._deleteEmbeds(experimentId);
+    return this.deleteEmbeds(experimentId);
   }
   /** WIP
    * Store an ExperimentReference on any flags referenced in an experiment
    * todo: maybe return the result and let errors bubble to indicate failure
    */
-  async _createEmbeds(
+  async createEmbeds(
     newExperiment: Experiment
   ): Promise<boolean> {
     try {
@@ -81,7 +81,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
   /** WIP
    * Updates all ExperimentReferences on any flags referenced by an experiment
    */
-  async _updateEmbeds(
+  async updateEmbeds(
     partialExperiment: PartialWithStringId<Experiment>
   ): Promise<boolean> {
     try {
@@ -119,7 +119,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
   /** WIP
    * Deletes all ExperimentReferences on any flags referenced by an experiment
    */
-  async _deleteEmbeds(experimentId: string): Promise<boolean> {
+  async deleteEmbeds(experimentId: string): Promise<boolean> {
     try {
       const embedFilter = {
         id: { $eq: experimentId },

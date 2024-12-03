@@ -55,39 +55,35 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     this.schema = schema;
   }
 
-  _recordToObject(document: MongoRecord<T>): T {
+  protected recordToObject(document: MongoRecord<T>): T {
     const { _id, ...rest } = document;
     const morphed = { id: document._id.toHexString(), ...rest };
     return morphed as unknown as T; // todo: find a better solution for type checking without throwing
   }
 
-  _validateNew(obj: object): OptionalUnlessRequiredId<BeforeId<T>> {
+  protected validateNew(obj: object): OptionalUnlessRequiredId<BeforeId<T>> {
     if ('id' in obj) {
       throw new TypeError('Attempted to create a document from an object that ' + 
         'contains an id field! Does this document already exist?');
-      // return null;
     }
 
     const schemaWithoutId = schemaOmit(this.schema, ['id']);
     const safeParseResult = schemaWithoutId.safeParse(obj);
 
     if (!safeParseResult.success) {
-      throw new SchemaParseError(safeParseResult);
-      // console.error(safeParseResult.error.format());
-      // return null; 
+      throw new SchemaParseError(safeParseResult); 
     }
     const parsed = safeParseResult.data;
 
-    if (this._holdsEmptyString(parsed, 'name')) {
+    if (this.holdsEmptyString(parsed, 'name')) {
       throw new TypeError('Attempted to create an object with an empty name!');
-      // return null;
     }
 
     const { id, ...validated } = safeParseResult.data;
     return validated;
   }
 
-  _validateUpdate<U extends PartialWithStringId<T>>(obj: object): U {
+  protected _validateUpdate<U extends PartialWithStringId<T>>(obj: object): U {
     if (!('id' in obj) || typeof obj.id !== 'string') {
       throw new TypeError('Attempted to update a document without including an id field!');
     }
@@ -100,14 +96,14 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
 
     const parsed = safeParseResult.data;
 
-    if (this._holdsEmptyString(parsed, 'name')) {
+    if (this.holdsEmptyString(parsed, 'name')) {
       throw new TypeError('Attempted to set an empty name!');
     }
 
     return parsed;
   }
 
-  _holdsEmptyString(obj: Record<string, unknown>, key: string): boolean {
+  protected holdsEmptyString(obj: Record<string, unknown>, key: string): boolean {
     if (key in obj) {
       const value = obj[key];
       return typeof value === 'string' && value.length === 0;
@@ -122,10 +118,9 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
       updatedAt: Date.now(),
       ...newEntry,
     }
-    const validated = this._validateNew(withTimeStamps);
-    const result = await this._withTransaction(async (session) => {
+    const validated = this.validateNew(withTimeStamps);
+    const result = await this.withTransaction(async (session) => {
         const insertResult = await this.collection.insertOne(validated);
-        // console.log({insertResult})
         if (!insertResult.insertedId) {
           await session.abortTransaction();
           throw new DocumentUpdateFailedError('Failed to insert new document');
@@ -134,7 +129,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
         const insertId = insertResult.insertedId.toHexString();
         const insertedEntry = await this.get(insertId);
 
-        const embedResult = await this._createEmbeds(insertedEntry);
+        const embedResult = await this.createEmbeds(insertedEntry);
         if (!embedResult) {
           await session.abortTransaction();
           throw new DocumentUpdateFailedError(`Failed to add embeds for document ${insertId}`);
@@ -148,7 +143,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   /**
    * A placeholder to be overridden on sub-classes
    */
-  async _createEmbeds(newDocument: T): Promise<boolean> {
+  protected async createEmbeds(newDocument: T): Promise<boolean> {
     return true;
   }
 
@@ -160,7 +155,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const resultCursor = this.collection.find({});
     if (maxCount) resultCursor.limit(maxCount);
     const documents = await resultCursor.toArray();
-    const transformed = documents.map((doc) => this._recordToObject(doc), this);
+    const transformed = documents.map((doc) => this.recordToObject(doc), this);
     return transformed;
   }
   /**
@@ -183,7 +178,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const result = await this.collection.findOne(query);
     if (result === null) return null;
 
-    return this._recordToObject(result);
+    return this.recordToObject(result);
   }
   /**
    * Find all document matching a query object. An empty object matches all documents.
@@ -195,22 +190,8 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const resultCursor = this.collection.find(query);
     if (maxCount) resultCursor.limit(maxCount);
     const records = await resultCursor.toArray();
-    return records.map(this._recordToObject, this);
+    return records.map(this.recordToObject, this);
   }
-  /**
-   * Updates an existing record. Will be removed once the new implementation is validated.
-   * @returns true if a record was updated, or false otherwise
-   */
-  // async updateOld(partialEntry: PartialWithStringId<T>): Promise<boolean> {
-  //   const validated = this._validateUpdate(partialEntry);
-  //   // if (validated === null) return null;
-
-  //   const { id, ...rest } = validated;
-  //   const updates = { ...rest, updatedAt: Date.now() };
-  //   const filter = { _id: ObjectId.createFromHexString(id) } as Filter<BeforeId<T>>;
-  //   const result = await this.collection.updateOne(filter, [{ $set: updates }]);
-  //   return result.acknowledged;
-  // }
   /**
    * Updates an existing record
    * @returns true if the update request was successful, or throws otherwise
@@ -231,14 +212,14 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
       ? [updateObj] 
       : updateObj as UpdateFilter<BeforeId<T>>;
     
-      const result = this._withTransaction(async (session) => {
+      const result = this.withTransaction(async (session) => {
       const updateResult = await this.collection.updateOne(filter, updateFilter);
       if (!updateResult.acknowledged) {
         await session.abortTransaction();
         throw new DocumentUpdateFailedError(`Failed to update document ${id}`);
       }
 
-      const embedResult = await this._updateEmbeds(validated);
+      const embedResult = await this.updateEmbeds(validated);
       if (!embedResult) {
         await session.abortTransaction();
         throw new DocumentUpdateFailedError(`Failed to update embeds for document ${id}`);
@@ -250,7 +231,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     return result;
   }
 
-  async _updateEmbeds(partialEntry: PartialWithStringId<T>): Promise<boolean> {
+  protected async updateEmbeds(partialEntry: PartialWithStringId<T>): Promise<boolean> {
     return true;
   }
   /**
@@ -378,8 +359,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    */
   async delete(documentId: string): Promise<boolean> {
     const filter = { _id: ObjectId.createFromHexString(documentId)};
-    const result = this._withTransaction(async (session) => {
-      // const existingDocument = await this.get(documentId);
+    const result = this.withTransaction(async (session) => {
       const deleteResult = await this.collection.deleteOne(filter as Filter<BeforeId<T>>);
       if (!deleteResult.deletedCount) {
         throw new DocumentUpdateFailedError(
@@ -387,7 +367,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
         );
       }
 
-      const embedDeleteResult = await this._deleteEmbeds(documentId);
+      const embedDeleteResult = await this.deleteEmbeds(documentId);
       if (!embedDeleteResult) {
         await session.abortTransaction();
         throw new DocumentUpdateFailedError(
@@ -404,7 +384,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   /**
    * A placeholder to be overridden on sub-classes
    */
-  async _deleteEmbeds(documentId: string): Promise<boolean> {
+  protected async deleteEmbeds(documentId: string): Promise<boolean> {
     return true;
   }
   /**
@@ -429,7 +409,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     return result;
   }
 
-  async _withTransaction<R = any>(cb: WithTransactionCallback<R>): Promise<R> {
+  protected async withTransaction<R = any>(cb: WithTransactionCallback<R>): Promise<R> {
     return this.manager.client.withSession(async (session) => session.withTransaction(cb));
   }
 }
