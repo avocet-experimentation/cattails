@@ -14,7 +14,7 @@
     "noImplicitAny": true
   },
   "reflection": true,
-  "include": ["src/**/*", "vitest.config.ts"],
+  "include": ["src/**/*", "vitest.config.ts", "mongodb/**/*"],
   "exclude": [
     "node_modules",
     "__tests__",
