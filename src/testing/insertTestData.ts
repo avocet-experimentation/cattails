@@ -60,9 +60,9 @@ const insertUser = async(arg: UserDraft) => {
   // await insertFeatureFlag(exampleFlagDrafts[0]);
   // await insertClientPropDefs(staticClientPropDefs);
 
-  // console.log("Flags:", await colls.flags.find().toArray());
-  // console.log("Client Connection:", await colls.connections.find().toArray());
-  // console.log("Experiment:", await colls.experiments.find().toArray()); 
-  // console.log("Environment:", await colls.environments.find().toArray());
-  // console.log("Client Prop Defs: ", await colls.clientProps.find().toArray());
-  // console.log("User:", await colls.users.find().toArray());
+  // console.log("Flags:", await colls.featureFlag.findMany({}));
+  // console.log("Client Connection:", await colls.clientConnection.findMany({}));
+  // console.log("Experiment:", await colls.experiment.findMany({})); 
+  // console.log("Environment:", await colls.environment.findMany({}));
+  // console.log("Client Prop Defs: ", await colls.clientPropDef.findMany({}));
+  // console.log("User:", await colls.user.findMany({}));
