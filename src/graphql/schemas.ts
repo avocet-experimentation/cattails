@@ -100,16 +100,13 @@ const userSchema = /* GraphQL */`
 const environmentSchema = /* GraphQL */`
 type Environment {
   id: ID!                  
-  name: EnvironmentName!
-  description: String
+  name: String
   defaultEnabled: Boolean!
 }
 
-enum EnvironmentName {
-  prod
-  dev
-  testing
-  staging
+input partialEnvironment {
+  name: String,
+  defaultEnabled: Boolean
 }
 `;
 
@@ -199,14 +196,14 @@ const mutationSchemas = /* GraphQL */`
     deleteUser(id: ID!): ID
 
     createEnvironment(
-      name: EnvironmentName!,
+      name: String,
       description: String,
       defaultEnabled: Boolean!
     ): Environment
 
     updateEnvironment(
       id: ID!,
-      name: EnvironmentName,
+      name: String,
       description: String,
       defaultEnabled: Boolean
     ): Environment
@@ -260,6 +257,7 @@ export const schema = /* GraphQL */`
     allClientPropDefs(limit: Int, offset: Int): [ClientPropDef]
     environment(id: ID!): Environment
     allEnvironments(limit: Int, offset: Int): [Environment]
+    findAllEnvironments(query: partialEnvironment, limit: Int): [Environment]
     clientConnection(id: ID!): ClientConnection
     allClientConnections(limit: Int, offset: Int): [ClientConnection]
     user(id: ID!): User

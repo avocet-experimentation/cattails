@@ -22,6 +22,13 @@ export const resolvers = {
     allEnvironments: async (_: any, { limit }: { limit?: number;}) => {
       return await repos.environment.getMany(limit);
     },
+    findAllEnvironments: async (_: any, { environmentName, defaultEnabled }: { environmentName?: string, defaultEnabled?: boolean }, limit?: number) => {
+      const query = {
+        ...(environmentName && { name: environmentName }),
+        defaultEnabled: defaultEnabled ?? false,
+      };
+      return repos.environment.findMany(query, limit);
+    },
     clientConnection: async (_: any, { id }: { id: string }) => {
       return await repos.clientConnection.get(id);
     },
