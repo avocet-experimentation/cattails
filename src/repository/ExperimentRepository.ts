@@ -3,6 +3,7 @@ import {
   Experiment,
   ExperimentReference,
   experimentSchema,
+  RuleStatus,
 } from "@estuary/types";
 import MongoRepository from "./MongoRepository.js";
 import { PartialWithStringId } from './MongoRepository.js';
@@ -14,35 +15,37 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
     super('experiment', experimentSchema, repositoryManager);
   }
 
-  async startExperiment(experimentId: string) {
+  protected async setExperimentStatus(experimentId: string, status: RuleStatus) {
     const updates = {
       id: experimentId,
-      status: 'active' as const,
+      status,
       startTimestamp: Date.now(),
     };
     
     const updateResult = await this.update(updates);
     if (!updateResult) {
-      throw new DocumentUpdateFailedError(`Failed to start experiment ${experimentId}`);
+      throw new DocumentUpdateFailedError(
+        `Failed to set experiment ${experimentId} status to "${status}"`
+      );
     }
 
     const updatedDoc = await this.get(experimentId);
+    return updatedDoc;
+  }
+
+  async startExperiment(experimentId: string) {
+    const updatedDoc = await this.setExperimentStatus(experimentId, 'active');
+    return this.createEmbeds(updatedDoc);
+  }
+
+  async pauseExperiment(experimentId: string) {
+    const updatedDoc = await this.setExperimentStatus(experimentId, 'paused');
     return this.createEmbeds(updatedDoc);
 
   }
 
   async stopExperiment(experimentId: string) {
-    const updates = {
-      id: experimentId,
-      status: 'completed' as const,
-      endTimestamp: Date.now(),
-    };
-    
-    const updateResult = await this.update(updates);
-    if (!updateResult) {
-      throw new DocumentUpdateFailedError(`Failed to stop experiment ${experimentId}`);
-    }
-
+    const updatedDoc = await this.setExperimentStatus(experimentId, 'paused');
     return this.deleteEmbeds(experimentId);
   }
   /** WIP

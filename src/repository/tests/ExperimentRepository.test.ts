@@ -44,7 +44,7 @@ describe('Embed methods', () => {
 
       expDoc.flagIds.push(flags[0].id);
       // printDetail({expDoc});
-      const embedsCreated = await repoManager.experiment._createEmbeds(expDoc);
+      const embedsCreated = await repoManager.experiment.createEmbeds(expDoc);
       expect(embedsCreated).toBe(true);
 
       const findQuery = { _id: ObjectId.createFromHexString(expDoc.flagIds[0]) };
@@ -163,7 +163,7 @@ describe('Embed methods', () => {
       const originalFlags = await repoManager.featureFlag.getMany();
       // printDetail({originalFlags})
       // const experimentDoc = await repoManager.experiment.get(experimentId);
-      const embedDeleteResult = await repoManager.experiment._deleteEmbeds(experimentId);
+      const embedDeleteResult = await repoManager.experiment.deleteEmbeds(experimentId);
       expect(embedDeleteResult).toBe(true);
       // const insertedExperiment = await repoManager.experiment.get(insertResults[0]);
       const updatedFlags = await repoManager.featureFlag.getMany();
@@ -215,7 +215,7 @@ describe('Embed methods', () => {
         startTimestamp: Date.now(),
       }
       
-      const updateResult = await repoManager.experiment._updateEmbeds(partialUpdate);
+      const updateResult = await repoManager.experiment.updateEmbeds(partialUpdate);
       
       expect(updateResult).toBe(true);
       
