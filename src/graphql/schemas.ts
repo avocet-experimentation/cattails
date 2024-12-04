@@ -238,10 +238,7 @@ const mutationSchemas = /* GraphQL */ `
 
     createEnvironment(newEntry: EnvironmentDraft!): Environment
 
-    updateEnvironment(
-      partialEntry: PartialEnvironment!
-      mergeProps: Boolean
-    ): Environment
+    updateEnvironment(partialEntry: PartialEnvironment!): Environment
 
     deleteEnvironment(id: ID!): Boolean
 

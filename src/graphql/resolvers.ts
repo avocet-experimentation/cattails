@@ -263,13 +263,12 @@ export const resolvers: IResolvers = {
       _,
       {
         partialEntry,
-        mergeProps,
       }: {
         partialEntry: PartialWithStringId<Environment>;
         mergeProps?: boolean;
       },
     ): Promise<Environment> => {
-      await repos.environment.update(partialEntry, mergeProps);
+      await repos.environment.update(partialEntry, false);
       return repos.environment.get(partialEntry.id);
     },
 
