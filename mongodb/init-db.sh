@@ -27,8 +27,10 @@ docker exec estuary-mongodb mongosh --quiet \
 # mongosh --username root --password 1234 --authenticationDatabase admin --quiet
 
 
-ROOT=$(dirname $(realpath "$1"))
 # Create indexes and insert initial documents
+ROOT=$(dirname $(realpath "$1"))
 (cd $ROOT && \
 npx tsx ./mongodb/initialize-mongo-indexes.ts && \
 npx tsx ./mongodb/insert-initial-data.ts)
+
+echo "Mongo setup complete"

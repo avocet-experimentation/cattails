@@ -1,23 +1,6 @@
-import {
-  ClientPropDefDraft,
-  DraftRecord,
-  EnvironmentDraft,
-  EstuaryMongoTypes,
-} from '@estuary/types';
-import RepositoryManager from '../src/repository/RepositoryManager.js';
-import cfg from '../src/envalid.js';
-import MongoRepository from '../src/repository/MongoRepository.js';
+import { ClientPropDefDraft, EnvironmentDraft } from '@estuary/types';
+import { insertArray, repos } from './insert-helpers.js';
 
-const colls = new RepositoryManager(cfg.MONGO_ADMIN_URI);
-
-const insertArray = async <T extends EstuaryMongoTypes>(
-  arr: DraftRecord<T>[],
-  collection: MongoRepository<T>,
-) => {
-  for (let i = 0; i < arr.length; i += 1) {
-    await collection.create(arr[i]);
-  }
-};
 const defaultEnvironments: EnvironmentDraft[] = [
   {
     name: 'testing',
@@ -37,7 +20,7 @@ const defaultEnvironments: EnvironmentDraft[] = [
   },
 ];
 
-await insertArray(defaultEnvironments, colls.environment);
+await insertArray(defaultEnvironments, repos.environment);
 
 const defaultClientPropDefs: ClientPropDefDraft[] = [
   ClientPropDefDraft.template({
@@ -47,7 +30,8 @@ const defaultClientPropDefs: ClientPropDefDraft[] = [
   }),
 ];
 
-await insertArray(defaultClientPropDefs, colls.clientPropDef);
+await insertArray(defaultClientPropDefs, repos.clientPropDef);
 
+// eslint-disable-next-line no-console
 console.log('initial data inserted');
 process.exit(0);

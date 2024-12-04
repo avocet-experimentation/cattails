@@ -1,11 +1,8 @@
 import { ExperimentDraft, FeatureFlagDraft, ForcedValue } from '@estuary/types';
-import RepositoryManager from '../src/repository/RepositoryManager.js';
-import cfg from '../src/envalid.js';
-
-const colls = new RepositoryManager(cfg.MONGO_ADMIN_URI);
+import { insertArray, repos } from './insert-helpers.js';
 
 // assumes that default environments have already been inserted
-const allEnvironments = await colls.environment.getMany();
+const allEnvironments = await repos.environment.getMany();
 
 // verify the testing environment exists - update code below if testing
 // environment is removed from initial data
@@ -40,9 +37,7 @@ const exampleFeatureFlags: FeatureFlagDraft[] = [
   exampleSiteThemeFlag,
 ];
 
-for (let i = 0; i < exampleFeatureFlags.length; i += 1) {
-  await colls.featureFlag.create(exampleFeatureFlags[i]);
-}
+await insertArray(exampleFeatureFlags, repos.featureFlag);
 // #endregion
 
 // #region EXPERIMENTS
@@ -65,10 +60,9 @@ export const exampleExperiments: ExperimentDraft[] = [
   abExperiment1,
 ];
 
-for (let i = 0; i < exampleExperiments.length; i += 1) {
-  await colls.experiment.create(exampleExperiments[i]);
-}
+await insertArray(exampleExperiments, repos.experiment);
 // #endregion
 
+// eslint-disable-next-line no-console
 console.log('example data inserted');
 process.exit(0);

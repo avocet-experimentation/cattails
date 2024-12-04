@@ -31,5 +31,6 @@ await colls.experiment.collection.createIndex(
 // for efficient lookup of treatments by their IDs
 await colls.experiment.collection.createIndex({ 'definedTreatments.$**': 1 });
 
+// eslint-disable-next-line no-console
 console.log('Indexes created');
 process.exit(0);
