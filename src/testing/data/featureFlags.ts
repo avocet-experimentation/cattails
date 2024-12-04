@@ -1,45 +1,51 @@
-import { FeatureFlag, FlagValueDef, BeforeId, FeatureFlagDraft, DraftRecord, ForcedValue, ExperimentReference, OverrideRuleUnion, FlagValueDefImpl } from "@estuary/types";
-import { ObjectId } from "mongodb";
+import {
+  FeatureFlag,
+  FeatureFlagDraft,
+  ForcedValue,
+  ExperimentReference,
+  OverrideRuleUnion,
+  FlagValueDefImpl,
+  FlagValueTypeDef,
+} from '@estuary/types';
+import { ObjectId } from 'mongodb';
 
-export const flagEnvironmentInit = () => ['prod', 'dev', 'testing', 'staging']
-  .reduce(
-    (acc, curr) => Object.assign(acc, { [curr]: true }), 
+export const flagEnvironmentInit = () =>
+  ['prod', 'dev', 'testing', 'staging'].reduce(
+    (acc, curr) => Object.assign(acc, { [curr]: true }),
     {} as FeatureFlagDraft['environmentNames'],
   );
 
-export const getExampleFlag = (
-  name: string = 'test flag',
-  description: string = '',
-  value: FlagValueDef = {
-    type: 'boolean',
-    initial: false,
-  },
-): DraftRecord<FeatureFlag> => {
-  // const currentTimeMs = Date.now();
-  
-  const flag = {
-    name,
-    description,
-    value,
-    // createdAt: currentTimeMs,
-    // updatedAt: currentTimeMs,
-    environmentNames: flagEnvironmentInit(),
-    overrideRules: [],
-  }
+const getExampleFlag = (() => {
+  let count = 1;
 
-  return Object.freeze(flag);
-};
+  return (
+    name: string = `example-flag-${count}`,
+    description: string = '',
+    valueType: FlagValueTypeDef = 'boolean',
+  ): FeatureFlagDraft => {
+    const flag = FeatureFlagDraft.template({
+      name,
+      description,
+      value: FlagValueDefImpl.template(valueType),
+      environmentNames: flagEnvironmentInit(),
+      overrideRules: [],
+    });
+
+    count += 1;
+    return Object.freeze(flag);
+  };
+})();
 
 export const exampleFlagDrafts: FeatureFlagDraft[] = [
   getExampleFlag('testing flag'),
-  getExampleFlag(
-    'live update', 
-    'refreshes charts automatically using server-sent events',
-    {
+  FeatureFlagDraft.template({
+    name: 'live update',
+    description: 'refreshes charts automatically using server-sent events',
+    value: {
       type: 'boolean',
       initial: true,
     },
-  ),
+  }),
 ];
 
 export const booleanForcedValue1: ForcedValue = {
@@ -87,12 +93,13 @@ export const numberForcedValue1: ForcedValue = {
   },
 };
 
-export const experimentRef1: ExperimentReference = ExperimentReference.template({
-  id: ObjectId.createFromTime(1).toHexString(),
-  name: 'Example Experiment',
-  environmentName: 'prod',
-});
-
+export const experimentRef1: ExperimentReference = ExperimentReference.template(
+  {
+    id: ObjectId.createFromTime(1).toHexString(),
+    name: 'Example Experiment',
+    environmentName: 'prod',
+  },
+);
 
 export const staticRules: OverrideRuleUnion[] = [
   booleanForcedValue1,
@@ -105,12 +112,10 @@ export const staticBooleanFlag: FeatureFlagDraft = {
   // id: '94328591069f921a07e5bd76',
   name: 'auto-update-ui',
   value: { type: 'boolean', initial: false },
-  description: 'Automatically update the page as new data is fetched. Long-lived flag',
+  description:
+    'Automatically update the page as new data is fetched. Long-lived flag',
   environmentNames: flagEnvironmentInit(),
-  overrideRules: [
-    booleanForcedValue1,
-    experimentRef1,
-  ] 
+  overrideRules: [booleanForcedValue1, experimentRef1],
 };
 
 export const staticBooleanFlag2 = FeatureFlagDraft.template({
@@ -138,21 +143,18 @@ export const staticFlags: FeatureFlag[] = [
     value: { type: 'boolean' as const, initial: false },
     description: 'use new database',
     environmentNames: flagEnvironmentInit(),
-    overrideRules: [
-      booleanForcedValue1,
-    ],
+    overrideRules: [booleanForcedValue1],
     createdAt: 1731364209327,
-    updatedAt: 1731364209327
+    updatedAt: 1731364209327,
   },
   {
     id: '94328591069f921a07e5bd76',
     name: 'auto-update-ui',
     value: { type: 'boolean' as const, initial: false },
-    description: 'Automatically update the page as new data is fetched. Long-lived flag',
+    description:
+      'Automatically update the page as new data is fetched. Long-lived flag',
     environmentNames: flagEnvironmentInit(),
-    overrideRules: [
-        booleanForcedValue1,
-      ],
+    overrideRules: [booleanForcedValue1],
     createdAt: 1,
     updatedAt: 1731364204812,
   },

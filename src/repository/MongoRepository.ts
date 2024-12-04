@@ -44,7 +44,6 @@ export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<
  *
  * todo:
  * - solve filter type problem and remove the `as Filter...` assertions
- * - narrow the type of EstuaryObjectSchema so that it is recognized as an object type
  */
 export default class MongoRepository<T extends EstuaryMongoTypes> {
   manager: RepositoryManager;
