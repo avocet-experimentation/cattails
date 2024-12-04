@@ -167,8 +167,8 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    * Get up to `maxCount` documents, or all if not specified
    * @returns a possibly empty array of documents
    */
-  async getMany(maxCount?: number): Promise<T[]> {
-    const resultCursor = this.collection.find({});
+  async getMany(maxCount?: number, offset?: number): Promise<T[]> {
+    const resultCursor = this.collection.find({}, { skip: offset });
     if (maxCount) resultCursor.limit(maxCount);
     const documents = await resultCursor.toArray();
     const transformed = documents.map((doc) => this.recordToObject(doc), this);

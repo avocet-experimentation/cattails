@@ -1,10 +1,18 @@
-const readPropDefSchema = /* GraphQL */`
-type ClientPropDef {
-  id: ID!          
-  name: String!            
-  description: String      
-  dataType: String
-  isIdentifier: Boolean!   
+const readPropDefSchema = /* GraphQL */ `
+  enum ClientPropValueType {
+    boolean
+    string
+    number
+  }
+
+  type ClientPropDef {
+    id: ID!
+    createdAt: Float!
+    updatedAt: Float!
+    name: String!
+    description: String
+    dataType: ClientPropValue!
+    isIdentifier: Boolean!
   }
 
   union ClientPropValue = BooleanValue | StringValue | NumberValue
@@ -38,10 +46,9 @@ type ClientPropDef {
     stringValue: StringValueInput
     numberValue: NumberValueInput
   }
-  
 `;
 
-const experimentSchema = /* GraphQL */`
+const experimentSchema = /* GraphQL */ `
   enum ExperimentStatus {
     draft
     active
@@ -51,6 +58,8 @@ const experimentSchema = /* GraphQL */`
 
   type Experiment {
     id: ID!
+    createdAt: Float!
+    updatedAt: Float!
     name: String!
     status: ExperimentStatus!
     enrollmentAttributes: [String]!
@@ -61,16 +70,15 @@ const experimentSchema = /* GraphQL */`
     startTimestamp: Float
     endTimestamp: Float
   }
-`
+`;
 
-const userSchema = /* GraphQL */`
+const userSchema = /* GraphQL */ `
   enum PermissionLevel {
     none
     view
     edit
     full
   }
-
 
   type UserPermissions {
     FeatureFlag: PermissionLevel!
@@ -89,71 +97,112 @@ const userSchema = /* GraphQL */`
     ClientPropDef: PermissionLevel!
     ClientConnection: PermissionLevel!
   }
-  
+
   type User {
-    id: ID!                    
-    email: String!         
+    id: ID!
+    createdAt: Float!
+    updatedAt: Float!
+    email: String!
     permissions: UserPermissions!
   }
 `;
 
-const environmentSchema = /* GraphQL */`
-type Environment {
-  id: ID!                  
-  name: String
-  defaultEnabled: Boolean!
-}
+const environmentSchema = /* GraphQL */ `
+  type Environment {
+    id: ID!
+    createdAt: Float!
+    updatedAt: Float!
+    name: String!
+    defaultEnabled: Boolean!
+  }
 
-input partialEnvironment {
-  name: String,
-  defaultEnabled: Boolean
-}
+  input EnvironmentDraft {
+    name: String!
+    defaultEnabled: Boolean!
+  }
+
+  input PartialEnvironment {
+    id: ID
+    createdAt: Float
+    updatedAt: Float
+    name: String
+    defaultEnabled: Boolean
+  }
+
+  input PartialEnvironmentWithId {
+    id: ID!
+    createdAt: Float
+    updatedAt: Float
+    name: String
+    defaultEnabled: Boolean
+  }
 `;
 
-const clientConnectionSchema = /* GraphQL */`
-  # ClientConnection Type
+const clientConnectionSchema = /* GraphQL */ `
   type ClientConnection {
-    id: ID!            
-    name: String!      
-    environmentId: ID! 
+    id: ID!
+    createdAt: Float!
+    updatedAt: Float!
+    name: String!
+    environmentId: ID!
     description: String!
   }
 `;
 
-const featureFlagSchema = /* GraphQL */`
-type FeatureFlag {
-  id: ID!             
-  name: String!       
-  description: String 
-  enabled: Boolean!   
-  environment: String!
-  createdAt: String!  
-  updatedAt: String!  
-}
+const featureFlagSchema = /* GraphQL */ `
+  type FeatureFlag {
+    id: ID!
+    createdAt: Float!
+    updatedAt: Float!
+    name: String!
+    description: String
+    environmentNames: [String]!
+  }
 
-input CreateFeatureFlagInput {
-  name: String!
-  description: String
-  enabled: Boolean!
-  environment: String!
-}
+  input CreateFeatureFlagInput {
+    name: String!
+    description: String
+    enabled: Boolean!
+    environment: String!
+  }
 
-input UpdateFeatureFlagInput {
-  id: ID!
-  name: String
-  description: String
-  enabled: Boolean
-  environment: String
-}
-`
+  input UpdateFeatureFlagInput {
+    id: ID!
+    name: String
+    description: String
+    enabled: Boolean
+    environment: String
+  }
+`;
 
-const mutationSchemas = /* GraphQL */`
+const querySchemas = /* GraphQL */ `
+  type Query {
+    clientPropDef(id: ID!): ClientPropDef
+    allClientPropDefs(limit: Int, offset: Int): [ClientPropDef]
+    environment(id: ID!): Environment
+    allEnvironments(limit: Int, offset: Int): [Environment]
+    findMatchingEnvironments(
+      partial: PartialEnvironment
+      limit: Int
+    ): [Environment]
+    clientConnection(id: ID!): ClientConnection
+    allClientConnections(limit: Int, offset: Int): [ClientConnection]
+    user(id: ID!): User
+    allUsers(limit: Int, offset: Int): [User]
+    experiment(id: ID!): Experiment
+    allExperiments(limit: Int, offset: Int): [Experiment]
+    FeatureFlag(id: ID!): FeatureFlag
+    allFeatureFlags(limit: Int, offset: Int): [FeatureFlag]
+  }
+`;
+
+const mutationSchemas = /* GraphQL */ `
   type Mutation {
     updateClientPropDef(
-      id: ID!,
-      name: String,
-      description: String,
-      dataType: String,
+      id: ID!
+      name: String
+      description: String
+      dataType: String
       isIdentifier: Boolean
     ): ClientPropDef
 
@@ -181,58 +230,44 @@ const mutationSchemas = /* GraphQL */`
 
     deleteClientConnection(id: ID!): ID
 
-    createUser(
-      email: String!,
-      permissions: UserPermissionsInput!
-    ): User
+    createUser(email: String!, permissions: UserPermissionsInput!): User
 
-
-    updateUser(
-      id: ID!,
-      email: String,
-      permissions: UserPermissionsInput!
-    ): User
+    updateUser(id: ID!, email: String, permissions: UserPermissionsInput!): User
 
     deleteUser(id: ID!): ID
 
-    createEnvironment(
-      name: String!,
-      description: String,
-      defaultEnabled: Boolean!
-    ): Environment
+    createEnvironment(newEntry: EnvironmentDraft!): Environment
 
     updateEnvironment(
-      id: ID!,
-      name: String,
-      description: String,
-      defaultEnabled: Boolean
+      partialEntry: PartialEnvironment!
+      mergeProps: Boolean
     ): Environment
 
     deleteEnvironment(id: ID!): Boolean
 
     createExperiment(
-      name: String!,
+      name: String!
       status: ExperimentStatus!
-      enrollmentAttributes: [String]!,
-      enrollmentProportion: Float!,
-      flagId: String!,
-      description: String,
-      hypothesis: String,
-      startTimestamp: Float,
-      endTimestamp: Float,
+      enrollmentAttributes: [String]!
+      enrollmentProportion: Float!
+      flagId: String!
+      description: String
+      hypothesis: String
+      startTimestamp: Float
+      endTimestamp: Float
     ): Experiment
 
     updateExperiment(
-      id: ID!,
-      name: String,
-      status: ExperimentStatus,
-      enrollmentAttributes: [String],
-      enrollmentProportion: Float,
-      flagId: String,
-      description: String,
-      hypothesis: String,
-      startTimestamp: Float,
-      endTimestamp: Float,
+      id: ID!
+      name: String
+      status: ExperimentStatus
+      enrollmentAttributes: [String]
+      enrollmentProportion: Float
+      flagId: String
+      description: String
+      hypothesis: String
+      startTimestamp: Float
+      endTimestamp: Float
     ): Experiment
 
     deleteExperiment(id: ID!): Boolean
@@ -243,7 +278,8 @@ const mutationSchemas = /* GraphQL */`
   }
 `;
 
-export const schema = /* GraphQL */`
+export const schema = /* GraphQL */ `
+  ${querySchemas}
   ${mutationSchemas}
   ${readPropDefSchema}
   ${environmentSchema}
@@ -251,21 +287,4 @@ export const schema = /* GraphQL */`
   ${userSchema}
   ${experimentSchema}
   ${featureFlagSchema}
-  
-  type Query {
-    clientPropDef(id: ID!): ClientPropDef
-    allClientPropDefs(limit: Int, offset: Int): [ClientPropDef]
-    environment(id: ID!): Environment
-    allEnvironments(limit: Int, offset: Int): [Environment]
-    findMatchingEnvironments(partial: partialEnvironment, limit: Int): [Environment]
-    clientConnection(id: ID!): ClientConnection
-    allClientConnections(limit: Int, offset: Int): [ClientConnection]
-    user(id: ID!): User
-    allUsers(limit: Int, offset: Int): [User]
-    experiment(id: ID!): Experiment
-    allExperiments(limit: Int, offset: Int): [Experiment]
-    FeatureFlag(id: ID!): FeatureFlag
-    allFeatureFlags(limit: Int, offset: Int): [FeatureFlag]
-    }
-    `;
-    
+`;
