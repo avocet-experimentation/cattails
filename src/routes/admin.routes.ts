@@ -17,7 +17,8 @@ import {
   deleteExperimentHandler,
   getAllExperimentsHandler,
   getExperimentByIdHandler,
-  getExperimentByNameHandler
+  getExperimentByNameHandler,
+  startExperimentHandler
 
 } from "./admin.excontroller.js";
 
@@ -40,6 +41,7 @@ export const getAdminRoutes = async (server: FastifyInstance): Promise<FastifyIn
   server.get("/experiments/id/:experimentId", getExperimentByIdHandler); // return experiment by its id
   server.get("/experiments/name/:experimentName", getExperimentByNameHandler); // return experiment by its name
   server.get("/experiments", getAllExperimentsHandler); // returns all experiments
+  server.get("/experiments/id/:experimentId/start", startExperimentHandler); // start experiment
   
   return server;
 };

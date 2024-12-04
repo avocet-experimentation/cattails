@@ -128,3 +128,23 @@ export const getAllExperimentsHandler = async (
   }
   return foundExperiments;
 };
+
+export const startExperimentHandler = async (
+  request: FastifyRequest<{ Params: ExperimentIdParam }>,
+  reply: FastifyReply
+): Promise<Experiment> => {
+  const { experimentId } = request.params;
+  const foundExperiment = await repository.experiment.get(experimentId);
+  if (!foundExperiment) {
+    return reply
+      .code(404)
+      .send({ error: { code: 404, message: "Experiment not found" } });
+  }
+  const updatedStatus = await repository.experiment.startExperiment(experimentId);
+  if (!updatedStatus) {
+    return reply
+      .code(404)
+      .send({ error: { code: 404, message: "Unable to start experiment" } });
+  }
+  return foundExperiment;
+};
