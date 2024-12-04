@@ -5,16 +5,13 @@
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "target": "esnext",
-    "types": [
-      "vitest/globals"
-    ],
+    "types": ["vitest/globals"],
     "sourceMap": true,
     "outDir": "dist",
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true
   },
-  "reflection": true,
-  "include": ["src/**/*", "vitest.config.ts", "mongodb/**/*"],
+  "include": ["src/**/*", "vitest.config.ts", "mongodb/**/*", ".eslintrc.cjs"],
   "exclude": [
     "node_modules",
     "__tests__",
