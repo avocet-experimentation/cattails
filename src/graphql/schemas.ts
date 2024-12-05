@@ -1,3 +1,6 @@
+import { environmentSchema } from "./environmentSchema.js";
+import { featureFlagSchema } from "./featureFlagSchema.js";
+
 const readPropDefSchema = /* GraphQL */ `
   enum ClientPropValueType {
     boolean
@@ -7,12 +10,12 @@ const readPropDefSchema = /* GraphQL */ `
 
   type ClientPropDef {
     id: ID!
-    createdAt: Float!
-    updatedAt: Float!
     name: String!
     description: String
     dataType: ClientPropValue!
     isIdentifier: Boolean!
+    createdAt: Float
+    updatedAt: Float
   }
 
   union ClientPropValue = BooleanValue | StringValue | NumberValue
@@ -55,20 +58,59 @@ const experimentSchema = /* GraphQL */ `
     paused
     completed
   }
+  
+  type ExperimentGroup {
+    id: ID!
+    name: String!
+    description: String
+    proportion: Float
+    sequence: [String]
+    cycles: Float
+  }
+
+  type Enrollment {
+    attributes: [String]
+    proportion: Float
+  }
+
+  type Metric {
+    fieldName: String
+    fieldDataType:      ?
+  }
+
+  type FlagState {
+    id: ID!
+    value: String | Float | Boolean
+  }
+
+  type Treatments {
+    id: ID!
+    name: String
+    duration: Float
+    flagStates: 
+  }
+
+  type DefineTreatments {
+    name: Treatments        ?
+  }
 
   type Experiment {
     id: ID!
-    createdAt: Float!
-    updatedAt: Float!
     name: String!
-    status: ExperimentStatus!
-    enrollmentAttributes: [String]!
-    enrollmentProportion: Float!
-    flagId: String!
+    environmentName: String!
+    status: ExperimentStatus
+    type: String
     description: String
     hypothesis: String
     startTimestamp: Float
     endTimestamp: Float
+    groups: [ExperimentGroup]
+    enrollment: Enrollment
+    flagIds: [String]
+    dependents: [Metric]
+    definedTreatments: DefinedTreatments
+    createdAt: Float
+    updatedAt: Float
   }
 `;
 
@@ -107,41 +149,6 @@ const userSchema = /* GraphQL */ `
   }
 `;
 
-const environmentSchema = /* GraphQL */ `
-  type Environment {
-    id: ID!
-    createdAt: Float!
-    updatedAt: Float!
-    name: String!
-    defaultEnabled: Boolean!
-    pinToLists: Boolean!
-  }
-
-  input EnvironmentDraft {
-    name: String!
-    defaultEnabled: Boolean!
-    pinToLists: Boolean!
-  }
-
-  input PartialEnvironment {
-    id: ID
-    createdAt: Float
-    updatedAt: Float
-    name: String
-    defaultEnabled: Boolean
-    pinToLists: Boolean
-  }
-
-  input PartialEnvironmentWithId {
-    id: ID!
-    createdAt: Float
-    updatedAt: Float
-    name: String
-    defaultEnabled: Boolean
-    pinToLists: Boolean
-  }
-`;
-
 const clientConnectionSchema = /* GraphQL */ `
   type ClientConnection {
     id: ID!
@@ -150,32 +157,6 @@ const clientConnectionSchema = /* GraphQL */ `
     name: String!
     environmentId: ID!
     description: String!
-  }
-`;
-
-const featureFlagSchema = /* GraphQL */ `
-  type FeatureFlag {
-    id: ID!
-    createdAt: Float!
-    updatedAt: Float!
-    name: String!
-    description: String
-    environmentNames: [String]!
-  }
-
-  input CreateFeatureFlagInput {
-    name: String!
-    description: String
-    enabled: Boolean!
-    environment: String!
-  }
-
-  input UpdateFeatureFlagInput {
-    id: ID!
-    name: String
-    description: String
-    enabled: Boolean
-    environment: String
   }
 `;
 
@@ -242,7 +223,7 @@ const mutationSchemas = /* GraphQL */ `
 
     createEnvironment(newEntry: EnvironmentDraft!): Environment
 
-    updateEnvironment(partialEntry: PartialEnvironment!): Environment
+    updateEnvironment(partialEntry: PartialEnvironmentWithId!): Environment
 
     deleteEnvironment(id: ID!): Boolean
 

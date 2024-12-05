@@ -306,7 +306,7 @@ export const resolvers: IResolvers = {
     createFeatureFlag: async (
       _,
       draft: FeatureFlagDraft,
-    ): Promise<FeatureFlagDraft | null> => {
+    ): Promise<FeatureFlag> => {
       const flagId = await repos.featureFlag.create(draft);
       return repos.featureFlag.get(flagId);
     },
@@ -324,14 +324,14 @@ export const resolvers: IResolvers = {
       return true;
     },
 
-    deleteFeatureFlag: async (_, { id }: { id: string }): Promise<string> => {
+    deleteFeatureFlag: async (_, { id }: { id: string }): Promise<boolean> => {
       const success = await repos.featureFlag.delete(id);
 
       if (!success) {
         throw new Error(`Failed to delete FeatureFlag with ID: ${id}`);
       }
 
-      return `FeatureFlag with ID ${id} deleted successfully.`;
+      return true;
     },
     // #endregion
   },
