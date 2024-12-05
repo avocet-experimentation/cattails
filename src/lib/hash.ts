@@ -1,64 +1,89 @@
-import { ClientPropEntries, ClientPropValue } from '@estuary/types';
-import crypto, { randomUUID } from 'node:crypto';
-/*
-MD5 vs DJB2:
-- MD5 is more collision resistant so it is prefereable to be used for larget data sets.
-- DJB2 is faster and more lightweight, as it relies on bitwise operations and some arithmetic. Ideal for frequent hashing. MD5 is has greater computation costs
-- MD5 produces a larger range of values (128bit hash) (less collision resistance) than DJB2 (32bit hash)
-
-- MD5 is better suited where more collision resistance is needed, DJB2 is ideal for fast hash computations
-- MD5 adds more dependency by use of crypto module, DJB2 has no depdencies.
-
-*/
-
-
-/**
- * Hash identifiers for pseudo-random assignment to one of many options
- * todo:
- * - change assignment options to Array<{ id: string, weight: proportion }>
- * @param identifiers An array of values to use collectively as a unique identifier for the client
- * @param assignmentOptions An array of IDs for possible assignments
- * @returns one of the options passed in
- */
-export function hashAndAssign(
-  identifiers: [string, ClientPropValue][],
-  assignmentOptions: readonly string[]
-): string {
-  const hash = hashIdentifiers(identifiers);
-  const sortedOptions = [...assignmentOptions].sort();
-  const index = Math.abs(hash) % sortedOptions.length;
-  return sortedOptions[index];
-}
-
-export function hashAndCompare(
-  identifiers: [string, ClientPropValue][],
-  proportion: number
-): boolean {
-  if (proportion === 0) return false;
-  const hash = hashIdentifiers(identifiers);
-  const compareValue = (proportion * 2 ** 32) - (2 ** 31) - 1;
-  return hash < compareValue;
-}
+/* eslint-disable no-bitwise */
+import { ClientPropEntries, ClientPropValue, sortByKey } from '@estuary/types';
+import { randomUUID } from 'node:crypto';
 
 /**
  * DJB2 Hash function.
- * @param input 
+ * @param input
  * @returns a signed 32-bit integer
  */
 export function hashStringDJB2(input: string) {
   const str = input.length === 0 ? randomUUID() : input;
   let hash = 0;
-  // iterate over the string, use bitwise left shift operator, which is essentially multiply the value by 32 -- increases significance of the current hash value.
-  // subtract the hash from the result
-  // Add the utf char value
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i); 
-    // console.log('left shifted:', hash)
-    hash |= 0; // Convert to 32bit integer -- bitwise OR operator(?)
-    // console.log('converted to 32 bit:', hash)
+  for (let i = 0; i < str.length; i += 1) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
   }
 
   return hash;
+}
+
+function hashIdentifiers(identifiers: ClientPropEntries, sort: boolean = true) {
+  const sortedIdentifiers = sort ? identifiers.toSorted() : identifiers;
+  let string = '';
+
+  sortedIdentifiers.forEach(([name, value]) => {
+    string += name + value;
+  });
+
+  return hashStringDJB2(string);
+}
+
+/**
+ * Hash identifiers for pseudo-random assignment to one of many options
+ * @param identifiers An array of values to use collectively as a unique identifier for the client
+ * @returns one of the options passed in
+ */
+export function hashAndAssign(
+  identifiers: [string, ClientPropValue][],
+  assignmentOptions: readonly { id: string; weight: number }[],
+  sort: boolean = true,
+): string {
+  const hash = hashIdentifiers(identifiers, sort);
+  //
+  const weightSum = assignmentOptions.reduce(
+    (acc, option) => acc + option.weight,
+    0,
+  );
+  const options = sort
+    ? sortByKey([...assignmentOptions], 'id')
+    : assignmentOptions;
+
+  // map to weight + prev weight
+  // iterating upwards, find the first one larger than the calculated hash
+  const positionedOptions = options.reduce(
+    (acc: { id: string; hash: number }[], option, i, arr) => {
+      const previousWeight = i > 0 ? arr[i - 1].weight : 0;
+      const newElement = {
+        id: option.id,
+        hash: option.weight + previousWeight,
+      };
+      acc.push(newElement);
+      return acc;
+    },
+    [],
+  );
+  const hashModulo = hash % weightSum;
+  const selected = positionedOptions.find(
+    (option) => option.hash >= hashModulo,
+  );
+  if (!selected) {
+    throw new Error(
+      "The hash modulo was larger than all the options' hashes."
+        + " This shouldn't happen",
+    );
+  }
+  return selected.id;
+}
+
+export function hashAndCompare(
+  identifiers: [string, ClientPropValue][],
+  proportion: number,
+): boolean {
+  if (proportion === 0) return false;
+  const hash = hashIdentifiers(identifiers);
+  const compareValue = proportion * 2 ** 32 - 2 ** 31 - 1;
+  return hash < compareValue;
 }
 
 /**
@@ -75,42 +100,3 @@ export function hashStringSet(strings: readonly string[]) {
   const combined = sortAndCombineIds(strings);
   return hashStringDJB2(combined);
 }
-
-function hashIdentifiers(identifiers: ClientPropEntries) {
-  const sortedIdentifiers = identifiers.toSorted();
-  let string = '';
-
-  sortedIdentifiers.forEach(([ name, value ]) => {
-    string += name + value;
-  });
-
-  return hashStringDJB2(string);
-}
-
-// function hashIdentifiersMD5(identifiers: string[]) {
-//   const sortedKeys = Object.keys(identifiers).sort();
-//   let string = '';
-
-//   sortedKeys.forEach((key) => {
-//     string += identifiers[key];
-//   });
-  
-//   //Create a new MD5 hash instance -> Produces 128bit hash value (32char hexadecimal string)
-//   const hexString = crypto.createHash('md5')
-//     .update(string) //Feed the input string into the hash instance
-//     .digest('hex'); //Specify hex to return a hexidecimal string
-//   const hash = BigInt('0x' + hexString); //Converts to BigInt
-
-//   return hash;
-// }
-
-// function hashAndAssignMD5(identifiers: string[], flagValues=['Control', 'Variant']) {
-//   const hashInt = hashIdentifiersMD5(identifiers);
-//   const flagArray = Array.from(flagValues).sort();
-
-//   const index = Number(hashInt % BigInt(flagArray.length))
-
-//   return flagArray[index];
-// }
-
-// console.log(hashAndAssignMD5({z: 'z',  az: 'a', ab: 'ab', bc: 'b', email: 'sean.a.mentele@gmail.com', name: 'sean'}, flagValues));
