@@ -13,13 +13,13 @@ import {
   BeforeId,
   stripKeysWithUndefined,
   EnvironmentDraft,
+  RequireOnly,
 } from '@estuary/types';
-import RepositoryManager from '../repository/RepositoryManager.js';
-import cfg from '../envalid.js';
-import { RequireOnly } from '@estuary/types';
-import { PartialWithStringId } from '../repository/MongoRepository.js';
 import { Filter } from 'mongodb';
 import { IResolvers } from 'mercurius';
+import RepositoryManager from '../repository/RepositoryManager.js';
+import cfg from '../envalid.js';
+import { PartialWithStringId } from '../repository/MongoRepository.js';
 
 const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
@@ -30,12 +30,9 @@ export const resolvers: IResolvers = {
       const fetched = await repos.clientPropDef.get(id);
       return fetched;
     },
-    allClientPropDefs: async (_, { limit }: { limit?: number }) => {
-      return repos.clientPropDef.getMany(limit);
-    },
-    environment: async (_, { id }: { id: string }) => {
-      return repos.environment.get(id);
-    },
+    allClientPropDefs: async (_, { limit }: { limit?: number }) =>
+      repos.clientPropDef.getMany(limit),
+    environment: async (_, { id }: { id: string }) => repos.environment.get(id),
     allEnvironments: async (
       _,
       { limit, offset }: { limit?: number; offset?: number },
@@ -50,30 +47,19 @@ export const resolvers: IResolvers = {
       const query = partial ? stripKeysWithUndefined(partial) : {};
       return repos.environment.findMany(query, limit);
     },
-    clientConnection: async (_, { id }: { id: string }) => {
-      return repos.clientConnection.get(id);
-    },
-    allClientConnections: async (_, { limit }: { limit?: number }) => {
-      return repos.clientConnection.getMany(limit);
-    },
-    user: async (_, { id }: { id: string }) => {
-      return repos.user.get(id);
-    },
-    allUsers: async (_, { limit }: { limit?: number }) => {
-      return repos.user.getMany(limit);
-    },
-    experiment: async (_, { id }: { id: string }) => {
-      return repos.experiment.get(id);
-    },
-    allExperiments: async (_, { limit }: { limit?: number }) => {
-      return repos.experiment.getMany(limit);
-    },
-    FeatureFlag: async (_, { id }: { id: string }) => {
-      return repos.featureFlag.get(id);
-    },
-    allFeatureFlags: async (_, { limit }: { limit?: number }) => {
-      return repos.featureFlag.getMany(limit);
-    },
+    clientConnection: async (_, { id }: { id: string }) =>
+      repos.clientConnection.get(id),
+    allClientConnections: async (_, { limit }: { limit?: number }) =>
+      repos.clientConnection.getMany(limit),
+    user: async (_, { id }: { id: string }) => repos.user.get(id),
+    allUsers: async (_, { limit }: { limit?: number }) =>
+      repos.user.getMany(limit),
+    experiment: async (_, { id }: { id: string }) => repos.experiment.get(id),
+    allExperiments: async (_, { limit }: { limit?: number }) =>
+      repos.experiment.getMany(limit),
+    FeatureFlag: async (_, { id }: { id: string }) => repos.featureFlag.get(id),
+    allFeatureFlags: async (_, { limit }: { limit?: number }) =>
+      repos.featureFlag.getMany(limit),
   },
   // #endregion
   Mutation: {
@@ -94,7 +80,7 @@ export const resolvers: IResolvers = {
         isIdentifier?: boolean;
       },
     ) => {
-      //make fields optional?
+      // make fields optional?
       const updates: Partial<ClientPropDef> = {};
 
       if (name !== undefined) updates.name = name;
@@ -120,11 +106,11 @@ export const resolvers: IResolvers = {
 
       const newId = await repos.clientPropDef.create(newEntry);
       if (!newId) {
-        //if id is undefined throw error
+        // if id is undefined throw error
         throw new Error('Failed to create ClientPropDef');
       }
 
-      return newId; //return id of created ?? tried whole object, ahd type issues
+      return newId; // return id of created ?? tried whole object, ahd type issues
     },
     deleteClientPropDef: async (_, { id }: { id: string }): Promise<string> => {
       const success = await repos.clientPropDef.delete(id);
@@ -332,7 +318,7 @@ export const resolvers: IResolvers = {
       const success = await repos.featureFlag.update(input);
 
       if (!success) {
-        throw new Error(`Failed to update FeatureFlag`);
+        throw new Error('Failed to update FeatureFlag');
       }
 
       return true;

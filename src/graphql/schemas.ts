@@ -114,11 +114,13 @@ const environmentSchema = /* GraphQL */ `
     updatedAt: Float!
     name: String!
     defaultEnabled: Boolean!
+    pinToLists: Boolean!
   }
 
   input EnvironmentDraft {
     name: String!
     defaultEnabled: Boolean!
+    pinToLists: Boolean!
   }
 
   input PartialEnvironment {
@@ -127,6 +129,7 @@ const environmentSchema = /* GraphQL */ `
     updatedAt: Float
     name: String
     defaultEnabled: Boolean
+    pinToLists: Boolean
   }
 
   input PartialEnvironmentWithId {
@@ -135,6 +138,7 @@ const environmentSchema = /* GraphQL */ `
     updatedAt: Float
     name: String
     defaultEnabled: Boolean
+    pinToLists: Boolean
   }
 `;
 
