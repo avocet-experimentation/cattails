@@ -6,31 +6,29 @@ import {
   experimentGroupSchema,
   Treatment,
   treatmentSchema,
-  ExperimentReference,
-} from "@estuary/types";
-import { hashAndAssign } from "./hash.js";
-import RepositoryManager from "../repository/RepositoryManager.js";
-
+} from '@estuary/types';
+import { hashAndAssign } from './hash.js';
+// import RepositoryManager from '../repository/RepositoryManager.js';
 
 export default class ExperimentManager {
-  repository: RepositoryManager;
+  // repository: RepositoryManager;
 
-  constructor(repositoryManager: RepositoryManager) {
-    this.repository = repositoryManager;
-  }
+  // constructor(repositoryManager: RepositoryManager) {
+  //   this.repository = repositoryManager;
+  // }
 
-  async getTreatmentAndHash(
-    experimentReference: ExperimentReference,
-    identifiers: ClientPropMapping
+  static async getTreatmentAndHash(
+    experiment: Experiment,
+    identifiers: ClientPropMapping,
   ): Promise<{
-    treatment: Treatment,
-    hash: string,
-  } | null> {
-    const experiment = await this.repository.experiment.get(experimentReference.id);
-    if (!experiment) return null;
-
-    const group = this.getGroupAssignment(experimentSchema.parse(experiment), identifiers);
-    const treatment = this.currentTreatment(experiment, group);
+      treatment: Treatment;
+      hash: string;
+    } | null> {
+    const group = ExperimentManager.getGroupAssignment(
+      experimentSchema.parse(experiment),
+      identifiers,
+    );
+    const treatment = ExperimentManager.currentTreatment(experiment, group);
     if (!treatment) return null;
 
     const hash = [experiment.id, group.id, treatment.id].join('+');
@@ -42,24 +40,38 @@ export default class ExperimentManager {
    * todo:
    * - only pass identifiers listed on enrollment.attributes into the hash function
    */
-  getGroupAssignment(experiment: Experiment, clientProps: ClientPropMapping): ExperimentGroup {
+  static getGroupAssignment(
+    experiment: Experiment,
+    clientProps: ClientPropMapping,
+  ): ExperimentGroup {
     const { groups } = experiment;
-    const groupIds = groups.map((group) => group.id);
+    const groupOptions = groups.map((group) => ({
+      id: group.id,
+      weight: group.proportion,
+    }));
     const propsToHash = experiment.enrollment.attributes;
-    const identifiers = Object.entries(clientProps)
-      .filter(([key]) => propsToHash.includes(key));
-    const assignmentGroupId = hashAndAssign(identifiers, groupIds);
-    const assignedGroup = groups.find((group) => group.id === assignmentGroupId);
+    const identifiers = Object.entries(clientProps).filter(([key]) =>
+      propsToHash.includes(key));
+    const assignmentGroupId = hashAndAssign(identifiers, groupOptions);
+    const assignedGroup = groups.find(
+      (group) => group.id === assignmentGroupId,
+    );
     return experimentGroupSchema.parse(assignedGroup);
   }
 
-  getGroupTreatments(experiment: Experiment, group: ExperimentGroup) {
-    return group.sequence.map((treatmentId) => experiment.definedTreatments[treatmentId]);
+  static getGroupTreatments(experiment: Experiment, group: ExperimentGroup) {
+    return group.sequence.map(
+      (treatmentId) => experiment.definedTreatments[treatmentId],
+    );
   }
+
   /**
    * Given an assigned experimental group, determines which block is currently applied to the group
    */
-  currentTreatment(experiment: Experiment, group: ExperimentGroup): Treatment | null {
+  static currentTreatment(
+    experiment: Experiment,
+    group: ExperimentGroup,
+  ): Treatment | null {
     const start = experiment.startTimestamp;
     if (!start || experiment.status !== 'active') return null;
 
@@ -70,7 +82,7 @@ export default class ExperimentManager {
       const startTimeMs = start + cumulativeDuration;
       const endTimeMs = startTimeMs + duration;
       cumulativeDuration += duration;
-      return (startTimeMs <= currentTimeMs && currentTimeMs < endTimeMs);
+      return startTimeMs <= currentTimeMs && currentTimeMs < endTimeMs;
     });
 
     if (!concurrent) return null;
