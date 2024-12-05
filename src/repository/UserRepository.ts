@@ -1,9 +1,9 @@
-import { User, userSchema } from "@estuary/types";
-import MongoRepository from "./MongoRepository.js";
-import RepositoryManager from "./RepositoryManager.js";
+import { User, userSchema } from '@estuary/types';
+import MongoRepository from './MongoRepository.js';
+import { IRepositoryManager } from './repository-types.js';
 
 export default class UserRepository extends MongoRepository<User> {
-  constructor(repositoryManager: RepositoryManager) {
+  constructor(repositoryManager: IRepositoryManager) {
     super('user', userSchema, repositoryManager);
   }
 }

@@ -19,7 +19,7 @@ import { Filter } from 'mongodb';
 import { IResolvers } from 'mercurius';
 import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';
-import { PartialWithStringId } from '../repository/MongoRepository.js';
+import { PartialWithStringId } from '../repository/repository-types.js';
 
 const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 

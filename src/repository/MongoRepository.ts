@@ -6,7 +6,6 @@ import {
   PushOperator,
   PullOperator,
   MatchKeysAndValues,
-  WithId,
   WithTransactionCallback,
   UpdateResult,
   UpdateFilter,
@@ -23,20 +22,12 @@ import {
   DocumentUpdateFailedError,
   DocumentNotFoundError,
   SchemaParseError,
-  RequireOnly,
 } from '@estuary/types';
-import RepositoryManager from './RepositoryManager.js';
-
-/* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
-
-export type MongoRecord<T extends EstuaryMongoTypes> = WithId<BeforeId<T>>;
-/**
- * A partial type that only requires an `id` field
- */
-export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<
-  T,
-  'id'
->;
+import {
+  IRepositoryManager,
+  MongoRecord,
+  PartialWithStringId,
+} from './repository-types.js';
 
 /**
  * Parent class for type-specific CRUD operations in Mongo.
@@ -46,14 +37,16 @@ export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<
  * - solve filter type problem and remove the `as Filter...` assertions
  */
 export default class MongoRepository<T extends EstuaryMongoTypes> {
-  manager: RepositoryManager;
+  manager: IRepositoryManager;
+
   collection: Collection<BeforeId<T>>;
+
   schema: EstuarySchema<T>;
 
   constructor(
     collectionName: EstuaryMongoCollectionName,
     schema: EstuarySchema<T>,
-    repositoryManager: RepositoryManager,
+    repositoryManager: IRepositoryManager,
   ) {
     this.manager = repositoryManager;
     this.collection = repositoryManager.client.db().collection(collectionName);
@@ -69,8 +62,8 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   protected validateNew(obj: object): OptionalUnlessRequiredId<BeforeId<T>> {
     if ('id' in obj) {
       throw new TypeError(
-        'Attempted to create a document from an object that ' +
-          'contains an id field! Does this document already exist?',
+        'Attempted to create a document from an object that '
+          + 'contains an id field! Does this document already exist?',
       );
     }
 
@@ -119,8 +112,9 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     if (key in obj) {
       const value = obj[key];
       return typeof value === 'string' && value.length === 0;
-    } else return false;
+    } return false;
   }
+
   /**
    * @returns a hex string representing the new record's ObjectId
    */
@@ -155,6 +149,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
 
     return result;
   }
+
   /**
    * A placeholder to be overridden on sub-classes
    */
@@ -173,6 +168,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const transformed = documents.map((doc) => this.recordToObject(doc), this);
     return transformed;
   }
+
   /**
    * @param documentId a hex string representing an ObjectId
    */
@@ -183,6 +179,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     if (result === null) throw new DocumentNotFoundError({ _id: docId });
     return result;
   }
+
   /**
    * Find a document from any of its properties.
    * @param query A MongoDB query. An empty object matches any document. To find by name, pass { name: documentName }. See [the documentation](https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/query-document/#std-label-node-fundamentals-query-document) for more
@@ -193,6 +190,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
 
     return this.recordToObject(result);
   }
+
   /**
    * Find all documents matching a query object.
    * @param query A MongoDB query. An empty object matches any document. To find by name, pass { name: documentName }. See [the documentation](https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/query-document/#std-label-node-fundamentals-query-document) for more
@@ -203,6 +201,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const records = await resultCursor.toArray();
     return records.map(this.recordToObject, this);
   }
+
   /**
    * Updates an existing record
    * @returns true if the update request was successful, or throws otherwise
@@ -253,6 +252,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   ): Promise<boolean> {
     return true;
   }
+
   /**
    * Updates the passed key on a record, if it exists. Fetches the document and
    * validates it with the updates against the schema before attempting to update.
@@ -286,6 +286,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const result = await this.collection.updateOne(filter, [{ $set: updates }]);
     return result.modifiedCount > 0;
   }
+
   /**
    * Pushes to an array within all matching records
    * @param matcher a partial document to filter by, or an array of them
@@ -341,6 +342,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const result = await this.collection.updateMany(filter, { $pull: op });
     return result;
   }
+
   /**
    * Pulls from an array on a document with the passed id
    */
@@ -379,11 +381,12 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     } as Filter<BeforeId<T>>;
 
     const op = { [`${keyPath}.$`]: updateObj } as MatchKeysAndValues<
-      BeforeId<T>
+    BeforeId<T>
     >;
     const result = await this.collection.updateOne(filter, { $set: op });
     return result.acknowledged;
   }
+
   /**
    * Deletes an existing record
    * @returns true if a record was deleted, or throws otherwise
@@ -419,6 +422,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   protected async deleteEmbeds(documentId: string): Promise<boolean> {
     return true;
   }
+
   /**
    * Parses a key path string into an update object
    * @param keyPath A dot-separated string representing nested properties
@@ -453,7 +457,6 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     cb: WithTransactionCallback<R>,
   ): Promise<R> {
     return this.manager.client.withSession(async (session) =>
-      session.withTransaction(cb),
-    );
+      session.withTransaction(cb));
   }
 }

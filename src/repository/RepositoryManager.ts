@@ -1,19 +1,25 @@
-import { Db, MongoClient } from "mongodb";
-import ClientConnectionRepository from "./ClientConnectionRepository.js";
-import ClientPropDefRepository from "./ClientPropDefRepository.js";
-import EnvironmentRepository from "./EnvironmentRepository.js";
-import ExperimentRepository from "./ExperimentRepository.js";
-import FeatureFlagRepository from "./FeatureFlagRepository.js";
-import UserRepository from "./UserRepository.js";
+import { MongoClient } from 'mongodb';
+import ClientConnectionRepository from './ClientConnectionRepository.js';
+import ClientPropDefRepository from './ClientPropDefRepository.js';
+import EnvironmentRepository from './EnvironmentRepository.js';
+import ExperimentRepository from './ExperimentRepository.js';
+import FeatureFlagRepository from './FeatureFlagRepository.js';
+import UserRepository from './UserRepository.js';
+import { IRepositoryManager } from './repository-types.js';
 
-export default class RepositoryManager {
+export default class RepositoryManager implements IRepositoryManager {
   client: MongoClient;
 
   featureFlag: FeatureFlagRepository;
+
   experiment: ExperimentRepository;
+
   clientPropDef: ClientPropDefRepository;
+
   environment: EnvironmentRepository;
+
   clientConnection: ClientConnectionRepository;
+
   user: UserRepository;
 
   constructor(mongoUri: string) {

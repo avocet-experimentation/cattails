@@ -4,28 +4,30 @@ import {
   ExperimentReference,
   experimentSchema,
   RuleStatus,
-} from "@estuary/types";
-import MongoRepository from "./MongoRepository.js";
-import { PartialWithStringId } from './MongoRepository.js';
-import RepositoryManager from "./RepositoryManager.js";
-import { ObjectId } from "mongodb";
+} from '@estuary/types';
+import { ObjectId } from 'mongodb';
+import MongoRepository from './MongoRepository.js';
+import { IRepositoryManager, PartialWithStringId } from './repository-types.js';
 
 export default class ExperimentRepository extends MongoRepository<Experiment> {
-  constructor(repositoryManager: RepositoryManager) {
+  constructor(repositoryManager: IRepositoryManager) {
     super('experiment', experimentSchema, repositoryManager);
   }
 
-  protected async setExperimentStatus(experimentId: string, status: RuleStatus) {
+  protected async setExperimentStatus(
+    experimentId: string,
+    status: RuleStatus,
+  ) {
     const updates = {
       id: experimentId,
       status,
       startTimestamp: Date.now(),
     };
-    
+
     const updateResult = await this.update(updates);
     if (!updateResult) {
       throw new DocumentUpdateFailedError(
-        `Failed to set experiment ${experimentId} status to "${status}"`
+        `Failed to set experiment ${experimentId} status to "${status}"`,
       );
     }
 
@@ -41,33 +43,37 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
   async pauseExperiment(experimentId: string) {
     const updatedDoc = await this.setExperimentStatus(experimentId, 'paused');
     return this.createEmbeds(updatedDoc);
-
   }
 
   async stopExperiment(experimentId: string) {
     const updatedDoc = await this.setExperimentStatus(experimentId, 'paused');
     return this.deleteEmbeds(experimentId);
   }
+
   /** WIP
    * Store an ExperimentReference on any flags referenced in an experiment
    * todo: maybe return the result and let errors bubble to indicate failure
    */
-  async createEmbeds(
-    newExperiment: Experiment
-  ): Promise<boolean> {
+  async createEmbeds(newExperiment: Experiment): Promise<boolean> {
     try {
       const experimentReference = new ExperimentReference(newExperiment);
 
       const flagMatcher = {
-        _id: { $in: newExperiment.flagIds.map((id) => ObjectId.createFromHexString(id)) }
+        _id: {
+          $in: newExperiment.flagIds.map((id) =>
+            ObjectId.createFromHexString(id)),
+        },
       };
 
-      const embedResult = await this.manager.featureFlag
-        .push('overrideRules', experimentReference, flagMatcher);
+      const embedResult = await this.manager.featureFlag.push(
+        'overrideRules',
+        experimentReference,
+        flagMatcher,
+      );
 
       if (!embedResult) {
         throw new DocumentUpdateFailedError(
-          `Failed to add ExperimentReference on flags ${newExperiment.flagIds}!`
+          `Failed to add ExperimentReference on flags ${newExperiment.flagIds}!`,
         );
       }
 
@@ -85,7 +91,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
    * Updates all ExperimentReferences on any flags referenced by an experiment
    */
   async updateEmbeds(
-    partialExperiment: PartialWithStringId<Experiment>
+    partialExperiment: PartialWithStringId<Experiment>,
   ): Promise<boolean> {
     try {
       const { featureFlag } = this.manager;
@@ -93,22 +99,30 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
       const embedMatcher = { id: partialExperiment.id };
 
       const flagFilter = {
-        _id: { $in: updatedExpDoc.flagIds.map((id) => ObjectId.createFromHexString(id)) },
+        _id: {
+          $in: updatedExpDoc.flagIds.map((id) =>
+            ObjectId.createFromHexString(id)),
+        },
       };
 
-      const pullResult = await featureFlag.pull('overrideRules', embedMatcher, flagFilter);
+      const pullResult = await featureFlag.pull(
+        'overrideRules',
+        embedMatcher,
+        flagFilter,
+      );
       if (!pullResult.acknowledged) {
         throw new DocumentUpdateFailedError(
-          'Failed to remove previous ExperimentReference embeds');
+          'Failed to remove previous ExperimentReference embeds',
+        );
       }
 
       const updatedEmbed = new ExperimentReference({
         ...updatedExpDoc,
-        ...partialExperiment
+        ...partialExperiment,
       });
 
       const embedUpdateResult = await featureFlag.push(
-        'overrideRules', 
+        'overrideRules',
         updatedEmbed,
         flagFilter,
       );
@@ -126,10 +140,12 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
     try {
       const embedFilter = {
         id: { $eq: experimentId },
-      }
+      };
 
-      const embedDeleteResult = await this.manager.featureFlag
-      .pull('overrideRules', embedFilter);
+      const embedDeleteResult = await this.manager.featureFlag.pull(
+        'overrideRules',
+        embedFilter,
+      );
 
       return embedDeleteResult.acknowledged;
     } catch (e: unknown) {
@@ -142,7 +158,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
    */
   async _getDocumentsWithEmbeds(experimentId: string) {
     const flagsWithEmbed = await this.manager.featureFlag.findMany({
-      overrideRules: { $elemMatch: { id: experimentId, }, },
+      overrideRules: { $elemMatch: { id: experimentId } },
     });
 
     return flagsWithEmbed;
