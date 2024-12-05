@@ -2,22 +2,14 @@ import { ClientPropDefDraft, EnvironmentDraft } from '@estuary/types';
 import { insertArray, repos } from './insert-helpers.js';
 
 const defaultEnvironments: EnvironmentDraft[] = [
-  {
-    name: 'testing',
-    defaultEnabled: false,
-  },
-  {
-    name: 'production',
-    defaultEnabled: false,
-  },
-  {
-    name: 'staging',
-    defaultEnabled: false,
-  },
-  {
+  EnvironmentDraft.template({ name: 'testing' }),
+  EnvironmentDraft.template({ name: 'production', pinToLists: true }),
+  EnvironmentDraft.template({ name: 'staging' }),
+  EnvironmentDraft.template({
     name: 'dev',
     defaultEnabled: true,
-  },
+    pinToLists: true,
+  }),
 ];
 
 await insertArray(defaultEnvironments, repos.environment);

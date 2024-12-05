@@ -45,14 +45,14 @@ export const switchbackExperiment1 = ExperimentDraft.templateSwitchback({
   name: 'Example Switchback',
   description:
     'a simple switchback experiment with one group and two treatments',
-  environmentName: 'prod',
+  environmentName: 'production',
 });
 
 export const abExperiment1 = ExperimentDraft.templateAB({
   name: 'Example A/B Experiment',
   description:
     'A bivariate A/B test with two groups and two independent variables (flags)',
-  environmentName: 'prod',
+  environmentName: 'production',
 });
 
 export const exampleExperiments: ExperimentDraft[] = [
