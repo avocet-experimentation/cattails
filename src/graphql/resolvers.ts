@@ -57,9 +57,9 @@ export const resolvers: IResolvers = {
     experiment: async (_, { id }: { id: string }) => repos.experiment.get(id),
     allExperiments: async (_, { limit }: { limit?: number }) =>
       repos.experiment.getMany(limit),
-    FeatureFlag: async (_, { id }: { id: string }) => repos.featureFlag.get(id),
-    allFeatureFlags: async (_, { limit }: { limit?: number }) =>
-      repos.featureFlag.getMany(limit),
+    // FeatureFlag: async (_, { id }: { id: string }) => repos.featureFlag.get(id),
+    // allFeatureFlags: async (_, { limit }: { limit?: number }) =>
+    //   repos.featureFlag.getMany(limit),
   },
   // #endregion
   Mutation: {
@@ -303,36 +303,36 @@ export const resolvers: IResolvers = {
     // #endregion
 
     // #region feature flag resolvers
-    createFeatureFlag: async (
-      _,
-      draft: FeatureFlagDraft,
-    ): Promise<FeatureFlag> => {
-      const flagId = await repos.featureFlag.create(draft);
-      return repos.featureFlag.get(flagId);
-    },
+    // createFeatureFlag: async (
+    //   _,
+    //   draft: FeatureFlagDraft,
+    // ): Promise<FeatureFlag> => {
+    //   const flagId = await repos.featureFlag.create(draft);
+    //   return repos.featureFlag.get(flagId);
+    // },
 
-    updateFeatureFlag: async (
-      _,
-      input: PartialWithStringId<FeatureFlag>,
-    ): Promise<boolean> => {
-      const success = await repos.featureFlag.update(input);
+    // updateFeatureFlag: async (
+    //   _,
+    //   input: PartialWithStringId<FeatureFlag>,
+    // ): Promise<boolean> => {
+    //   const success = await repos.featureFlag.update(input);
 
-      if (!success) {
-        throw new Error('Failed to update FeatureFlag');
-      }
+    //   if (!success) {
+    //     throw new Error('Failed to update FeatureFlag');
+    //   }
 
-      return true;
-    },
+    //   return true;
+    // },
 
-    deleteFeatureFlag: async (_, { id }: { id: string }): Promise<boolean> => {
-      const success = await repos.featureFlag.delete(id);
+    // deleteFeatureFlag: async (_, { id }: { id: string }): Promise<boolean> => {
+    //   const success = await repos.featureFlag.delete(id);
 
-      if (!success) {
-        throw new Error(`Failed to delete FeatureFlag with ID: ${id}`);
-      }
+    //   if (!success) {
+    //     throw new Error(`Failed to delete FeatureFlag with ID: ${id}`);
+    //   }
 
-      return true;
-    },
+    //   return true;
+    // },
     // #endregion
   },
 };

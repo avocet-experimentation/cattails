@@ -1,8 +1,36 @@
+import { assertObject } from '@estuary/types';
+import { GraphQLScalarType } from 'graphql';
+
+const environmentRecordScalar = new GraphQLScalarType({
+  name: 'EnvironmentNames',
+  description: 'Record of environments to `true`',
+  parseValue(value) {
+    assertObject(value);
+    return value;
+  },
+});
+
 export const featureFlagSchema = /* GraphQL */ `
-  type FlagValueDef {
+  scalar EnvironmentNames
+
+  # union FlagValue = String | Float | Boolean
+
+  type FlagBooleanValue {
     type: String!
-    initial: String! | Float! | Boolean!
-  }  
+    initial: Boolean!
+  }
+
+  type FlagStringValue {
+    type: String!
+    initial: String!
+  }
+
+  type FlagNumberValue {
+    type: String!
+    initial: Float!
+  }
+
+  union FlagValueDef = FlagBooleanValue | FlagStringValue | FlagNumberValue
 
   type FeatureFlag {
     id: ID!
@@ -22,7 +50,7 @@ export const featureFlagSchema = /* GraphQL */ `
     name: String
     value: FlagValueDef
     description: String
-    environmentNames: EnvironmentNames    
+    environmentNames: EnvironmentNames
     overrideRules: OverrideRules
   }
 
@@ -34,14 +62,10 @@ export const featureFlagSchema = /* GraphQL */ `
     overrideRules: OverrideRules!
   }
 
-  type EnvironmentNames {
-    
-  }
-
   type OverrideRules {
     type: String!
     id: String!
-    value: String! | Float! | Boolean!
+    value: String!
     description: String!
     status: ExperimentStatus!
     environmentName: String!

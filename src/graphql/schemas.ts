@@ -1,5 +1,5 @@
-import { environmentSchema } from "./environmentSchema.js";
-import { featureFlagSchema } from "./featureFlagSchema.js";
+import { environmentSchema } from './environmentSchema.js';
+// import { featureFlagSchema } from './featureFlagSchema.js';
 
 const readPropDefSchema = /* GraphQL */ `
   enum ClientPropValueType {
@@ -58,7 +58,7 @@ const experimentSchema = /* GraphQL */ `
     paused
     completed
   }
-  
+
   type ExperimentGroup {
     id: ID!
     name: String!
@@ -75,23 +75,23 @@ const experimentSchema = /* GraphQL */ `
 
   type Metric {
     fieldName: String
-    fieldDataType:      ?
+    fieldDataType: String
   }
 
   type FlagState {
     id: ID!
-    value: String | Float | Boolean
+    value: String!
   }
 
   type Treatments {
     id: ID!
     name: String
     duration: Float
-    flagStates: 
+    flagStates: [FlagState]
   }
 
-  type DefineTreatments {
-    name: Treatments        ?
+  type DefinedTreatments {
+    name: Treatments
   }
 
   type Experiment {
@@ -176,8 +176,8 @@ const querySchemas = /* GraphQL */ `
     allUsers(limit: Int, offset: Int): [User]
     experiment(id: ID!): Experiment
     allExperiments(limit: Int, offset: Int): [Experiment]
-    FeatureFlag(id: ID!): FeatureFlag
-    allFeatureFlags(limit: Int, offset: Int): [FeatureFlag]
+    # FeatureFlag(id: ID!): FeatureFlag
+    # allFeatureFlags(limit: Int, offset: Int): [FeatureFlag]
   }
 `;
 
@@ -254,9 +254,9 @@ const mutationSchemas = /* GraphQL */ `
 
     deleteExperiment(id: ID!): Boolean
 
-    createFeatureFlag(input: CreateFeatureFlagInput!): FeatureFlag!
-    updateFeatureFlag(input: UpdateFeatureFlagInput!): FeatureFlag!
-    deleteFeatureFlag(id: ID!): ID
+    # createFeatureFlag(input: FeatureFlagDraft!): FeatureFlag!
+    # updateFeatureFlag(input: PartialFeatureFlagWithStringId!): FeatureFlag!
+    # deleteFeatureFlag(id: ID!): ID
   }
 `;
 
@@ -268,5 +268,4 @@ export const schema = /* GraphQL */ `
   ${clientConnectionSchema}
   ${userSchema}
   ${experimentSchema}
-  ${featureFlagSchema}
 `;

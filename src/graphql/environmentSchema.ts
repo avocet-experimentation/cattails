@@ -22,4 +22,13 @@ export const environmentSchema = /* GraphQL */ `
     defaultEnabled: Boolean
     pinToLists: Boolean
   }
+
+  input PartialEnvironment {
+    id: ID
+    createdAt: Float
+    updatedAt: Float
+    name: String
+    defaultEnabled: Boolean
+    pinToLists: Boolean
+  }
 `;
