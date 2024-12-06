@@ -59,7 +59,7 @@ export default class FeatureFlagRepository extends MongoRepository<FeatureFlag> 
     return this.removeRule(ruleMatcher, idMatcher);
   }
 
-  async getEnvironmentFlags(environment: string) {
-    return this.findMany({ [`environments.${environment}.enabled`]: true });
+  async getEnvironmentFlags(environmentName: string) {
+    return this.findMany({ [`environmentNames.${environmentName}`]: true });
   }
 }

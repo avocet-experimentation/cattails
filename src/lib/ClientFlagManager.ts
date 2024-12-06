@@ -187,8 +187,8 @@ export default class ClientFlagManager {
     return `${id}+${this.randomIds(2)}`;
   }
 
-  static async randomIds(count: number) {
-    const idArr = new Array(count).fill(null).map(randomUUID);
+  static randomIds(count: number) {
+    const idArr = new Array(count).fill(null).map(() => randomUUID());
     return idArr.join('+');
   }
 }
