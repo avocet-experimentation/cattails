@@ -17,12 +17,12 @@ export default class ExperimentManager {
   //   this.repository = repositoryManager;
   // }
 
-  static async getTreatmentAndHash(
+  static async getTreatmentAndIds(
     experiment: Experiment,
     identifiers: ClientPropMapping,
   ): Promise<{
       treatment: Treatment;
-      hash: string;
+      metadata: string;
     } | null> {
     const group = ExperimentManager.getGroupAssignment(
       experimentSchema.parse(experiment),
@@ -31,8 +31,8 @@ export default class ExperimentManager {
     const treatment = ExperimentManager.currentTreatment(experiment, group);
     if (!treatment) return null;
 
-    const hash = [experiment.id, group.id, treatment.id].join('+');
-    return { treatment, hash };
+    const metadata = [experiment.id, group.id, treatment.id].join('+');
+    return { treatment, metadata };
   }
 
   /**

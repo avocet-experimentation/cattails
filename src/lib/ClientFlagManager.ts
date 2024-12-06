@@ -4,7 +4,6 @@ import {
   FeatureFlagDraft,
   FlagClientMapping,
   FlagClientValue,
-  FlagCurrentValue,
   forcedValueSchema,
   OverrideRuleUnion,
 } from '@estuary/types';
@@ -41,7 +40,7 @@ export default class ClientFlagManager {
 
       return await this.computeFlagValue(flag, environmentName, clientProps);
     } catch (e: unknown) {
-      return { value: null, hash: await ClientFlagManager.defaultIdString() };
+      return { value: null, metadata: await ClientFlagManager.defaultIdString() };
     }
   }
 
@@ -93,7 +92,7 @@ export default class ClientFlagManager {
   ): Promise<FlagClientValue> {
     const defaultReturn = {
       value: flag.value.initial,
-      hash: ClientFlagManager.singleIdString(flag.id),
+      metadata: ClientFlagManager.singleIdString(flag.id),
     };
 
     const envRules = FeatureFlagDraft.getEnvironmentRules(
@@ -103,7 +102,7 @@ export default class ClientFlagManager {
     const selectedRule = ClientFlagManager.enroll(envRules, clientProps);
     if (selectedRule === undefined) return defaultReturn;
 
-    const ruleValue = await this.ruleValueAndHash(
+    const ruleValue = await this.ruleValueAndMetadata(
       selectedRule,
       flag.id,
       clientProps,
@@ -111,22 +110,19 @@ export default class ClientFlagManager {
     return ruleValue ?? defaultReturn;
   }
 
-  private async ruleValueAndHash(
+  private async ruleValueAndMetadata(
     rule: OverrideRuleUnion,
     flagId: string,
     identifiers: ClientPropMapping,
-  ): Promise<{
-      value: FlagCurrentValue;
-      hash: string;
-    } | null> {
+  ): Promise<FlagClientValue | null> {
     if (rule.type === 'Experiment') {
       const experiment = await this.repository.experiment.get(rule.id);
-      const result = await ExperimentManager.getTreatmentAndHash(
+      const result = await ExperimentManager.getTreatmentAndIds(
         experiment,
         identifiers,
       );
       if (result === null) return null;
-      const { treatment, hash } = result;
+      const { treatment, metadata } = result;
       const match = treatment.flagStates.find(({ id }) => id === flagId);
       if (match === undefined) {
         const msg = [
@@ -136,12 +132,12 @@ export default class ClientFlagManager {
         throw new Error(msg.join('. '));
       }
 
-      return { value: match.value, hash };
+      return { value: match.value, metadata };
     }
     if (rule.type === 'ForcedValue') {
       return {
         value: forcedValueSchema.parse(rule).value,
-        hash: ClientFlagManager.singleIdString(rule.id),
+        metadata: ClientFlagManager.singleIdString(rule.id),
       };
     }
     console.error('Rule type was invalid!');
