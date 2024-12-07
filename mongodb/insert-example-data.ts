@@ -18,12 +18,20 @@ const forceTrueInTesting = ForcedValue.template({
   value: true,
 });
 
-const exampleFeatureToggle = FeatureFlagDraft.template({
-  name: 'example-feature-toggle',
-  description: 'toggles the <insert feature here>',
+const liveUpdateToggle = FeatureFlagDraft.template({
+  name: 'live-update',
+  description: 'toggles periodic fetching of weather data',
   value: { type: 'boolean', initial: false },
-  environmentNames: { production: true },
+  environmentNames: { production: true, testing: true },
   overrideRules: [forceTrueInTesting],
+});
+
+const unitSystemFlag = FeatureFlagDraft.template({
+  name: 'unit-system',
+  description: 'Sets units of measurement to metric or imperial',
+  value: { type: 'string', initial: 'metric' },
+  environmentNames: { production: true, dev: true },
+  overrideRules: [],
 });
 
 const exampleSiteThemeFlag = FeatureFlagDraft.template({
@@ -33,7 +41,8 @@ const exampleSiteThemeFlag = FeatureFlagDraft.template({
 });
 
 const exampleFeatureFlags: FeatureFlagDraft[] = [
-  exampleFeatureToggle,
+  liveUpdateToggle,
+  unitSystemFlag,
   exampleSiteThemeFlag,
 ];
 
