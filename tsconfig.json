@@ -12,11 +12,5 @@
     "noImplicitAny": true
   },
   "include": ["src/**/*", "vitest.config.ts", "mongodb/**/*", ".eslintrc.cjs"],
-  "exclude": [
-    "node_modules",
-    "__tests__",
-    "src/**/*.spec.*",
-    "src/**/*.test.*",
-    "src/**/*.mock.*"
-  ]
+  "exclude": ["node_modules"]
 }
