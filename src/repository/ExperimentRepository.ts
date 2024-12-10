@@ -46,7 +46,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
   }
 
   async stopExperiment(experimentId: string) {
-    const updatedDoc = await this.setExperimentStatus(experimentId, 'paused');
+    await this.setExperimentStatus(experimentId, 'paused');
     return this.deleteEmbeds(experimentId);
   }
 
@@ -156,7 +156,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
   /**
    * (WIP) Get an array of documents containing embeds matching the passed ID
    */
-  async _getDocumentsWithEmbeds(experimentId: string) {
+  async getDocumentsWithEmbeds(experimentId: string) {
     const flagsWithEmbed = await this.manager.featureFlag.findMany({
       overrideRules: { $elemMatch: { id: experimentId } },
     });

@@ -10,6 +10,7 @@ import {
   User,
 } from '@estuary/types';
 import { MongoClient, WithId } from 'mongodb';
+// eslint-disable-next-line import/no-cycle
 import MongoRepository from './MongoRepository.js';
 
 /* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */

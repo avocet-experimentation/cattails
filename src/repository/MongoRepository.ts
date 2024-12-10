@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 import {
   ObjectId,
   Collection,
@@ -23,6 +24,7 @@ import {
   DocumentNotFoundError,
   SchemaParseError,
 } from '@estuary/types';
+// eslint-disable-next-line import/no-cycle
 import {
   IRepositoryManager,
   MongoRecord,
@@ -54,9 +56,12 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   }
 
   protected recordToObject(document: MongoRecord<T>): T {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const { _id, ...rest } = document;
+    // eslint-disable-next-line no-underscore-dangle
     const morphed = { id: document._id.toHexString(), ...rest };
-    return morphed as unknown as T; // todo: find a better solution for type checking without throwing
+    // todo: find a better solution for type checking without throwing
+    return morphed as unknown as T;
   }
 
   protected validateNew(obj: object): OptionalUnlessRequiredId<BeforeId<T>> {
@@ -105,14 +110,15 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     return parsed;
   }
 
-  protected holdsEmptyString(
-    obj: Record<string, unknown>,
-    key: string,
+  protected holdsEmptyString<O extends object, K extends keyof O>(
+    obj: O,
+    key: K,
   ): boolean {
     if (key in obj) {
       const value = obj[key];
       return typeof value === 'string' && value.length === 0;
-    } return false;
+    }
+    return false;
   }
 
   /**
@@ -154,7 +160,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    * A placeholder to be overridden on sub-classes
    */
   protected async createEmbeds(newDocument: T): Promise<boolean> {
-    return true;
+    return !!newDocument;
   }
 
   /**
@@ -250,7 +256,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
   protected async updateEmbeds(
     partialEntry: PartialWithStringId<T>,
   ): Promise<boolean> {
-    return true;
+    return !!partialEntry;
   }
 
   /**
@@ -275,6 +281,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const merged = merge(original, parsed);
     const validated = this.validateUpdate(merged);
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const { id: _, ...rest } = validated;
     const updates = { ...rest, updatedAt: Date.now() };
 
@@ -294,7 +301,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    */
   async push(
     keyPath: string,
-    newEntry: Record<string, any>,
+    newEntry: object,
     matcher: Filter<T>,
   ): Promise<UpdateResult<T>> {
     const op = { [keyPath]: newEntry } as PushOperator<BeforeId<T>>;
@@ -313,7 +320,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    */
   async pushTo(
     keyPath: string,
-    newEntry: Record<string, any>,
+    newEntry: object,
     documentId: string,
   ): Promise<UpdateResult<T>> {
     const matcher = {
@@ -329,7 +336,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    */
   async pull(
     keyPath: string,
-    toDeleteMatcher: Record<string, any>,
+    toDeleteMatcher: object,
     documentMatcher: Filter<T> = {},
   ): Promise<UpdateResult<T>> {
     const op = { [keyPath]: toDeleteMatcher } as PullOperator<BeforeId<T>>;
@@ -348,7 +355,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    */
   async pullFrom(
     keyPath: string,
-    toDelete: Record<string, any>,
+    toDelete: object,
     documentId: string,
   ): Promise<UpdateResult<T>> {
     const matcher = {
@@ -372,6 +379,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
     const validated = this.validateUpdate(searchObj);
     if (validated === null) return null;
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const { id: _, ...rest } = validated;
 
     const filter = {
@@ -420,7 +428,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    * A placeholder to be overridden on sub-classes
    */
   protected async deleteEmbeds(documentId: string): Promise<boolean> {
-    return true;
+    return !!documentId;
   }
 
   /**
@@ -428,18 +436,18 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    * @param keyPath A dot-separated string representing nested properties
    * @param newValue The value to assign to the parsed key
    */
-  protected keyPathToObject<V, T extends Record<string, T | V>>(
+  keyPathToObject<V, R extends Record<string, R | V>>(
     keyPath: string,
     newValue: V,
   ) {
     const segments = keyPath.split('.');
-    const accumulator = {} as T;
-    let ptr = accumulator;
+    const accumulator = {} as R;
+    let ptr: R = accumulator;
     const result = segments.reduce((acc, segment, i) => {
       const newInner = i === segments.length - 1 ? newValue : {};
       Object.assign(ptr, { [segment]: newInner });
       if (ptr[segment] !== newValue) {
-        ptr = ptr[segment] as T;
+        ptr = ptr[segment] as R;
       }
 
       return acc;
@@ -453,7 +461,7 @@ export default class MongoRepository<T extends EstuaryMongoTypes> {
    * If the callback returns a falsy value or throws an error, all operations
    * are reversed/cancelled.
    */
-  protected async withTransaction<R = any>(
+  protected async withTransaction<R = unknown>(
     cb: WithTransactionCallback<R>,
   ): Promise<R> {
     return this.manager.client.withSession(async (session) =>

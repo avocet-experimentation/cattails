@@ -1,10 +1,14 @@
-import { MongoClient, ObjectId } from 'mongodb';
-import cfg from '../../envalid.js';
-import { afterAll, beforeAll, beforeEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { exampleFlagDrafts, getExampleFlag, numberForcedValue1, staticFlagDrafts, staticFlags, staticNumberFlag, staticRules } from '../../testing/data/featureFlags.js';
-import { EstuaryMongoCollectionName, FeatureFlagDraft, ForcedValue, OverrideRuleUnion } from '@estuary/types';
-import RepositoryManager from '../RepositoryManager.js';
-import { printDetail } from '../../lib/index.js';
+import {
+  afterAll, beforeAll, beforeEach, describe, expect, it,
+} from 'vitest';
+import { FeatureFlagDraft } from '@estuary/types';
+import {
+  exampleFlagDrafts,
+  getExampleFlag,
+  numberForcedValue1,
+  staticFlagDrafts,
+  staticNumberFlag,
+} from '../../testing/data/featureFlags.js';
 import {
   repoManager,
   insertFlags,
@@ -14,18 +18,22 @@ import {
 beforeAll(eraseTestData);
 
 describe('Rule methods', () => {
-  
   describe('addRule', () => {
-    let insertResults: string[] = [];
+    const insertResults: string[] = [];
     beforeEach(async () => {
       await eraseTestData();
       await insertFlags(insertResults, staticFlagDrafts.slice(0, 3));
     });
 
-    it("returns true and adds a rule with valid input", async () => {
+    it('returns true and adds a rule with valid input', async () => {
       const { environmentNames, overrideRules, ...matcher } = staticNumberFlag;
-      const acknowledged = await repoManager.featureFlag.addRule(numberForcedValue1, matcher);
-      const updatedFlag = await repoManager.featureFlag.findOne({ name: staticNumberFlag.name });
+      const acknowledged = await repoManager.featureFlag.addRule(
+        numberForcedValue1,
+        matcher,
+      );
+      const updatedFlag = await repoManager.featureFlag.findOne({
+        name: staticNumberFlag.name,
+      });
       // printDetail({updatedFlag});
       if (updatedFlag === null) throw new Error('Flag should exist!');
 
@@ -38,44 +46,40 @@ describe('Rule methods', () => {
 
   // WIP
   describe('removeRule', () => {
-    let insertResults: string[] = [];
+    const insertResults: string[] = [];
     beforeEach(async () => {
       await eraseTestData();
       await insertFlags(insertResults, staticFlagDrafts.slice(0, 2));
     });
 
-    it("returns true", async () => {
+    it('returns true', async () => {
       const flag = staticFlagDrafts[0];
       const rule = FeatureFlagDraft.getEnvironmentRules(flag, 'prod')[0];
       const { environmentNames, ...matcher } = flag;
-      const acknowledged = await repoManager.featureFlag.removeRule(rule, matcher);
+      const acknowledged = await repoManager.featureFlag.removeRule(
+        rule,
+        matcher,
+      );
       expect(acknowledged).toBe(true);
     });
 
-    it("Removes all occurrences of a rule for its environment", async () => {
+    it('Removes all occurrences of a rule for its environment', async () => {
       const flag = staticFlagDrafts[0];
       const rule = FeatureFlagDraft.getEnvironmentRules(flag, 'prod')[0];
-      // console.log({rule});
-      const acknowledged = await repoManager.featureFlag.removeRule(rule, {});
-      // console.log({ruleAfter: rule})
+      await repoManager.featureFlag.removeRule(rule, {});
       const updated = await repoManager.featureFlag.getMany();
-      const updatedRules = [
-        updated[0].overrideRules,
-        updated[1].overrideRules,
-      ];
-      // printDetail({updatedRules});
+      const updatedRules = [updated[0].overrideRules, updated[1].overrideRules];
       expect(updatedRules[0]).not.toContainEqual(rule);
       expect(updatedRules[1]).not.toContainEqual(rule);
     });
 
-    it("Removes a rule given only a partial rule object", async () => {
+    it('Removes a rule given only a partial rule object', async () => {
       const flagDraft = staticFlagDrafts[0];
       const rule = FeatureFlagDraft.getEnvironmentRules(flagDraft, 'prod')[0];
-      // if (!rule) throw new Error('rule should exist!');
-      
+
       const { status, enrollment, ...ruleMatcher } = rule;
-      const { name, ...rest } = flagDraft;
-      const acknowledged = await repoManager.featureFlag.removeRule(ruleMatcher, { name });
+      const { name } = flagDraft;
+      await repoManager.featureFlag.removeRule(ruleMatcher, { name });
       const updatedFlagDoc = await repoManager.featureFlag.findOne({ name });
       if (!updatedFlagDoc) throw new Error('Flag should exist!');
 
@@ -84,9 +88,8 @@ describe('Rule methods', () => {
     });
 
     // remove?
-    it.skip("Returns false (throws?) when ", async () => {
-    });
-    
+    it.skip('Returns false (throws?) when ', async () => {});
+
     afterAll(eraseTestData);
   });
 
@@ -99,21 +102,19 @@ describe('Rule methods', () => {
       await Promise.all(insertions);
     });
 
-    it("", async () => {
-    });
-
+    it('', async () => {});
 
     afterAll(eraseTestData);
   });
 
   // WIP; might not implement
   describe.skip('updateRule', () => {
-    let insertResults: string[] = [];
-    beforeAll(async () => await insertFlags(insertResults, exampleFlagDrafts.slice(0, 2)));
+    const insertResults: string[] = [];
+    beforeAll(async () =>
+      insertFlags(insertResults, exampleFlagDrafts.slice(0, 2)));
 
-    it("overwrites specified fields when passed a partial object", async () => {
+    it('overwrites specified fields when passed a partial object', async () => {
       // const first = insertResults[0];
-
       // const updateObject = {
       //   id: first,
       //   value: {
@@ -123,7 +124,6 @@ describe('Rule methods', () => {
       // };
       // const result = await repo.featureFlag.update(updateObject);
       // expect(result).not.toBeNull();
-
       // const updatedFirst = await repo.featureFlag.get(first);
       // expect(updatedFirst).not.toBeNull();
       // expect(updatedFirst).toMatchObject(updateObject);
@@ -133,27 +133,22 @@ describe('Rule methods', () => {
       // const second = insertResults[1];
       // const original = exampleFlags[1];
       // if (second === null) return;
-
       // const updateName = 'updated testing flag';
       // const result = await repo.featureFlag.update({ id: second, name: updateName });
       // expect(result).toBe(true);
-
       // const updatedFirst = await repo.featureFlag.get(second);
       // expect(updatedFirst).not.toBeNull();
       // if (updatedFirst === null) return;
-
       // const { createdAt, updatedAt, ...withoutTimeStamps } = updatedFirst;
       // expectTypeOf(createdAt).toBeNumber();
       // expectTypeOf(updatedAt).toBeNumber();
       // expect(updatedAt).toBeGreaterThanOrEqual(createdAt);
-
       // const reconstructed = { ...withoutTimeStamps, name: original.name };
       // expect(reconstructed).toStrictEqual({ id: second, ...original });
     });
 
     afterAll(eraseTestData);
   });
-
 });
 
 afterAll(eraseTestData);
