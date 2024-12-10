@@ -1,33 +1,27 @@
-import { Environment, EnvironmentDraft } from "@estuary/types";
-
-export const exampleEnvironment: EnvironmentDraft = {
-  name: "prod",
-  defaultEnabled: true,
-}
+import { EnvironmentDraft } from '@estuary/types';
 
 export const exampleEnvironmentArray: EnvironmentDraft[] = [
-  {
+  EnvironmentDraft.template({
     name: 'testing',
-    defaultEnabled: false,
-  },
-  {
+    pinToLists: true,
+  }),
+  EnvironmentDraft.template({
     name: 'production',
-    defaultEnabled: false,
-  },
-  {
+  }),
+  EnvironmentDraft.template({
     name: 'staging',
-    defaultEnabled: false,
-  },
-  {
+    pinToLists: true,
+  }),
+  EnvironmentDraft.template({
     name: 'development',
     defaultEnabled: true,
-  },
-  {
+    pinToLists: true,
+  }),
+  EnvironmentDraft.template({
     name: 'canary',
     defaultEnabled: true,
-  },
-  {
+  }),
+  EnvironmentDraft.template({
     name: 'insider',
-    defaultEnabled: false,
-  },
+  }),
 ];

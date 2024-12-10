@@ -1,4 +1,4 @@
-import { ExperimentDraft } from "@estuary/types";
+import { ExperimentDraft } from '@estuary/types';
 
 export const experiment1 = ExperimentDraft.template({
   name: 'example experiment to embed',

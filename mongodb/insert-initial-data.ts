@@ -1,5 +1,5 @@
 import { ClientPropDefDraft, EnvironmentDraft } from '@estuary/types';
-import { insertArray, repos } from './insert-helpers.js';
+import { insertDrafts, repos } from '../src/repository/insert-helpers.js';
 
 const defaultEnvironments: EnvironmentDraft[] = [
   EnvironmentDraft.template({ name: 'testing' }),
@@ -12,7 +12,7 @@ const defaultEnvironments: EnvironmentDraft[] = [
   }),
 ];
 
-await insertArray(defaultEnvironments, repos.environment);
+await insertDrafts(defaultEnvironments, repos.environment);
 
 const defaultClientPropDefs: ClientPropDefDraft[] = [
   ClientPropDefDraft.template({
@@ -22,7 +22,7 @@ const defaultClientPropDefs: ClientPropDefDraft[] = [
   }),
 ];
 
-await insertArray(defaultClientPropDefs, repos.clientPropDef);
+await insertDrafts(defaultClientPropDefs, repos.clientPropDef);
 
 // eslint-disable-next-line no-console
 console.log('initial data inserted');

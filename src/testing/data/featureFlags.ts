@@ -15,7 +15,7 @@ export const flagEnvironmentInit = () =>
     {} as FeatureFlagDraft['environmentNames'],
   );
 
-const getExampleFlag = (() => {
+export const getExampleFlag = (() => {
   let count = 1;
 
   return (

@@ -1,4 +1,4 @@
-import { ClientPropDef, ClientPropDefDraft } from "@estuary/types";
+import { ClientPropDefDraft } from '@estuary/types';
 
 export const staticClientPropDefs: ClientPropDefDraft[] = [
   {
@@ -13,4 +13,4 @@ export const staticClientPropDefs: ClientPropDefDraft[] = [
     isIdentifier: false,
     description: null,
   },
-]
+];

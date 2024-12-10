@@ -1,5 +1,5 @@
 import { ExperimentDraft, FeatureFlagDraft, ForcedValue } from '@estuary/types';
-import { insertArray, repos } from './insert-helpers.js';
+import { insertDrafts, repos } from '../src/repository/insert-helpers.js';
 
 // assumes that default environments have already been inserted
 const allEnvironments = await repos.environment.getMany();
@@ -46,7 +46,7 @@ const exampleFeatureFlags: FeatureFlagDraft[] = [
   exampleSiteThemeFlag,
 ];
 
-await insertArray(exampleFeatureFlags, repos.featureFlag);
+await insertDrafts(exampleFeatureFlags, repos.featureFlag);
 // #endregion
 
 // #region EXPERIMENTS
@@ -69,7 +69,7 @@ export const exampleExperiments: ExperimentDraft[] = [
   abExperiment1,
 ];
 
-await insertArray(exampleExperiments, repos.experiment);
+await insertDrafts(exampleExperiments, repos.experiment);
 // #endregion
 
 // eslint-disable-next-line no-console
