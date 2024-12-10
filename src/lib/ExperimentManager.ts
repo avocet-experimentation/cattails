@@ -24,10 +24,7 @@ export default class ExperimentManager {
       treatment: Treatment;
       metadata: string;
     } | null> {
-    const group = ExperimentManager.getGroupAssignment(
-      experimentSchema.parse(experiment),
-      identifiers,
-    );
+    const group = ExperimentManager.getGroupAssignment(experiment, identifiers);
     const treatment = ExperimentManager.currentTreatment(experiment, group);
     if (!treatment) return null;
 
@@ -56,7 +53,11 @@ export default class ExperimentManager {
     const assignedGroup = groups.find(
       (group) => group.id === assignmentGroupId,
     );
-    return experimentGroupSchema.parse(assignedGroup);
+    if (!assignedGroup) {
+      throw new Error(`Failed to find group with id ${assignmentGroupId}`);
+    }
+
+    return assignedGroup;
   }
 
   static getGroupTreatments(experiment: Experiment, group: ExperimentGroup) {
@@ -86,6 +87,6 @@ export default class ExperimentManager {
     });
 
     if (!concurrent) return null;
-    return treatmentSchema.parse(concurrent);
+    return concurrent;
   }
 }

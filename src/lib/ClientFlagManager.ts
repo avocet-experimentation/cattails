@@ -136,13 +136,13 @@ export default class ClientFlagManager {
     }
     if (rule.type === 'ForcedValue') {
       return {
-        value: forcedValueSchema.parse(rule).value,
+        value: rule.value,
         metadata: ClientFlagManager.singleIdString(rule.id),
       };
     }
-    console.error('Rule type was invalid!');
-    printDetail({ rule });
-    return null;
+    throw new TypeError(`Rule type was not accounted for! ${JSON.stringify(rule)}`);
+    // printDetail({ rule });
+    // return null;
   }
 
   /**

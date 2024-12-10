@@ -1,6 +1,5 @@
 import {
   ClientPropMapping,
-  flagClientValueSchema,
   FlagClientValue,
   FlagClientMapping,
 } from '@estuary/types';
@@ -34,9 +33,7 @@ export const fetchFFlagHandler = async (
     clientProps,
   );
 
-  return reply
-    .code(200)
-    .send(flagClientValueSchema.passthrough().parse(currentValue));
+  return reply.code(200).send(currentValue);
 };
 
 export const getEnvironmentFFlagsHandler = async (
