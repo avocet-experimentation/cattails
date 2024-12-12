@@ -4,7 +4,6 @@ import {
   FeatureFlagDraft,
   FlagClientMapping,
   FlagClientValue,
-  forcedValueSchema,
   OverrideRuleUnion,
 } from '@estuary/types';
 import { randomUUID } from 'crypto';
@@ -12,7 +11,6 @@ import { hashAndCompare } from './hash.js';
 import ExperimentManager from './ExperimentManager.js';
 import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';
-import { printDetail } from './index.js';
 
 export default class ClientFlagManager {
   repository: RepositoryManager;
@@ -40,7 +38,10 @@ export default class ClientFlagManager {
 
       return await this.computeFlagValue(flag, environmentName, clientProps);
     } catch (e: unknown) {
-      return { value: null, metadata: await ClientFlagManager.defaultIdString() };
+      return {
+        value: null,
+        metadata: await ClientFlagManager.defaultIdString(),
+      };
     }
   }
 
@@ -140,13 +141,14 @@ export default class ClientFlagManager {
         metadata: ClientFlagManager.singleIdString(rule.id),
       };
     }
-    throw new TypeError(`Rule type was not accounted for! ${JSON.stringify(rule)}`);
-    // printDetail({ rule });
-    // return null;
+    throw new TypeError(
+      `Rule type was not accounted for! ${JSON.stringify(rule)}`,
+    );
   }
 
   /**
-   * Attempt to randomly enroll a client in each override rule, in order
+   * Attempt to enroll a client in one of the passed override rules, testing
+   * enrollment one rule at a time in the order they were stored on the flag
    */
   private static enroll(
     overrideRules: OverrideRuleUnion[],

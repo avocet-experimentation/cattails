@@ -1,22 +1,12 @@
 import {
   Experiment,
-  experimentSchema,
   ClientPropMapping,
   ExperimentGroup,
-  experimentGroupSchema,
   Treatment,
-  treatmentSchema,
 } from '@estuary/types';
 import { hashAndAssign } from './hash.js';
-// import RepositoryManager from '../repository/RepositoryManager.js';
 
 export default class ExperimentManager {
-  // repository: RepositoryManager;
-
-  // constructor(repositoryManager: RepositoryManager) {
-  //   this.repository = repositoryManager;
-  // }
-
   static async getTreatmentAndIds(
     experiment: Experiment,
     identifiers: ClientPropMapping,
@@ -34,8 +24,6 @@ export default class ExperimentManager {
 
   /**
    * Assigns a user to an experimental group
-   * todo:
-   * - only pass identifiers listed on enrollment.attributes into the hash function
    */
   static getGroupAssignment(
     experiment: Experiment,
@@ -67,7 +55,8 @@ export default class ExperimentManager {
   }
 
   /**
-   * Given an assigned experimental group, determines which block is currently applied to the group
+   * Determines which treatment is currently being applied to the passed
+   * experiment group
    */
   static currentTreatment(
     experiment: Experiment,

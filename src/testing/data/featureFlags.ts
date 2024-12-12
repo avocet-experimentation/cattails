@@ -11,8 +11,9 @@ import { ObjectId } from 'mongodb';
 
 export const flagEnvironmentInit = () =>
   ['prod', 'dev', 'testing', 'staging'].reduce(
-    (acc, curr) => Object.assign(acc, { [curr]: true }),
-    {} as FeatureFlagDraft['environmentNames'],
+    (acc: FeatureFlagDraft['environmentNames'], curr) =>
+      Object.assign(acc, { [curr]: true }),
+    {},
   );
 
 export const getExampleFlag = (() => {
