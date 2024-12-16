@@ -83,7 +83,7 @@ export const deleteExperimentHandler = async (
       },
     });
   }
-  await reply.code(204).send();
+  return reply.code(204).send({ deleted: succeeded });
 };
 
 export const getExperimentByIdHandler = async (

@@ -2,7 +2,7 @@ import {
   AvocetMongoCollectionName,
   AvocetMongoTypes,
   DraftRecord,
-  ClientConnectionDraft,
+  SDKConnectionDraft,
   ClientPropDefDraft,
   EnvironmentDraft,
   ExperimentDraft,
@@ -28,7 +28,7 @@ export const eraseTestData = async () => {
   await eraseCollection('experiment');
   await eraseCollection('clientPropDef');
   await eraseCollection('environment');
-  await eraseCollection('clientConnection');
+  await eraseCollection('sdkConnection');
 };
 
 export const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
@@ -50,8 +50,8 @@ export const insertFeatureFlags = async (obj: FeatureFlagDraft[]) =>
 export const insertClientPropDefs = async (arr: ClientPropDefDraft[]) =>
   insertDrafts(arr, colls.clientPropDef);
 
-export const insertClientConnections = async (arg: ClientConnectionDraft[]) =>
-  insertDrafts(arg, colls.clientConnection);
+export const insertSDKConnections = async (arg: SDKConnectionDraft[]) =>
+  insertDrafts(arg, colls.sdkConnection);
 
 export const insertEnvironments = async (arr: EnvironmentDraft[]) =>
   insertDrafts(arr, colls.environment);

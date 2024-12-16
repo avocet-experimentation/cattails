@@ -2,8 +2,8 @@ import {
   ClientPropMapping,
   FeatureFlag,
   FeatureFlagDraft,
-  FlagClientMapping,
-  FlagClientValue,
+  ClientSDKFlagMapping,
+  ClientSDKFlagValue,
   OverrideRuleUnion,
 } from '@avocet/core';
 import { randomUUID } from 'crypto';
@@ -29,7 +29,7 @@ export default class ClientFlagManager {
     flagName: string,
     environmentName: string,
     clientProps: ClientPropMapping,
-  ): Promise<FlagClientValue> {
+  ): Promise<ClientSDKFlagValue> {
     try {
       const flag = await this.repository.featureFlag.findOne({
         name: flagName,
@@ -58,7 +58,7 @@ export default class ClientFlagManager {
   async environmentFlagValues(
     environmentName: string,
     clientProps: ClientPropMapping,
-  ): Promise<FlagClientMapping> {
+  ): Promise<ClientSDKFlagMapping> {
     try {
       const featureFlags = await this.repository.featureFlag.getEnvironmentFlags(environmentName);
 
@@ -71,7 +71,7 @@ export default class ClientFlagManager {
           environmentName,
           clientProps,
         );
-        // transform the promise to a tuple of [name, FlagClientValue] upon resolution
+        // transform the promise to a tuple of [name, ClientSDKFlagValue] upon resolution
         promises.push(promise.then((result) => [flag.name, result]));
       }
 
@@ -91,7 +91,7 @@ export default class ClientFlagManager {
     flag: FeatureFlag,
     environmentName: string,
     clientProps: ClientPropMapping,
-  ): Promise<FlagClientValue> {
+  ): Promise<ClientSDKFlagValue> {
     const defaultReturn = {
       value: flag.value.initial,
       metadata: ClientFlagManager.singleIdString(flag.id),
@@ -116,7 +116,7 @@ export default class ClientFlagManager {
     rule: OverrideRuleUnion,
     flagId: string,
     identifiers: ClientPropMapping,
-  ): Promise<FlagClientValue | null> {
+  ): Promise<ClientSDKFlagValue | null> {
     if (rule.type === 'Experiment') {
       const experiment = await this.repository.experiment.get(rule.id);
       const result = await ExperimentManager.getTreatmentAndIds(

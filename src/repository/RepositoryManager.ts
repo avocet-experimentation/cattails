@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import ClientConnectionRepository from './ClientConnectionRepository.js';
+import SDKConnectionRepository from './SDKConnectionRepository.js';
 import ClientPropDefRepository from './ClientPropDefRepository.js';
 import EnvironmentRepository from './EnvironmentRepository.js';
 import ExperimentRepository from './ExperimentRepository.js';
@@ -18,7 +18,7 @@ export default class RepositoryManager implements IRepositoryManager {
 
   environment: EnvironmentRepository;
 
-  clientConnection: ClientConnectionRepository;
+  sdkConnection: SDKConnectionRepository;
 
   user: UserRepository;
 
@@ -29,7 +29,7 @@ export default class RepositoryManager implements IRepositoryManager {
     this.experiment = new ExperimentRepository(this);
     this.clientPropDef = new ClientPropDefRepository(this);
     this.environment = new EnvironmentRepository(this);
-    this.clientConnection = new ClientConnectionRepository(this);
+    this.sdkConnection = new SDKConnectionRepository(this);
     this.user = new UserRepository(this);
   }
 }

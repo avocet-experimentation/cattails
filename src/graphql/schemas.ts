@@ -128,7 +128,7 @@ const userSchema = /* GraphQL */ `
     Environment: PermissionLevel!
     User: PermissionLevel!
     ClientPropDef: PermissionLevel!
-    ClientConnection: PermissionLevel!
+    SDKConnection: PermissionLevel!
   }
 
   input UserPermissionsInput {
@@ -137,7 +137,7 @@ const userSchema = /* GraphQL */ `
     Environment: PermissionLevel!
     User: PermissionLevel!
     ClientPropDef: PermissionLevel!
-    ClientConnection: PermissionLevel!
+    SDKConnection: PermissionLevel!
   }
 
   type User {
@@ -149,8 +149,8 @@ const userSchema = /* GraphQL */ `
   }
 `;
 
-const clientConnectionSchema = /* GraphQL */ `
-  type ClientConnection {
+const sdkConnectionSchema = /* GraphQL */ `
+  type SDKConnection {
     id: ID!
     createdAt: Float!
     updatedAt: Float!
@@ -170,8 +170,8 @@ const querySchemas = /* GraphQL */ `
       partial: PartialEnvironment
       limit: Int
     ): [Environment]
-    clientConnection(id: ID!): ClientConnection
-    allClientConnections(limit: Int, offset: Int): [ClientConnection]
+    sdkConnection(id: ID!): SDKConnection
+    allSDKConnections(limit: Int, offset: Int): [SDKConnection]
     user(id: ID!): User
     allUsers(limit: Int, offset: Int): [User]
     experiment(id: ID!): Experiment
@@ -200,20 +200,20 @@ const mutationSchemas = /* GraphQL */ `
 
     deleteClientPropDef(id: ID!): ID
 
-    createClientConnection(
+    createSDKConnection(
       name: String!
       description: String
       environmentId: ID!
-    ): ClientConnection
+    ): SDKConnection
 
-    updateClientConnection(
+    updateSDKConnection(
       id: ID!
       name: String
       description: String
       environmentId: ID
-    ): ClientConnection
+    ): SDKConnection
 
-    deleteClientConnection(id: ID!): ID
+    deleteSDKConnection(id: ID!): ID
 
     createUser(email: String!, permissions: UserPermissionsInput!): User
 
@@ -265,7 +265,7 @@ export const schema = /* GraphQL */ `
   ${mutationSchemas}
   ${readPropDefSchema}
   ${environmentSchema}
-  ${clientConnectionSchema}
+  ${sdkConnectionSchema}
   ${userSchema}
   ${experimentSchema}
 `;

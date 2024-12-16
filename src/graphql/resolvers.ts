@@ -1,12 +1,12 @@
 import {
   ClientPropDef,
-  ClientConnection,
+  SDKConnection,
   User,
   Environment,
   Experiment,
   ClientPropDefDraft,
   ExperimentDraft,
-  ClientConnectionDraft,
+  SDKConnectionDraft,
   UserDraft,
   FeatureFlagDraft,
   FeatureFlag,
@@ -47,10 +47,10 @@ export const resolvers: IResolvers = {
       const query = partial ? stripKeysWithUndefined(partial) : {};
       return repos.environment.findMany(query, limit);
     },
-    clientConnection: async (_, { id }: { id: string }) =>
-      repos.clientConnection.get(id),
-    allClientConnections: async (_, { limit }: { limit?: number }) =>
-      repos.clientConnection.getMany(limit),
+    sdkConnection: async (_, { id }: { id: string }) =>
+      repos.sdkConnection.get(id),
+    allSDKConnections: async (_, { limit }: { limit?: number }) =>
+      repos.sdkConnection.getMany(limit),
     user: async (_, { id }: { id: string }) => repos.user.get(id),
     allUsers: async (_, { limit }: { limit?: number }) =>
       repos.user.getMany(limit),
@@ -116,7 +116,7 @@ export const resolvers: IResolvers = {
       const success = await repos.clientPropDef.delete(id);
 
       if (!success) {
-        throw new Error('Failed to delete ClientConnection');
+        throw new Error('Failed to delete SDKConnection');
       }
 
       return id;
@@ -124,7 +124,7 @@ export const resolvers: IResolvers = {
     // #endregion
 
     // #region clientconnection resolvers
-    updateClientConnection: async (
+    updateSDKConnection: async (
       _,
       {
         id,
@@ -137,49 +137,46 @@ export const resolvers: IResolvers = {
         description?: string;
         environmentId?: string;
       },
-    ): Promise<ClientConnection> => {
-      const updates: Partial<ClientConnection> = {};
+    ): Promise<SDKConnection> => {
+      const updates: Partial<SDKConnection> = {};
       if (name !== undefined) updates.name = name;
       if (description !== undefined) updates.description = description;
       if (environmentId !== undefined) updates.environmentId = environmentId;
 
       const partialEntry = { id, ...updates };
 
-      const success = await repos.clientConnection.update(partialEntry);
+      const success = await repos.sdkConnection.update(partialEntry);
       if (!success) {
-        throw new Error('Failed to update ClientConnection');
+        throw new Error('Failed to update SDKConnection');
       }
 
-      const updatedRecord = await repos.clientConnection.get(id);
+      const updatedRecord = await repos.sdkConnection.get(id);
 
       if (!updatedRecord) {
-        throw new Error('ClientConnection not found after update');
+        throw new Error('SDKConnection not found after update');
       }
 
       return updatedRecord;
     },
 
-    createClientConnection: async (
+    createSDKConnection: async (
       _,
-      input: ClientConnectionDraft,
+      input: SDKConnectionDraft,
     ): Promise<string> => {
-      const newId = await repos.clientConnection.create(input);
+      const newId = await repos.sdkConnection.create(input);
 
       if (!newId) {
-        throw new Error('Failed to create ClientConnection');
+        throw new Error('Failed to create SDKConnection');
       }
 
       return newId;
     },
 
-    deleteClientConnection: async (
-      _,
-      { id }: { id: string },
-    ): Promise<string> => {
-      const success = await repos.clientConnection.delete(id);
+    deleteSDKConnection: async (_, { id }: { id: string }): Promise<string> => {
+      const success = await repos.sdkConnection.delete(id);
 
       if (!success) {
-        throw new Error('Failed to delete ClientConnection');
+        throw new Error('Failed to delete SDKConnection');
       }
 
       return id;

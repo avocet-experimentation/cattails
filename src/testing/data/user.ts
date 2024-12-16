@@ -7,7 +7,7 @@ export const staticUser = new UserDraft({
     experiment: 'edit',
     environment: 'none',
     clientPropDef: 'full',
-    clientConnection: 'view',
+    sdkConnection: 'view',
     user: 'edit',
   },
 });

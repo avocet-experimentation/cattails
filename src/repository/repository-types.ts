@@ -6,7 +6,7 @@ import {
   Experiment,
   ClientPropDef,
   Environment,
-  ClientConnection,
+  SDKConnection,
   User,
 } from '@avocet/core';
 import { MongoClient, WithId } from 'mongodb';
@@ -31,6 +31,6 @@ export interface IRepositoryManager {
   experiment: MongoRepository<Experiment>;
   clientPropDef: MongoRepository<ClientPropDef>;
   environment: MongoRepository<Environment>;
-  clientConnection: MongoRepository<ClientConnection>;
+  sdkConnection: MongoRepository<SDKConnection>;
   user: MongoRepository<User>;
 }

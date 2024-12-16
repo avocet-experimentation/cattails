@@ -1,4 +1,4 @@
-import { ClientPropMapping, FlagClientMapping } from '@avocet/core';
+import { ClientPropMapping, ClientSDKFlagMapping } from '@avocet/core';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ClientFlagManager from '../lib/ClientFlagManager.js';
 
@@ -21,7 +21,7 @@ interface FetchFlagClientRequest extends FetchFlagsClientBody {
 export const fetchFFlagHandler = async (
   request: FastifyRequest<{ Body: FetchFlagClientRequest }>,
   reply: FastifyReply,
-): Promise<FlagClientMapping> => {
+): Promise<ClientSDKFlagMapping> => {
   const { environmentName, clientProps, flagName } = request.body;
   const currentValue = await clientFlagManager.getClientFlagValue(
     flagName,
@@ -35,7 +35,7 @@ export const fetchFFlagHandler = async (
 export const getEnvironmentFFlagsHandler = async (
   request: FastifyRequest<{ Body: FetchFlagsClientBody }>,
   reply: FastifyReply,
-): Promise<FlagClientMapping> => {
+): Promise<ClientSDKFlagMapping> => {
   const { environmentName, clientProps } = request.body;
   const environmentValues = await clientFlagManager.environmentFlagValues(
     environmentName,

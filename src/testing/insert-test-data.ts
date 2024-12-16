@@ -2,14 +2,14 @@
 
 import { exampleFlagDrafts } from './data/featureFlags.js';
 import { staticClientPropDefs } from './data/clientPropDefs.js';
-import { staticClientConnections } from './data/clientConnections.js';
+import { staticSDKConnections } from './data/sdkConnections.js';
 import { exampleEnvironmentArray } from './data/environments.js';
 import { exampleExperiments } from './data/experiment-data.js';
 import { staticUser } from './data/user.js';
 import {
   colls,
   eraseTestData,
-  insertClientConnections,
+  insertSDKConnections,
   insertClientPropDefs,
   insertEnvironments,
   insertExperiments,
@@ -22,12 +22,12 @@ await insertUsers([staticUser]);
 await insertExperiments(exampleExperiments);
 await insertEnvironments(exampleEnvironmentArray);
 await insertEnvironments(exampleEnvironmentArray);
-await insertClientConnections(staticClientConnections);
+await insertSDKConnections(staticSDKConnections);
 await insertFeatureFlags([exampleFlagDrafts[0]]);
 await insertClientPropDefs(staticClientPropDefs);
 
 console.log('Flags:', await colls.featureFlag.findMany({}));
-console.log('Client Connection:', await colls.clientConnection.findMany({}));
+console.log('Client Connection:', await colls.sdkConnection.findMany({}));
 console.log('Experiment:', await colls.experiment.findMany({}));
 console.log('Environment:', await colls.environment.findMany({}));
 console.log('Client Prop Defs: ', await colls.clientPropDef.findMany({}));

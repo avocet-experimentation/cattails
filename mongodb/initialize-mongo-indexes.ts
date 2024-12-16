@@ -8,10 +8,7 @@ await colls.featureFlag.collection.createIndex({ name: 1 }, { unique: true });
 await colls.experiment.collection.createIndex({ name: 1 }, { unique: true });
 await colls.environment.collection.createIndex({ name: 1 }, { unique: true });
 await colls.clientPropDef.collection.createIndex({ name: 1 }, { unique: true });
-await colls.clientConnection.collection.createIndex(
-  { name: 1 },
-  { unique: true },
-);
+await colls.sdkConnection.collection.createIndex({ name: 1 }, { unique: true });
 
 // ensure only one user account exists per email address
 await colls.user.collection.createIndex({ email: 1 }, { unique: true });
