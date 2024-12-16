@@ -21,7 +21,11 @@ module.exports = {
   rules: {
     'no-unused-vars': 'off', // handled by TS
     'implicit-arrow-linebreak': 'off',
-    'import/prefer-default-export': 'off'
+    'import/prefer-default-export': 'off',
+    'import/no-extraneous-dependencies': [
+      'error',
+      { devDependencies: ['**/*.test.js', '**/*.spec.js', 'vitest.config.ts'] }
+    ]
   },
   settings: {
     'import/resolver': {
