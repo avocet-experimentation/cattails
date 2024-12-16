@@ -22,7 +22,7 @@ await colls.featureFlag.collection.createIndex({
 // ensure groups have unique IDs
 await colls.experiment.collection.createIndex(
   { 'groups.id': 1 },
-  { unique: true },
+  { unique: true, partialFilterExpression: { 'groups.id': { $exists: true } } },
 );
 
 // for efficient lookup of treatments by their IDs
