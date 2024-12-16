@@ -23,7 +23,7 @@ import {
   DocumentUpdateFailedError,
   DocumentNotFoundError,
   SchemaParseError,
-} from '@estuary/types';
+} from '@avocet/core';
 // eslint-disable-next-line import/no-cycle
 import {
   IRepositoryManager,

@@ -1,4 +1,4 @@
-import { Environment, environmentSchema } from '@estuary/types';
+import { Environment, environmentSchema } from '@avocet/core';
 import MongoRepository from './MongoRepository.js';
 import { IRepositoryManager } from './repository-types.js';
 

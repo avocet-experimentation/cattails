@@ -4,7 +4,7 @@ import {
   ExperimentReference,
   experimentSchema,
   RuleStatus,
-} from '@estuary/types';
+} from '@avocet/core';
 import { ObjectId } from 'mongodb';
 import MongoRepository from './MongoRepository.js';
 import { IRepositoryManager, PartialWithStringId } from './repository-types.js';

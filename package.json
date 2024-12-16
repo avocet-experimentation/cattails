@@ -1,7 +1,7 @@
 {
   "name": "cattails",
   "version": "1.0.0",
-  "description": "Service for working with estuary's feature flags and experiments",
+  "description": "Service for working with Avocet's feature flags and experiments",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -32,7 +32,7 @@
     "vitest": "^2.0.0"
   },
   "dependencies": {
-    "@estuary/types": "file:../packages/estuary-types",
+    "@avocet/core": "file:../packages/avocet-core",
     "@fastify/cors": "^8.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/ws": "^8.5.13",

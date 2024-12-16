@@ -2,7 +2,7 @@ services:
   mongo:
     image: mongo
     mem_limit: 1g
-    container_name: estuary-mongodb
+    container_name: avocet-mongodb
     restart: always
     ports:
       - "27017:27017"

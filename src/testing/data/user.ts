@@ -1,4 +1,4 @@
-import { UserDraft } from '@estuary/types';
+import { UserDraft } from '@avocet/core';
 
 export const staticUser = new UserDraft({
   email: 'testuser@example.com',

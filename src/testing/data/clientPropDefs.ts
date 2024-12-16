@@ -1,4 +1,4 @@
-import { ClientPropDefDraft } from '@estuary/types';
+import { ClientPropDefDraft } from '@avocet/core';
 
 export const staticClientPropDefs: ClientPropDefDraft[] = [
   {

@@ -3,7 +3,7 @@ import {
   ClientPropMapping,
   ExperimentGroup,
   Treatment,
-} from '@estuary/types';
+} from '@avocet/core';
 import { hashAndAssign } from './hash.js';
 
 export default class ExperimentManager {

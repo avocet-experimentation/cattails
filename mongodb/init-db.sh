@@ -5,22 +5,22 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
-until [ "$(docker inspect -f {{.State.Health.Status}} estuary-mongodb)" = "healthy" ]; do
+until [ "$(docker inspect -f {{.State.Health.Status}} avocet-mongodb)" = "healthy" ]; do
   sleep 1;
 done;
 # Connect to the MongoDB container without authentication
-docker exec estuary-mongodb mongosh --quiet \
+docker exec avocet-mongodb mongosh --quiet \
   --eval 'use admin' \
   --eval 'db.auth({ user: "root", pwd: "1234" })' \
-  --eval 'use estuary' \
+  --eval 'use avocet' \
   --eval 'db.dropDatabase()' \
   --eval 'db.dropAllUsers()' \
-  --eval 'db.createUser({ user: "estuary-admin", pwd: "1234", roles: [{ role: "readWrite", db: "estuary" }] })' \
-  --eval 'db.createUser({ user: "estuary-api", pwd: "1234", roles: [{ role: "read", db: "estuary" }] })' \
+  --eval 'db.createUser({ user: "avocet-admin", pwd: "1234", roles: [{ role: "readWrite", db: "avocet" }] })' \
+  --eval 'db.createUser({ user: "avocet-api", pwd: "1234", roles: [{ role: "read", db: "avocet" }] })' \
   --eval 'show users' \
-  --eval 'use estuary_testing' \
+  --eval 'use avocet_testing' \
   --eval 'db.dropAllUsers()' \
-  --eval 'db.createUser({ user: "estuary-testing", pwd: "1234", roles: [{ role: "readWrite", db: "estuary_testing" }] })' \
+  --eval 'db.createUser({ user: "avocet-testing", pwd: "1234", roles: [{ role: "readWrite", db: "avocet_testing" }] })' \
   --eval 'show users'
 
 # Command to manually login to Docker mongoDB as authorized user:

@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { DraftRecord, Experiment, PartialUpdate } from '@estuary/types';
+import { DraftRecord, Experiment, PartialUpdate } from '@avocet/core';
 import { ExperimentIdParam, ExperimentNameParam } from './routes.types.js';
 import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';

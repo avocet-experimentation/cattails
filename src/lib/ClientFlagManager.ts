@@ -5,7 +5,7 @@ import {
   FlagClientMapping,
   FlagClientValue,
   OverrideRuleUnion,
-} from '@estuary/types';
+} from '@avocet/core';
 import { randomUUID } from 'crypto';
 import { hashAndCompare } from './hash.js';
 import ExperimentManager from './ExperimentManager.js';
@@ -79,6 +79,7 @@ export default class ClientFlagManager {
       return Object.fromEntries(resolve);
     } catch (e: unknown) {
       if (e instanceof Error) {
+        // eslint-disable-next-line no-console
         console.error(e);
       }
 

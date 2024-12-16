@@ -1,4 +1,4 @@
-import { User, userSchema } from '@estuary/types';
+import { User, userSchema } from '@avocet/core';
 import MongoRepository from './MongoRepository.js';
 import { IRepositoryManager } from './repository-types.js';
 

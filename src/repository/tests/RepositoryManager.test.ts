@@ -13,7 +13,7 @@ import {
   FlagValueDefImpl,
   ForcedValue,
   OverrideRuleUnion,
-} from '@estuary/types';
+} from '@avocet/core';
 import { randomUUID } from 'crypto';
 import {
   exampleFlagDrafts,

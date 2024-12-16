@@ -4,7 +4,7 @@ import {
   ExperimentDraft,
   EstuaryMongoTypes,
   DraftRecord,
-} from '@estuary/types';
+} from '@avocet/core';
 import cfg from '../envalid.js';
 import RepositoryManager from '../repository/RepositoryManager.js';
 import MongoRepository from '../repository/MongoRepository.js';

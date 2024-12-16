@@ -4,7 +4,7 @@ import {
   FeatureFlag,
   OverrideRuleUnion,
   PartialUpdate,
-} from '@estuary/types';
+} from '@avocet/core';
 import { FlagIdParam, FlagNameParam } from './routes.types.js';
 import { PartialWithStringId } from '../repository/repository-types.js';
 import RepositoryManager from '../repository/RepositoryManager.js';

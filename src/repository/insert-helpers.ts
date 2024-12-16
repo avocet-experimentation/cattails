@@ -8,7 +8,7 @@ import {
   ExperimentDraft,
   FeatureFlagDraft,
   UserDraft,
-} from '@estuary/types';
+} from '@avocet/core';
 import MongoRepository from './MongoRepository.js';
 import RepositoryManager from './RepositoryManager.js';
 import cfg from '../envalid.js';

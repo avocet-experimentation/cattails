@@ -8,7 +8,7 @@ import {
   Environment,
   ClientConnection,
   User,
-} from '@estuary/types';
+} from '@avocet/core';
 import { MongoClient, WithId } from 'mongodb';
 // eslint-disable-next-line import/no-cycle
 import MongoRepository from './MongoRepository.js';
