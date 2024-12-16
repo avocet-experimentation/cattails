@@ -1,4 +1,4 @@
-import { ClientConnectionDraft } from '@estuary/types';
+import { ClientConnectionDraft } from '@avocet/core';
 
 export const staticClientConnections: ClientConnectionDraft[] = [
   ClientConnectionDraft.template({

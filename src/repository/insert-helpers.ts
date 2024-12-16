@@ -1,6 +1,6 @@
 import {
-  EstuaryMongoCollectionName,
-  EstuaryMongoTypes,
+  AvocetMongoCollectionName,
+  AvocetMongoTypes,
   DraftRecord,
   ClientConnectionDraft,
   ClientPropDefDraft,
@@ -8,7 +8,7 @@ import {
   ExperimentDraft,
   FeatureFlagDraft,
   UserDraft,
-} from '@estuary/types';
+} from '@avocet/core';
 import MongoRepository from './MongoRepository.js';
 import RepositoryManager from './RepositoryManager.js';
 import cfg from '../envalid.js';
@@ -20,7 +20,7 @@ const CONNECTION_STRING = cfg.MONGO_ADMIN_URI;
 export const colls = new RepositoryManager(CONNECTION_STRING);
 const db = colls.client.db();
 
-const eraseCollection = async (collectionName: EstuaryMongoCollectionName) =>
+const eraseCollection = async (collectionName: AvocetMongoCollectionName) =>
   db.dropCollection(collectionName);
 
 export const eraseTestData = async () => {
@@ -33,7 +33,7 @@ export const eraseTestData = async () => {
 
 export const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
-export const insertDrafts = async <T extends EstuaryMongoTypes>(
+export const insertDrafts = async <T extends AvocetMongoTypes>(
   drafts: DraftRecord<T>[],
   collection: MongoRepository<T>,
 ) => {

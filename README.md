@@ -17,7 +17,7 @@ When the container has been started up, run the script:
 ./init-db.sh
 ```
 
-This will create users for the `estuary` and `estuary_testing` databases.
+This will create users for the `avocet` and `avocet_testing` databases.
 
 ### Running and Building the Service
 

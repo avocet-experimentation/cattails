@@ -1,5 +1,5 @@
 /* eslint-disable no-bitwise */
-import { ClientPropEntries, ClientPropValue, sortByKey } from '@estuary/types';
+import { ClientPropEntries, ClientPropValue, sortByKey } from '@avocet/core';
 import { randomUUID } from 'node:crypto';
 
 /**

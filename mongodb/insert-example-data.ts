@@ -1,4 +1,4 @@
-import { ExperimentDraft, FeatureFlagDraft, ForcedValue } from '@estuary/types';
+import { ExperimentDraft, FeatureFlagDraft, ForcedValue } from '@avocet/core';
 import { insertDrafts, repos } from '../src/repository/insert-helpers.js';
 
 // assumes that default environments have already been inserted

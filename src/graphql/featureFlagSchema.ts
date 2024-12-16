@@ -1,4 +1,4 @@
-import { assertObject } from '@estuary/types';
+import { assertObject } from '@avocet/core';
 import { GraphQLScalarType } from 'graphql';
 
 const environmentRecordScalar = new GraphQLScalarType({

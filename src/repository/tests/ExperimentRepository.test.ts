@@ -9,7 +9,7 @@ import {
   FlagValueDefImpl,
   idMap,
   Treatment,
-} from '@estuary/types';
+} from '@avocet/core';
 import { staticFlagDrafts } from '../../testing/data/featureFlags.js';
 import { exampleExperiments } from '../../testing/data/experiment-data.js';
 import {

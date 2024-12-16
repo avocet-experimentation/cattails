@@ -1,5 +1,5 @@
 import {
-  EstuaryMongoTypes,
+  AvocetMongoTypes,
   BeforeId,
   RequireOnly,
   FeatureFlag,
@@ -8,18 +8,18 @@ import {
   Environment,
   ClientConnection,
   User,
-} from '@estuary/types';
+} from '@avocet/core';
 import { MongoClient, WithId } from 'mongodb';
 // eslint-disable-next-line import/no-cycle
 import MongoRepository from './MongoRepository.js';
 
 /* TYPE DEFINITIONS FOR WORKING WITH MONGO RECORDS */
 
-export type MongoRecord<T extends EstuaryMongoTypes> = WithId<BeforeId<T>>;
+export type MongoRecord<T extends AvocetMongoTypes> = WithId<BeforeId<T>>;
 /**
  * A partial type that only requires an `id` field
  */
-export type PartialWithStringId<T extends EstuaryMongoTypes> = RequireOnly<
+export type PartialWithStringId<T extends AvocetMongoTypes> = RequireOnly<
 T,
 'id'
 >;

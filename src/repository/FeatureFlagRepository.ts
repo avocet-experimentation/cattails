@@ -2,7 +2,7 @@ import {
   FeatureFlag,
   featureFlagSchema,
   OverrideRuleUnion,
-} from '@estuary/types';
+} from '@avocet/core';
 import { Filter, ObjectId } from 'mongodb';
 import MongoRepository from './MongoRepository.js';
 import { IRepositoryManager } from './repository-types.js';

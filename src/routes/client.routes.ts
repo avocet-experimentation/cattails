@@ -1,6 +1,9 @@
-import { FastifyInstance } from "fastify";
-import cors from "@fastify/cors";
-import { fetchFFlagHandler, getEnvironmentFFlagsHandler } from "./client.controller.js";
+import { FastifyInstance } from 'fastify';
+import cors from '@fastify/cors';
+import {
+  fetchFFlagHandler,
+  getEnvironmentFFlagsHandler,
+} from './client.controller.js';
 
 // // security (disabled for now)
 // const corsConfig = {
@@ -17,12 +20,14 @@ import { fetchFFlagHandler, getEnvironmentFFlagsHandler } from "./client.control
 // };
 
 // map http methods to the path and the handlers which are implemented in the controller
-export const getClientRoutes = async (server: FastifyInstance): Promise<FastifyInstance> => {
+export const getClientRoutes = async (
+  server: FastifyInstance,
+): Promise<FastifyInstance> => {
   await server.register(cors);
 
   // todo: remove the flag name from the route since this leaks information
-  server.post("/fflags/name/:fflagName", fetchFFlagHandler); // return flag by its name
-  server.post("/fflags/caching", getEnvironmentFFlagsHandler); // return a hash table of flags enabled for the selected environment
+  server.post('/fflag', fetchFFlagHandler); // return flag by its name
+  server.post('/fflags', getEnvironmentFFlagsHandler); // return a hash table of flags enabled for the selected environment
 
   return server;
 };

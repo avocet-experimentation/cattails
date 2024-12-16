@@ -14,7 +14,7 @@ import {
   stripKeysWithUndefined,
   EnvironmentDraft,
   RequireOnly,
-} from '@estuary/types';
+} from '@avocet/core';
 import { Filter } from 'mongodb';
 import { IResolvers } from 'mercurius';
 import RepositoryManager from '../repository/RepositoryManager.js';
@@ -161,14 +161,9 @@ export const resolvers: IResolvers = {
 
     createClientConnection: async (
       _,
-      input: RequireOnly<ClientConnectionDraft, 'name' | 'environmentId'>,
+      input: ClientConnectionDraft,
     ): Promise<string> => {
-      const newEntry = {
-        description: '',
-        ...input,
-      };
-
-      const newId = await repos.clientConnection.create(newEntry);
+      const newId = await repos.clientConnection.create(input);
 
       if (!newId) {
         throw new Error('Failed to create ClientConnection');
@@ -270,7 +265,6 @@ export const resolvers: IResolvers = {
       const newExperiment = ExperimentDraft.template(input);
 
       const newId = await repos.experiment.create(newExperiment);
-      console.log('Experiment created with ID:', newId);
 
       if (!newId) {
         throw new Error('Failed to create experiment');

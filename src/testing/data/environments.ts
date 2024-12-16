@@ -1,4 +1,4 @@
-import { EnvironmentDraft } from '@estuary/types';
+import { EnvironmentDraft } from '@avocet/core';
 
 export const exampleEnvironmentArray: EnvironmentDraft[] = [
   EnvironmentDraft.template({

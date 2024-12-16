@@ -13,17 +13,17 @@ import {
 } from 'mongodb';
 import merge from 'deepmerge';
 import {
-  EstuarySchema,
-  EstuaryMongoCollectionName,
+  AvocetSchema,
+  AvocetMongoCollectionName,
   BeforeId,
-  EstuaryMongoTypes,
+  AvocetMongoTypes,
   getPartialSchema,
   schemaOmit,
   DraftRecord,
   DocumentUpdateFailedError,
   DocumentNotFoundError,
   SchemaParseError,
-} from '@estuary/types';
+} from '@avocet/core';
 // eslint-disable-next-line import/no-cycle
 import {
   IRepositoryManager,
@@ -38,16 +38,16 @@ import {
  * todo:
  * - solve filter type problem and remove the `as Filter...` assertions
  */
-export default class MongoRepository<T extends EstuaryMongoTypes> {
+export default class MongoRepository<T extends AvocetMongoTypes> {
   manager: IRepositoryManager;
 
   collection: Collection<BeforeId<T>>;
 
-  schema: EstuarySchema<T>;
+  schema: AvocetSchema<T>;
 
   constructor(
-    collectionName: EstuaryMongoCollectionName,
-    schema: EstuarySchema<T>,
+    collectionName: AvocetMongoCollectionName,
+    schema: AvocetSchema<T>,
     repositoryManager: IRepositoryManager,
   ) {
     this.manager = repositoryManager;

@@ -1,7 +1,7 @@
 import {
   afterAll, beforeAll, beforeEach, describe, expect, it,
 } from 'vitest';
-import { FeatureFlagDraft } from '@estuary/types';
+import { FeatureFlagDraft } from '@avocet/core';
 import {
   exampleFlagDrafts,
   getExampleFlag,

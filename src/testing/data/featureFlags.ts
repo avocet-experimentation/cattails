@@ -6,7 +6,7 @@ import {
   OverrideRuleUnion,
   FlagValueDefImpl,
   FlagValueTypeDef,
-} from '@estuary/types';
+} from '@avocet/core';
 import { ObjectId } from 'mongodb';
 
 export const flagEnvironmentInit = () =>

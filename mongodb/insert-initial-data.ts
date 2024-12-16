@@ -1,4 +1,4 @@
-import { ClientPropDefDraft, EnvironmentDraft } from '@estuary/types';
+import { ClientPropDefDraft, EnvironmentDraft } from '@avocet/core';
 import { insertDrafts, repos } from '../src/repository/insert-helpers.js';
 
 const defaultEnvironments: EnvironmentDraft[] = [
