@@ -5,21 +5,20 @@ import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';
 import { PartialWithStringId } from '../repository/repository-types.js';
 
-// Note: `Params` field in the generics of the request object represent the path parameters we will extract from the URL
-
 const repository = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
 export const createExperimentHandler = async (
   request: FastifyRequest<{ Body: DraftRecord<Experiment> }>,
   reply: FastifyReply,
 ): Promise<string> => {
-  const documentId = await repository.experiment.create(request.body);
-  if (!documentId) {
+  try {
+    const documentId = await repository.experiment.create(request.body);
+    return await reply.code(201).send(documentId);
+  } catch (e) {
     return reply
       .code(409)
-      .send({ error: { code: 409, message: 'Experiment already exists' } }); // return null due to duplicate key (name) error
+      .send({ error: { code: 409, message: 'Experiment already exists' } });
   }
-  return reply.code(201).send(documentId);
 };
 
 // might remove this in favor of using patch only
@@ -83,7 +82,7 @@ export const deleteExperimentHandler = async (
       },
     });
   }
-  return reply.code(204).send({ deleted: succeeded });
+  return reply.code(200).send({ deleted: succeeded });
 };
 
 export const getExperimentByIdHandler = async (
