@@ -7,13 +7,13 @@ import {
 import { hashAndAssign } from './hash.js';
 
 export default class ExperimentManager {
-  static async getTreatmentAndIds(
+  static getTreatmentAndIds(
     experiment: Experiment,
     identifiers: ClientPropMapping,
-  ): Promise<{
+  ): {
       treatment: Treatment;
       metadata: string;
-    } | null> {
+    } | null {
     const group = ExperimentManager.getGroupAssignment(experiment, identifiers);
     const treatment = ExperimentManager.currentTreatment(experiment, group);
     if (!treatment) return null;

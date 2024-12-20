@@ -5,124 +5,122 @@ import {
   ClientSDKFlagMapping,
   ClientSDKFlagValue,
   OverrideRuleUnion,
+  ForcedValue,
+  Experiment,
 } from '@avocet/core';
 import { randomUUID } from 'crypto';
 import { hashAndCompare } from './hash.js';
 import ExperimentManager from './ExperimentManager.js';
-import RepositoryManager from '../repository/RepositoryManager.js';
-import cfg from '../envalid.js';
+// import RepositoryManager from '../repository/RepositoryManager.js';
+// import cfg from '../envalid.js';
 
 export default class ClientFlagManager {
-  repository: RepositoryManager;
+  // repository: RepositoryManager;
 
-  constructor() {
-    this.repository = new RepositoryManager(cfg.MONGO_API_URI);
-  }
+  // constructor() {
+  //   this.repository = new RepositoryManager(cfg.MONGO_API_URI);
+  // }
 
-  /**
-   * Get the value of a flag to display to a client as well as identifiers
-   * corresponding to the override rule applied, or the flag's own ID. Returns
-   * `null` fallback values if no corresponding flag is found or the flag is
-   * not enabled in the client's environment.
-   */
-  async getClientFlagValue(
-    flagName: string,
-    environmentName: string,
-    clientProps: ClientPropMapping,
-  ): Promise<ClientSDKFlagValue> {
-    try {
-      const flag = await this.repository.featureFlag.findOne({
-        name: flagName,
-      });
-      if (!flag || !(environmentName in flag.environmentNames)) throw new Error();
+  // /**
+  //  * Get the value of a flag to display to a client as well as identifiers
+  //  * corresponding to the override rule applied, or the flag's own ID. Returns
+  //  * `null` fallback values if no corresponding flag is found or the flag is
+  //  * not enabled in the client's environment.
+  //  */
+  // async getClientFlagValue(
+  //   flagName: string,
+  //   environmentName: string,
+  //   clientProps: ClientPropMapping,
+  // ): Promise<ClientSDKFlagValue> {
+  //   try {
+  //     const flag = await this.repository.featureFlag.findOne({
+  //       name: flagName,
+  //     });
+  //     if (!flag || !(environmentName in flag.environmentNames)) throw new Error();
 
-      return await this.computeFlagValue(flag, environmentName, clientProps);
-    } catch (e: unknown) {
-      return {
-        value: null,
-        metadata: await ClientFlagManager.defaultIdString(),
-      };
-    }
-  }
+  //     return await this.computeFlagValue(flag, environmentName, clientProps);
+  //   } catch (e: unknown) {
+  //     return {
+  //       value: null,
+  //       metadata: await ClientFlagManager.defaultIdString(),
+  //     };
+  //   }
+  // }
 
-  /**
-   * Gets client values for every flag in the specified environment
-   *
-   * todo:
-   * - take a client API key instead of an environment name, then:
-   *   - fetch SDK connections
-   *   - find one that corresponds to the received key
-   *   - return null if none match
-   *   - else get the environment for that connection
-   */
-  async environmentFlagValues(
-    environmentName: string,
-    clientProps: ClientPropMapping,
-  ): Promise<ClientSDKFlagMapping> {
-    try {
-      const featureFlags = await this.repository.featureFlag.getEnvironmentFlags(environmentName);
+  // /**
+  //  * Gets client values for every flag in the specified environment
+  //  *
+  //  * todo:
+  //  * - take a client API key instead of an environment name, then:
+  //  *   - fetch SDK connections
+  //  *   - find one that corresponds to the received key
+  //  *   - return null if none match
+  //  *   - else get the environment for that connection
+  //  */
+  // async environmentFlagValues(
+  //   environmentName: string,
+  //   clientProps: ClientPropMapping,
+  // ): Promise<ClientSDKFlagMapping> {
+  //   try {
+  //     const featureFlags = await this.repository.featureFlag.getEnvironmentFlags(environmentName);
 
-      const promises = [];
+  //     const promises = [];
 
-      for (let i = 0; i < featureFlags.length; i += 1) {
-        const flag = featureFlags[i];
-        const promise = this.computeFlagValue(
-          flag,
-          environmentName,
-          clientProps,
-        );
-        // transform the promise to a tuple of [name, ClientSDKFlagValue] upon resolution
-        promises.push(promise.then((result) => [flag.name, result]));
-      }
+  //     for (let i = 0; i < featureFlags.length; i += 1) {
+  //       const flag = featureFlags[i];
+  //       const promise = this.computeFlagValue(
+  //         flag,
+  //         environmentName,
+  //         clientProps,
+  //       );
+  //       // transform the promise to a tuple of [name, ClientSDKFlagValue] upon resolution
+  //       promises.push(promise.then((result) => [flag.name, result]));
+  //     }
 
-      const resolve = await Promise.all(promises);
-      return Object.fromEntries(resolve);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        // eslint-disable-next-line no-console
-        console.error(e);
-      }
+  //     const resolve = await Promise.all(promises);
+  //     return Object.fromEntries(resolve);
+  //   } catch (e: unknown) {
+  //     if (e instanceof Error) {
+  //       // eslint-disable-next-line no-console
+  //       console.error(e);
+  //     }
 
-      return {};
-    }
-  }
+  //     return {};
+  //   }
+  // }
 
-  private async computeFlagValue(
-    flag: FeatureFlag,
-    environmentName: string,
-    clientProps: ClientPropMapping,
-  ): Promise<ClientSDKFlagValue> {
-    const defaultReturn = {
-      value: flag.value.initial,
-      metadata: ClientFlagManager.singleIdString(flag.id),
-    };
+  // async computeFlagValue(
+  //   flag: FeatureFlag,
+  //   environmentName: string,
+  //   clientProps: ClientPropMapping,
+  // ): Promise<ClientSDKFlagValue> {
+  //   const defaultReturn = {
+  //     value: flag.value.initial,
+  //     metadata: ClientFlagManager.singleIdString(flag.id),
+  //   };
 
-    const envRules = FeatureFlagDraft.getEnvironmentRules(
-      flag,
-      environmentName,
-    );
-    const selectedRule = ClientFlagManager.enroll(envRules, clientProps);
-    if (selectedRule === undefined) return defaultReturn;
+  //   const envRules = FeatureFlagDraft.getEnvironmentRules(
+  //     flag,
+  //     environmentName,
+  //   );
+  //   const selectedRule = ClientFlagManager.enroll(envRules, clientProps);
+  //   if (selectedRule === undefined) return defaultReturn;
 
-    const ruleValue = await this.ruleValueAndMetadata(
-      selectedRule,
-      flag.id,
-      clientProps,
-    );
-    return ruleValue ?? defaultReturn;
-  }
+  //   const ruleValue = await this.ruleValueAndMetadata(
+  //     selectedRule,
+  //     flag.id,
+  //     clientProps,
+  //   );
+  //   return ruleValue ?? defaultReturn;
+  // }
 
-  private async ruleValueAndMetadata(
-    rule: OverrideRuleUnion,
+  static ruleValueAndMetadata(
+    rule: ForcedValue | Experiment,
     flagId: string,
     identifiers: ClientPropMapping,
-  ): Promise<ClientSDKFlagValue | null> {
+  ): ClientSDKFlagValue | null {
     if (rule.type === 'Experiment') {
-      const experiment = await this.repository.experiment.get(rule.id);
-      const result = await ExperimentManager.getTreatmentAndIds(
-        experiment,
-        identifiers,
-      );
+      const result = ExperimentManager.getTreatmentAndIds(rule, identifiers);
       if (result === null) return null;
       const { treatment, metadata } = result;
       const match = treatment.flagStates.find(({ id }) => id === flagId);
@@ -151,7 +149,7 @@ export default class ClientFlagManager {
    * Attempt to enroll a client in one of the passed override rules, testing
    * enrollment one rule at a time in the order they were stored on the flag
    */
-  private static enroll(
+  static enroll(
     overrideRules: OverrideRuleUnion[],
     clientProps: ClientPropMapping,
   ): OverrideRuleUnion | undefined {
@@ -178,7 +176,7 @@ export default class ClientFlagManager {
     return startTime <= currentTime && currentTime < endTime;
   }
 
-  static async defaultIdString() {
+  static defaultIdString() {
     return this.randomIds(3);
   }
 
