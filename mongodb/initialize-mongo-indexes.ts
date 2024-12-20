@@ -15,8 +15,9 @@ await colls.user.collection.createIndex({ email: 1 }, { unique: true });
 
 // for efficient lookup of which flags are enabled on a given environment
 await colls.featureFlag.collection.createIndex({ 'environmentNames.$**': 1 });
+// for finding flags referencing a given experiment
 await colls.featureFlag.collection.createIndex({
-  'overrideRules.environmentName': 1,
+  'overrideRules.id': 1,
 });
 
 // ensure groups have unique IDs
