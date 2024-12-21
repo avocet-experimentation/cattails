@@ -70,3 +70,5 @@ export const schema = /* GraphQL */ `
   ${clientPropDefGQLSchema}
   ${userGQLSchema}
 `;
+
+// ${featureFlagSchema}
