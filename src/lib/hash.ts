@@ -39,8 +39,8 @@ export function hashAndAssign(
   assignmentOptions: readonly { id: string; weight: number }[],
   sort: boolean = true,
 ): string {
+  const HASH_MAX = 2 ** 31 - 1;
   const hash = hashIdentifiers(identifiers, sort);
-  //
   const weightSum = assignmentOptions.reduce(
     (acc, option) => acc + option.weight,
     0,
@@ -63,10 +63,16 @@ export function hashAndAssign(
     },
     [],
   );
-  const hashModulo = hash % weightSum;
-  const selected = positionedOptions.find(
-    (option) => option.hash >= hashModulo,
-  );
+  const positiveHash = hash < 0 ? HASH_MAX + hash : hash;
+  const hashModulo = (positiveHash / HASH_MAX) % weightSum;
+  const selected = positionedOptions.find((option) => option.hash > hashModulo);
+  // console.table(positionedOptions);
+  // console.log({
+  //   hash,
+  //   weightSum,
+  //   hashModulo,
+  //   selected,
+  // });
   if (!selected) {
     throw new Error(
       "The hash modulo was larger than all the options' hashes."
