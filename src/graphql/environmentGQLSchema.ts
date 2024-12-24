@@ -1,4 +1,4 @@
-export const environmentSchema = /* GraphQL */ `
+export const environmentGQLSchema = /* GraphQL */ `
   type Environment {
     id: ID!
     createdAt: Float!

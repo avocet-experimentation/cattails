@@ -1,36 +1,69 @@
-import { assertObject } from '@avocet/core';
+import { featureFlagSchema } from '@avocet/core';
 import { GraphQLScalarType } from 'graphql';
 
-const environmentRecordScalar = new GraphQLScalarType({
+export const environmentRecordScalar = new GraphQLScalarType({
   name: 'EnvironmentNames',
   description: 'Record of environments to `true`',
   parseValue(value) {
-    assertObject(value);
-    return value;
+    return featureFlagSchema.shape.environmentNames.parse(value);
   },
 });
 
-export const featureFlagSchema = /* GraphQL */ `
+export const flagValueDefScalar = new GraphQLScalarType({
+  name: 'FlagValueDef',
+  description: "See FeatureFlag['value']",
+  parseValue(value) {
+    return featureFlagSchema.shape.value.parse(value);
+  },
+});
+
+export const featureFlagGQLSchema = /* GraphQL */ `
   scalar EnvironmentNames
+
+  scalar FlagValueDef
 
   # union FlagValue = String | Float | Boolean
 
-  type FlagBooleanValue {
+  # type FlagBooleanValue {
+  #   type: String!
+  #   initial: Boolean!
+  # }
+
+  # type FlagStringValue {
+  #   type: String!
+  #   initial: String!
+  # }
+
+  # type FlagNumberValue {
+  #   type: String!
+  #   initial: Float!
+  # }
+
+  # union FlagValueDef = FlagBooleanValue | FlagStringValue | FlagNumberValue
+
+  type OverrideRule {
     type: String!
-    initial: Boolean!
+    id: String!
+    value: String!
+    description: String!
+    status: ExperimentStatus!
+    environmentName: String!
+    startTimeStamp: Float!
+    endTimeStamp: Float!
+    enrollment: Enrollment!
   }
 
-  type FlagStringValue {
+  input OverrideRuleInput {
     type: String!
-    initial: String!
+    id: String!
+    value: String!
+    description: String!
+    status: ExperimentStatus!
+    environmentName: String!
+    startTimeStamp: Float!
+    endTimeStamp: Float!
+    enrollment: EnrollmentInput!
   }
-
-  type FlagNumberValue {
-    type: String!
-    initial: Float!
-  }
-
-  union FlagValueDef = FlagBooleanValue | FlagStringValue | FlagNumberValue
 
   type FeatureFlag {
     id: ID!
@@ -40,7 +73,7 @@ export const featureFlagSchema = /* GraphQL */ `
     value: FlagValueDef!
     description: String
     environmentNames: EnvironmentNames
-    overrideRules: OverrideRules!
+    overrideRules: [OverrideRule]!
   }
 
   input PartialFeatureFlagWithStringId {
@@ -51,7 +84,7 @@ export const featureFlagSchema = /* GraphQL */ `
     value: FlagValueDef
     description: String
     environmentNames: EnvironmentNames
-    overrideRules: OverrideRules
+    overrideRules: [OverrideRuleInput]
   }
 
   input FeatureFlagDraft {
@@ -59,18 +92,6 @@ export const featureFlagSchema = /* GraphQL */ `
     value: FlagValueDef!
     description: String
     environmentNames: EnvironmentNames
-    overrideRules: OverrideRules!
-  }
-
-  type OverrideRules {
-    type: String!
-    id: String!
-    value: String!
-    description: String!
-    status: ExperimentStatus!
-    environmentName: String!
-    startTimeStamp: Float!
-    endTimeStamp: Float!
-    enrollment: Enrollment!
+    overrideRules: [OverrideRuleInput]!
   }
 `;

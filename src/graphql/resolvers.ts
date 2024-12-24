@@ -13,23 +13,28 @@ import {
   BeforeId,
   stripKeysWithUndefined,
   EnvironmentDraft,
-  RequireOnly,
 } from '@avocet/core';
 import { Filter } from 'mongodb';
 import { IResolvers } from 'mercurius';
 import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';
 import { PartialWithStringId } from '../repository/repository-types.js';
+import {
+  environmentRecordScalar,
+  flagValueDefScalar,
+} from './featureFlagSchema.js';
+import { clientPropValueScalar } from './ClientPropDefGQLSchema.js';
 
 const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
 export const resolvers: IResolvers = {
+  EnvironmentNames: environmentRecordScalar,
+  FlagValueDef: flagValueDefScalar,
+  ClientPropValue: clientPropValueScalar,
   // #region Reader resolvers
   Query: {
-    clientPropDef: async (_, { id }: { id: string }) => {
-      const fetched = await repos.clientPropDef.get(id);
-      return fetched;
-    },
+    clientPropDef: async (_, { id }: { id: string }) =>
+      repos.clientPropDef.get(id),
     allClientPropDefs: async (_, { limit }: { limit?: number }) =>
       repos.clientPropDef.getMany(limit),
     environment: async (_, { id }: { id: string }) => repos.environment.get(id),
@@ -57,128 +62,68 @@ export const resolvers: IResolvers = {
     experiment: async (_, { id }: { id: string }) => repos.experiment.get(id),
     allExperiments: async (_, { limit }: { limit?: number }) =>
       repos.experiment.getMany(limit),
-    // FeatureFlag: async (_, { id }: { id: string }) => repos.featureFlag.get(id),
-    // allFeatureFlags: async (_, { limit }: { limit?: number }) =>
-    //   repos.featureFlag.getMany(limit),
+    FeatureFlag: async (_, { id }: { id: string }) => repos.featureFlag.get(id),
+    allFeatureFlags: async (_, { limit }: { limit?: number }) =>
+      repos.featureFlag.getMany(limit),
   },
   // #endregion
   Mutation: {
-    // #region clientpropdef mutation resolvers
-    updateClientPropDef: async (
-      _,
-      {
-        id,
-        name,
-        description,
-        dataType,
-        isIdentifier,
-      }: {
-        id: string;
-        name?: string;
-        description?: string;
-        dataType?: 'string' | 'number' | 'boolean';
-        isIdentifier?: boolean;
-      },
-    ) => {
-      // make fields optional?
-      const updates: Partial<ClientPropDef> = {};
-
-      if (name !== undefined) updates.name = name;
-      if (description !== undefined) updates.description = description;
-      if (dataType !== undefined) updates.dataType = dataType;
-      if (isIdentifier !== undefined) updates.isIdentifier = isIdentifier;
-
-      // call to update teh record
-      const success = await repos.clientPropDef.update({ id, ...updates });
-      if (!success) {
-        throw new Error('Failed to update ClientPropDef');
-      }
-
-      // Return the updated data, meaning it worked
-      return repos.clientPropDef.get(id);
-      // return success;
-    },
+    // #region ClientPropDef mutation resolvers
     createClientPropDef: async (
       _,
-      input: RequireOnly<ClientPropDefDraft, 'name' | 'dataType'>,
-    ): Promise<string | null> => {
-      const newEntry = ClientPropDefDraft.template(input);
-
-      const newId = await repos.clientPropDef.create(newEntry);
-      if (!newId) {
-        // if id is undefined throw error
-        throw new Error('Failed to create ClientPropDef');
-      }
-
-      return newId; // return id of created ?? tried whole object, ahd type issues
+      { newEntry }: { newEntry: ClientPropDefDraft },
+    ): Promise<ClientPropDef> => {
+      const id = await repos.clientPropDef.create(newEntry);
+      return repos.clientPropDef.get(id);
     },
-    deleteClientPropDef: async (_, { id }: { id: string }): Promise<string> => {
-      const success = await repos.clientPropDef.delete(id);
 
+    updateClientPropDef: async (
+      _,
+      { partialEntry }: { partialEntry: PartialWithStringId<ClientPropDef> },
+    ): Promise<ClientPropDef> => {
+      const success = await repos.clientPropDef.update(partialEntry);
       if (!success) {
-        throw new Error('Failed to delete SDKConnection');
+        throw new Error(
+          `Failed to update client property definition ${partialEntry.id}`,
+        );
       }
 
+      return repos.clientPropDef.get(partialEntry.id);
+    },
+
+    deleteClientPropDef: async (_, { id }: { id: string }): Promise<string> => {
+      await repos.clientPropDef.delete(id);
       return id;
     },
     // #endregion
 
     // #region clientconnection resolvers
+    createSDKConnection: async (
+      _,
+      { newEntry }: { newEntry: SDKConnectionDraft },
+    ): Promise<SDKConnection> => {
+      const id = await repos.sdkConnection.create(newEntry);
+      return repos.sdkConnection.get(id);
+    },
+
     updateSDKConnection: async (
       _,
       {
-        id,
-        name,
-        description,
-        environmentId,
+        partialEntry,
       }: {
-        id: string;
-        name?: string;
-        description?: string;
-        environmentId?: string;
+        partialEntry: PartialWithStringId<SDKConnection>;
       },
     ): Promise<SDKConnection> => {
-      const updates: Partial<SDKConnection> = {};
-      if (name !== undefined) updates.name = name;
-      if (description !== undefined) updates.description = description;
-      if (environmentId !== undefined) updates.environmentId = environmentId;
-
-      const partialEntry = { id, ...updates };
-
       const success = await repos.sdkConnection.update(partialEntry);
       if (!success) {
-        throw new Error('Failed to update SDKConnection');
+        throw new Error(`Failed to update SDK connection ${partialEntry.id}`);
       }
 
-      const updatedRecord = await repos.sdkConnection.get(id);
-
-      if (!updatedRecord) {
-        throw new Error('SDKConnection not found after update');
-      }
-
-      return updatedRecord;
-    },
-
-    createSDKConnection: async (
-      _,
-      input: SDKConnectionDraft,
-    ): Promise<string> => {
-      const newId = await repos.sdkConnection.create(input);
-
-      if (!newId) {
-        throw new Error('Failed to create SDKConnection');
-      }
-
-      return newId;
+      return repos.sdkConnection.get(partialEntry.id);
     },
 
     deleteSDKConnection: async (_, { id }: { id: string }): Promise<string> => {
-      const success = await repos.sdkConnection.delete(id);
-
-      if (!success) {
-        throw new Error('Failed to delete SDKConnection');
-      }
-
+      await repos.sdkConnection.delete(id);
       return id;
     },
     // #endregion
@@ -186,44 +131,27 @@ export const resolvers: IResolvers = {
     // #region user resolvers
     createUser: async (
       _,
-      input: RequireOnly<UserDraft, 'identifier'>,
-    ): Promise<User | null> => {
-      const newEntry = UserDraft.templateAdmin(input);
-
-      const userId = await repos.user.create(newEntry);
-
-      if (!userId) {
-        throw new Error('Failed to create User');
-      }
-
-      return repos.user.get(userId); // Fetch and return the created user
+      { newEntry }: { newEntry: UserDraft },
+    ): Promise<User> => {
+      const id = await repos.user.create(newEntry);
+      return repos.user.get(id);
     },
 
     updateUser: async (
       _,
-      input: PartialWithStringId<User>,
-    ): Promise<boolean> => {
-      const success = await repos.user.update(input);
+      { partialEntry }: { partialEntry: PartialWithStringId<User> },
+    ): Promise<User> => {
+      const success = await repos.user.update(partialEntry);
 
       if (!success) {
-        throw new Error('Failed to update User');
+        throw new Error(`Failed to update user ${partialEntry.id}`);
       }
 
-      // Fetch and return the updated user
-      if (!success) {
-        throw new Error('Updated User not found');
-      }
-
-      return true;
+      return repos.user.get(partialEntry.id);
     },
 
     deleteUser: async (_, { id }: { id: string }): Promise<string> => {
-      const success = await repos.user.delete(id);
-
-      if (!success) {
-        throw new Error('Failed to delete User');
-      }
-
+      await repos.user.delete(id);
       return id;
     },
     // #endregion
@@ -233,8 +161,8 @@ export const resolvers: IResolvers = {
       _,
       { newEntry }: { newEntry: EnvironmentDraft },
     ): Promise<Environment> => {
-      const newId = await repos.environment.create(newEntry);
-      return repos.environment.get(newId);
+      const id = await repos.environment.create(newEntry);
+      return repos.environment.get(id);
     },
 
     updateEnvironment: async (
@@ -243,87 +171,76 @@ export const resolvers: IResolvers = {
         partialEntry,
       }: {
         partialEntry: PartialWithStringId<Environment>;
-        mergeProps?: boolean;
       },
     ): Promise<Environment> => {
-      await repos.environment.update(partialEntry, false);
+      const success = await repos.environment.update(partialEntry);
+      if (!success) {
+        throw new Error(`Failed to update environment ${partialEntry.id}`);
+      }
+
       return repos.environment.get(partialEntry.id);
     },
 
-    deleteEnvironment: async (_, { id }: { id: string }): Promise<boolean> =>
-      repos.environment.delete(id),
+    deleteEnvironment: async (_, { id }: { id: string }): Promise<string> => {
+      await repos.environment.delete(id);
+      return id;
+    },
     // #endregion
 
     // #region experiment resolvers
     createExperiment: async (
       _,
-      input: RequireOnly<ExperimentDraft, 'name' | 'environmentName'>,
-    ): Promise<boolean> => {
-      const newExperiment = ExperimentDraft.template(input);
-
-      const newId = await repos.experiment.create(newExperiment);
-
-      if (!newId) {
-        throw new Error('Failed to create experiment');
-      }
-
-      return true;
+      { newEntry }: { newEntry: ExperimentDraft },
+    ): Promise<Experiment> => {
+      const id = await repos.experiment.create(newEntry);
+      return repos.experiment.get(id);
     },
 
     updateExperiment: async (
       _,
-      input: PartialWithStringId<Experiment>,
-    ): Promise<boolean> => {
-      const success = await repos.experiment.update(input);
+      { partialEntry }: { partialEntry: PartialWithStringId<Experiment> },
+    ): Promise<Experiment> => {
+      const success = await repos.experiment.update(partialEntry);
 
       if (!success) {
         throw new Error('Failed to update the experiment');
       }
-      return true;
+
+      return repos.experiment.get(partialEntry.id);
     },
 
-    deleteExperiment: async (_, { id }: { id: string }): Promise<boolean> => {
-      const success = await repos.experiment.delete(id);
-
-      if (!success) {
-        throw new Error('Failed to delete experiment');
-      }
-
-      return true;
+    deleteExperiment: async (_, { id }: { id: string }): Promise<string> => {
+      await repos.experiment.delete(id);
+      return id;
     },
     // #endregion
 
     // #region feature flag resolvers
-    // createFeatureFlag: async (
-    //   _,
-    //   draft: FeatureFlagDraft,
-    // ): Promise<FeatureFlag> => {
-    //   const flagId = await repos.featureFlag.create(draft);
-    //   return repos.featureFlag.get(flagId);
-    // },
+    createFeatureFlag: async (
+      _,
+      { newEntry }: { newEntry: FeatureFlagDraft },
+    ): Promise<FeatureFlag> => {
+      const flagId = await repos.featureFlag.create(newEntry);
+      return repos.featureFlag.get(flagId);
+    },
 
-    // updateFeatureFlag: async (
-    //   _,
-    //   input: PartialWithStringId<FeatureFlag>,
-    // ): Promise<boolean> => {
-    //   const success = await repos.featureFlag.update(input);
+    updateFeatureFlag: async (
+      _,
+      { partialEntry }: { partialEntry: PartialWithStringId<FeatureFlag> },
+    ): Promise<FeatureFlag> => {
+      const success = await repos.featureFlag.update(partialEntry);
 
-    //   if (!success) {
-    //     throw new Error('Failed to update FeatureFlag');
-    //   }
+      if (!success) {
+        throw new Error('Failed to update FeatureFlag');
+      }
 
-    //   return true;
-    // },
+      return repos.featureFlag.get(partialEntry.id);
+    },
 
-    // deleteFeatureFlag: async (_, { id }: { id: string }): Promise<boolean> => {
-    //   const success = await repos.featureFlag.delete(id);
-
-    //   if (!success) {
-    //     throw new Error(`Failed to delete FeatureFlag with ID: ${id}`);
-    //   }
-
-    //   return true;
-    // },
+    deleteFeatureFlag: async (_, { id }: { id: string }): Promise<string> => {
+      await repos.featureFlag.delete(id);
+      return id;
+    },
     // #endregion
   },
 };
