@@ -75,6 +75,8 @@ server.addHook('onRequest', async (request, reply) => {
   }
 });
 
+server.register(mercuriusLogging);
+
 server.listen({ port: cfg.SERVICE_PORT }, (error, address) => {
   if (error instanceof Error) {
     console.error(error);
