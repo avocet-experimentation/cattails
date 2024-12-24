@@ -1,7 +1,7 @@
 import { UserDraft } from '@avocet/core';
 
 export const staticUser = new UserDraft({
-  email: 'testuser@example.com',
+  identifier: 'testuser@example.com',
   permissions: {
     featureFlag: 'view',
     experiment: 'edit',

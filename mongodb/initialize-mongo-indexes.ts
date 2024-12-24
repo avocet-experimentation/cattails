@@ -29,6 +29,11 @@ await colls.experiment.collection.createIndex(
 // for efficient lookup of treatments by their IDs
 await colls.experiment.collection.createIndex({ 'definedTreatments.$**': 1 });
 
+await colls.experiment.collection.createIndex({ environmentName: 1 });
+await colls.experiment.collection.createIndex({ 'flagIds.$**': 1 });
+
+await colls.sdkConnection.collection.createIndex({ environmentId: 1 });
+
 // eslint-disable-next-line no-console
 console.log('Indexes created');
 process.exit(0);
