@@ -186,7 +186,7 @@ export const resolvers: IResolvers = {
     // #region user resolvers
     createUser: async (
       _,
-      input: RequireOnly<UserDraft, 'email'>,
+      input: RequireOnly<UserDraft, 'identifier'>,
     ): Promise<User | null> => {
       const newEntry = UserDraft.templateAdmin(input);
 

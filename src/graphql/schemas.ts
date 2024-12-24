@@ -156,7 +156,16 @@ const sdkConnectionSchema = /* GraphQL */ `
     updatedAt: Float!
     name: String!
     environmentId: ID!
-    description: String!
+    description: String
+    allowedOrigins: [String]!
+    clientKeyHash: String!
+  }
+  input SDKConnectionDraft {
+    name: String!
+    environmentId: ID!
+    description: String
+    allowedOrigins: [String]!
+    clientKeyHash: String!
   }
 `;
 
@@ -200,17 +209,15 @@ const mutationSchemas = /* GraphQL */ `
 
     deleteClientPropDef(id: ID!): ID
 
-    createSDKConnection(
-      name: String!
-      description: String
-      environmentId: ID!
-    ): SDKConnection
+    createSDKConnection(newEntry: SDKConnectionDraft): SDKConnection
 
     updateSDKConnection(
       id: ID!
       name: String
       description: String
       environmentId: ID
+      allowedOrigins: [String]!
+      clientKeyHash: String!
     ): SDKConnection
 
     deleteSDKConnection(id: ID!): ID
