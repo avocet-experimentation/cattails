@@ -42,6 +42,7 @@
     "fastify": "^4.17.0",
     "graphql": "^16.9.0",
     "mercurius": "~14.1.0",
+    "mercurius-logging": "^1.4.1",
     "mongodb": "^6.10.0"
   }
 }
