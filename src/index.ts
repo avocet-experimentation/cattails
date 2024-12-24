@@ -11,14 +11,13 @@ import { jwtValidationObject } from './validation.js';
 const server = Fastify({
   logger: true,
 });
-
 // check if service is up during deployment; check on regular frequency
 server.get('/healthcheck', async () => ({ status: 'OK' }));
 // register routes for out flag entity
-await server.register(getClientRoutes, { prefix: 'api' });
+server.register(getClientRoutes, { prefix: 'api' });
 // todo: replace '*' origin with environment variable referencing dashboard
-// await server.register(cors, { prefix: 'graphql', origin: '*' });
-await server.register(mercurius, {
+server.register(cors, { prefix: 'graphql', origin: '*' });
+server.register(mercurius, {
   schema,
   resolvers,
   graphiql: true,
