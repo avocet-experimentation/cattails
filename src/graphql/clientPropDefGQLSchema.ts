@@ -10,7 +10,7 @@ export const clientPropValueScalar = new GraphQLScalarType({
   },
 });
 
-export const ClientPropDefGQLSchema = /* GraphQL */ `
+export const clientPropDefGQLSchema = /* GraphQL */ `
   scalar ClientPropValue
 
   type ClientPropDef {
