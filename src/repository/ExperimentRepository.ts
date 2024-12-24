@@ -89,6 +89,8 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
 
   /** WIP
    * Updates all ExperimentReferences on any flags referenced by an experiment
+   *
+   * todo: preserve position in override rules array
    */
   async updateEmbeds(
     partialExperiment: PartialWithStringId<Experiment>,

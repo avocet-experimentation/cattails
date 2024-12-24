@@ -34,10 +34,17 @@ export default class ExperimentManager {
       id: group.id,
       weight: group.proportion,
     }));
+
+    // TODO: filter clientProps to just those marked as identifiers and in the
+    // experiment's enrollment.attributes. If none remain pass an empty array
+    // and handle that correctly
     const propsToHash = experiment.enrollment.attributes;
     const identifiers = Object.entries(clientProps).filter(([key]) =>
       propsToHash.includes(key));
-    const assignmentGroupId = hashAndAssign(identifiers, groupOptions);
+    const assignmentGroupId = hashAndAssign(
+      Object.entries(clientProps),
+      groupOptions,
+    );
     const assignedGroup = groups.find(
       (group) => group.id === assignmentGroupId,
     );
@@ -45,6 +52,7 @@ export default class ExperimentManager {
       throw new Error(`Failed to find group with id ${assignmentGroupId}`);
     }
 
+    console.log({ clientProps, groupName: assignedGroup.name });
     return assignedGroup;
   }
 

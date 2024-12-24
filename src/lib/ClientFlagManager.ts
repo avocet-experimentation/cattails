@@ -1,8 +1,5 @@
 import {
   ClientPropMapping,
-  FeatureFlag,
-  FeatureFlagDraft,
-  ClientSDKFlagMapping,
   ClientSDKFlagValue,
   OverrideRuleUnion,
   ForcedValue,
@@ -11,109 +8,8 @@ import {
 import { randomUUID } from 'crypto';
 import { hashAndCompare } from './hash.js';
 import ExperimentManager from './ExperimentManager.js';
-// import RepositoryManager from '../repository/RepositoryManager.js';
-// import cfg from '../envalid.js';
 
 export default class ClientFlagManager {
-  // repository: RepositoryManager;
-
-  // constructor() {
-  //   this.repository = new RepositoryManager(cfg.MONGO_API_URI);
-  // }
-
-  // /**
-  //  * Get the value of a flag to display to a client as well as identifiers
-  //  * corresponding to the override rule applied, or the flag's own ID. Returns
-  //  * `null` fallback values if no corresponding flag is found or the flag is
-  //  * not enabled in the client's environment.
-  //  */
-  // async getClientFlagValue(
-  //   flagName: string,
-  //   environmentName: string,
-  //   clientProps: ClientPropMapping,
-  // ): Promise<ClientSDKFlagValue> {
-  //   try {
-  //     const flag = await this.repository.featureFlag.findOne({
-  //       name: flagName,
-  //     });
-  //     if (!flag || !(environmentName in flag.environmentNames)) throw new Error();
-
-  //     return await this.computeFlagValue(flag, environmentName, clientProps);
-  //   } catch (e: unknown) {
-  //     return {
-  //       value: null,
-  //       metadata: await ClientFlagManager.defaultIdString(),
-  //     };
-  //   }
-  // }
-
-  // /**
-  //  * Gets client values for every flag in the specified environment
-  //  *
-  //  * todo:
-  //  * - take a client API key instead of an environment name, then:
-  //  *   - fetch SDK connections
-  //  *   - find one that corresponds to the received key
-  //  *   - return null if none match
-  //  *   - else get the environment for that connection
-  //  */
-  // async environmentFlagValues(
-  //   environmentName: string,
-  //   clientProps: ClientPropMapping,
-  // ): Promise<ClientSDKFlagMapping> {
-  //   try {
-  //     const featureFlags = await this.repository.featureFlag.getEnvironmentFlags(environmentName);
-
-  //     const promises = [];
-
-  //     for (let i = 0; i < featureFlags.length; i += 1) {
-  //       const flag = featureFlags[i];
-  //       const promise = this.computeFlagValue(
-  //         flag,
-  //         environmentName,
-  //         clientProps,
-  //       );
-  //       // transform the promise to a tuple of [name, ClientSDKFlagValue] upon resolution
-  //       promises.push(promise.then((result) => [flag.name, result]));
-  //     }
-
-  //     const resolve = await Promise.all(promises);
-  //     return Object.fromEntries(resolve);
-  //   } catch (e: unknown) {
-  //     if (e instanceof Error) {
-  //       // eslint-disable-next-line no-console
-  //       console.error(e);
-  //     }
-
-  //     return {};
-  //   }
-  // }
-
-  // async computeFlagValue(
-  //   flag: FeatureFlag,
-  //   environmentName: string,
-  //   clientProps: ClientPropMapping,
-  // ): Promise<ClientSDKFlagValue> {
-  //   const defaultReturn = {
-  //     value: flag.value.initial,
-  //     metadata: ClientFlagManager.singleIdString(flag.id),
-  //   };
-
-  //   const envRules = FeatureFlagDraft.getEnvironmentRules(
-  //     flag,
-  //     environmentName,
-  //   );
-  //   const selectedRule = ClientFlagManager.enroll(envRules, clientProps);
-  //   if (selectedRule === undefined) return defaultReturn;
-
-  //   const ruleValue = await this.ruleValueAndMetadata(
-  //     selectedRule,
-  //     flag.id,
-  //     clientProps,
-  //   );
-  //   return ruleValue ?? defaultReturn;
-  // }
-
   static ruleValueAndMetadata(
     rule: ForcedValue | Experiment,
     flagId: string,

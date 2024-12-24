@@ -242,6 +242,22 @@ describe('Embed methods', () => {
       expect(typeof updatedEmbedReferences[1].startTimestamp).toEqual('number');
     });
 
+    it.skip('Correctly adds embeds if a flag was added to flagIds', async () => {
+      // todo: verify embeds added onto new flag
+    });
+
+    it.skip('Correctly removes embeds if a flag was removed from flagIds', async () => {
+      // todo: verify the removed flag also has its embed removed
+    });
+
+    it.skip("Preserves embed index within flags' override rules array", async () => {
+      // const result = await repoManager.featureFlag.update({
+      //   id: ObjectId.createFromTime(1).toHexString(),
+      //   name: 'asdfoasihgda',
+      // });
+      // expect(result).toBeFalsy();
+    });
+
     it.skip("doesn't modify embed fields that were not passed", async () => {
       // const second = insertResults[1];
       // const original = exampleFlagDrafts[1];

@@ -399,7 +399,7 @@ export default class MongoRepository<T extends AvocetMongoTypes> {
    * Deletes an existing record
    * @returns true if a record was deleted, or throws otherwise
    */
-  async delete(documentId: string): Promise<boolean> {
+  async delete(documentId: string): Promise<true> {
     const filter = { _id: ObjectId.createFromHexString(documentId) };
     const result = this.withTransaction(async (session) => {
       const deleteResult = await this.collection.deleteOne(
