@@ -5,6 +5,10 @@ import { experimentGQLSchema } from './experimentGQLSchema.js';
 import { sdkConnectionGQLSchema } from './sdkConnectionGQLSchema.js';
 import { userGQLSchema } from './userGQLSchema.js';
 
+const directiveSchemas = /* GraphQL */ `
+  directive @oneOf(value: String!) on FIELD_DEFINITION
+`;
+
 const querySchemas = /* GraphQL */ `
   type Query {
     FeatureFlag(id: ID!): FeatureFlag
@@ -61,6 +65,7 @@ const mutationSchemas = /* GraphQL */ `
 `;
 
 export const schema = /* GraphQL */ `
+  ${directiveSchemas}
   ${querySchemas}
   ${mutationSchemas}
   ${featureFlagGQLSchema}

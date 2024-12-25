@@ -1,67 +1,60 @@
-import { featureFlagSchema } from '@avocet/core';
-import { GraphQLScalarType } from 'graphql';
-
-export const environmentRecordScalar = new GraphQLScalarType({
-  name: 'EnvironmentNames',
-  description: 'Record of environments to `true`',
-  parseValue(value) {
-    return featureFlagSchema.shape.environmentNames.parse(value);
-  },
-});
-
-export const flagValueDefScalar = new GraphQLScalarType({
-  name: 'FlagValueDef',
-  description: "See FeatureFlag['value']",
-  parseValue(value) {
-    return featureFlagSchema.shape.value.parse(value);
-  },
-});
-
 export const featureFlagGQLSchema = /* GraphQL */ `
   scalar EnvironmentNames
 
   scalar FlagValueDef
 
-  # union FlagValue = String | Float | Boolean
-
-  # type FlagBooleanValue {
-  #   type: String!
-  #   initial: Boolean!
-  # }
-
-  # type FlagStringValue {
-  #   type: String!
-  #   initial: String!
-  # }
-
-  # type FlagNumberValue {
-  #   type: String!
-  #   initial: Float!
-  # }
-
-  # union FlagValueDef = FlagBooleanValue | FlagStringValue | FlagNumberValue
-
-  type OverrideRule {
-    type: String!
-    id: String!
-    value: String!
-    description: String!
-    status: ExperimentStatus!
-    environmentName: String!
-    startTimeStamp: Float!
-    endTimeStamp: Float!
-    enrollment: Enrollment!
+  enum OverrideRuleType {
+    Experiment
+    ForcedValue
   }
 
-  input OverrideRuleInput {
-    type: String!
+  interface OverrideRule {
     id: String!
+    status: ExperimentStatus!
+    description: String
+    startTimestamp: Float
+    endTimestamp: Float
+    environmentName: String!
+    enrollment: Enrollment!
+    type: OverrideRuleType!
+  }
+
+  type ExperimentReference implements OverrideRule {
+    id: String!
+    status: ExperimentStatus!
+    description: String
+    startTimestamp: Float
+    endTimestamp: Float
+    environmentName: String!
+    enrollment: Enrollment!
+    type: OverrideRuleType!
+    name: String!
+  }
+
+  type ForcedValue implements OverrideRule {
+    id: String!
+    status: ExperimentStatus!
+    description: String
+    startTimestamp: Float
+    endTimestamp: Float
+    environmentName: String!
+    enrollment: Enrollment!
+    type: OverrideRuleType!
     value: String!
-    description: String!
+  }
+
+  union OverrideRuleUnion = ExperimentReference | ForcedValue
+
+  input OverrideRuleInput {
+    id: String!
+    type: String!
+    name: String
+    value: String
+    description: String
     status: ExperimentStatus!
     environmentName: String!
-    startTimeStamp: Float!
-    endTimeStamp: Float!
+    startTimestamp: Float
+    endTimestamp: Float
     enrollment: EnrollmentInput!
   }
 
@@ -73,7 +66,7 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     value: FlagValueDef!
     description: String
     environmentNames: EnvironmentNames
-    overrideRules: [OverrideRule]!
+    overrideRules: [OverrideRule!]!
   }
 
   input PartialFeatureFlagWithStringId {
