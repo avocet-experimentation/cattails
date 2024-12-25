@@ -12,7 +12,7 @@ import { IResolvers } from 'mercurius';
 import { GraphQLScalarType } from 'graphql';
 import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';
-import { mutationResolvers } from './mutationResolvers.js';
+import { mutationResolvers } from './mutation-resolvers.js';
 
 const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
