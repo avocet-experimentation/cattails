@@ -1,9 +1,9 @@
-import { clientPropDefGQLSchema } from './clientPropDefGQLSchema.js';
-import { featureFlagGQLSchema } from './featureFlagGQLSchema.js';
-import { environmentGQLSchema } from './environmentGQLSchema.js';
-import { experimentGQLSchema } from './experimentGQLSchema.js';
-import { sdkConnectionGQLSchema } from './sdkConnectionGQLSchema.js';
-import { userGQLSchema } from './userGQLSchema.js';
+import { clientPropDefGQLSchema } from './client-prop-def-schema.js';
+import { featureFlagGQLSchema } from './feature-flag-schema.js';
+import { environmentGQLSchema } from './environment-schema.js';
+import { experimentGQLSchema } from './experiment-schema.js';
+import { sdkConnectionGQLSchema } from './sdk-connection-schema.js';
+import { userGQLSchema } from './user-schema.js';
 
 const directiveSchemas = /* GraphQL */ `
   directive @oneOf(value: String!) on FIELD_DEFINITION
