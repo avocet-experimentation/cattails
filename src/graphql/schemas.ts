@@ -33,9 +33,7 @@ const querySchemas = /* GraphQL */ `
 const mutationSchemas = /* GraphQL */ `
   type Mutation {
     createFeatureFlag(newEntry: FeatureFlagDraft!): FeatureFlag!
-    updateFeatureFlag(
-      partialEntry: PartialFeatureFlagWithStringId!
-    ): FeatureFlag
+    updateFeatureFlag(partialEntry: PartialFeatureFlagWithId!): FeatureFlag
     deleteFeatureFlag(id: ID!): ID
 
     createExperiment(newEntry: ExperimentDraft!): Experiment!

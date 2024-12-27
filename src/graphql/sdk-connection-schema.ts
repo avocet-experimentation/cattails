@@ -6,7 +6,7 @@ export const sdkConnectionGQLSchema = /* GraphQL */ `
     name: String!
     environmentId: ID!
     description: String
-    allowedOrigins: [String]!
+    allowedOrigins: [String!]!
     clientKeyHash: String!
   }
 
@@ -17,7 +17,7 @@ export const sdkConnectionGQLSchema = /* GraphQL */ `
     name: String
     environmentId: ID
     description: String
-    allowedOrigins: [String]
+    allowedOrigins: [String!]
     clientKeyHash: String
   }
 
@@ -25,7 +25,7 @@ export const sdkConnectionGQLSchema = /* GraphQL */ `
     name: String!
     environmentId: ID!
     description: String
-    allowedOrigins: [String]!
+    allowedOrigins: [String!]!
     clientKeyHash: String!
   }
 `;
