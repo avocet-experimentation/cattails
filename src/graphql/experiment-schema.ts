@@ -11,7 +11,7 @@ export const experimentGQLSchema = /* GraphQL */ `
     name: String!
     description: String
     proportion: Float!
-    sequence: [String]!
+    sequence: [String!]!
     cycles: Float!
   }
 
@@ -20,7 +20,7 @@ export const experimentGQLSchema = /* GraphQL */ `
     name: String!
     description: String
     proportion: Float!
-    sequence: [String]!
+    sequence: [String!]!
     cycles: Float!
   }
 
@@ -30,7 +30,7 @@ export const experimentGQLSchema = /* GraphQL */ `
   }
 
   input EnrollmentInput {
-    attributes: [String]
+    attributes: [String!]
     proportion: Float
   }
 
@@ -58,14 +58,14 @@ export const experimentGQLSchema = /* GraphQL */ `
     id: ID!
     name: String!
     duration: Float!
-    flagStates: [FlagState]!
+    flagStates: [FlagState!]!
   }
 
   input TreatmentInput {
     id: ID!
     name: String!
     duration: Float!
-    flagStates: [FlagStateInput]!
+    flagStates: [FlagStateInput!]!
   }
 
   type Experiment {
@@ -80,11 +80,11 @@ export const experimentGQLSchema = /* GraphQL */ `
     hypothesis: String
     startTimestamp: Float
     endTimestamp: Float
-    groups: [ExperimentGroup]!
+    groups: [ExperimentGroup!]!
     enrollment: Enrollment!
-    flagIds: [String]!
-    dependents: [Metric]!
-    definedTreatments: [Treatment]!
+    flagIds: [String!]!
+    dependents: [Metric!]!
+    definedTreatments: [Treatment!]!
   }
 
   input PartialExperimentWithId {
@@ -99,11 +99,11 @@ export const experimentGQLSchema = /* GraphQL */ `
     hypothesis: String
     startTimestamp: Float
     endTimestamp: Float
-    groups: [ExperimentGroupInput]
+    groups: [ExperimentGroupInput!]
     enrollment: EnrollmentInput
-    flagIds: [String]
-    dependents: [MetricInput]
-    definedTreatments: [TreatmentInput]
+    flagIds: [String!]
+    dependents: [MetricInput!]
+    definedTreatments: [TreatmentInput!]
   }
 
   input ExperimentDraft {
@@ -115,10 +115,10 @@ export const experimentGQLSchema = /* GraphQL */ `
     hypothesis: String
     startTimestamp: Float
     endTimestamp: Float
-    groups: [ExperimentGroupInput]!
+    groups: [ExperimentGroupInput!]!
     enrollment: EnrollmentInput!
-    flagIds: [String]!
-    dependents: [MetricInput]!
-    definedTreatments: [TreatmentInput]!
+    flagIds: [String!]!
+    dependents: [MetricInput!]!
+    definedTreatments: [TreatmentInput!]!
   }
 `;

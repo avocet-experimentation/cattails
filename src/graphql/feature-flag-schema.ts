@@ -71,7 +71,7 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     overrideRules: [OverrideRule!]!
   }
 
-  input PartialFeatureFlagWithStringId {
+  input PartialFeatureFlagWithId {
     id: ID!
     createdAt: Float
     updatedAt: Float
@@ -79,7 +79,7 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     value: FlagValueDef
     description: String
     environmentNames: EnvironmentNames
-    overrideRules: [OverrideRuleInput]
+    overrideRules: [OverrideRuleInput!]
   }
 
   input FeatureFlagDraft {
@@ -87,6 +87,6 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     value: FlagValueDef!
     description: String
     environmentNames: EnvironmentNames
-    overrideRules: [OverrideRuleInput]!
+    overrideRules: [OverrideRuleInput!]!
   }
 `;
