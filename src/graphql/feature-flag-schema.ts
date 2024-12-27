@@ -3,6 +3,8 @@ export const featureFlagGQLSchema = /* GraphQL */ `
 
   scalar FlagValueDef
 
+  scalar TextPrimitive
+
   enum OverrideRuleType {
     Experiment
     ForcedValue
@@ -40,7 +42,7 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     environmentName: String!
     enrollment: Enrollment!
     type: OverrideRuleType!
-    value: String!
+    value: TextPrimitive!
   }
 
   union OverrideRuleUnion = ExperimentReference | ForcedValue
@@ -49,7 +51,7 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     id: String!
     type: String!
     name: String
-    value: String
+    value: TextPrimitive
     description: String
     status: ExperimentStatus!
     environmentName: String!
