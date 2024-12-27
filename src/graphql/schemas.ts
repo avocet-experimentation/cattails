@@ -11,7 +11,7 @@ const directiveSchemas = /* GraphQL */ `
 
 const querySchemas = /* GraphQL */ `
   type Query {
-    FeatureFlag(id: ID!): FeatureFlag
+    featureFlag(id: ID!): FeatureFlag
     allFeatureFlags(limit: Int, offset: Int): [FeatureFlag!]!
     experiment(id: ID!): Experiment
     allExperiments(limit: Int, offset: Int): [Experiment!]!

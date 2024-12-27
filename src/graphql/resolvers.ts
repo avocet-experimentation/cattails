@@ -17,6 +17,21 @@ import { mutationResolvers } from './mutation-resolvers.js';
 const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 
 const scalarResolvers: IResolvers = {
+  TextPrimitive: {
+    resolveType(obj: string | number | boolean) {
+      if (
+        typeof obj !== 'string'
+        && typeof obj !== 'number'
+        && typeof obj !== 'boolean'
+      ) {
+        throw new TypeError(
+          `Value ${JSON.stringify(obj)} is not a text primitive!`,
+        );
+      }
+
+      return obj;
+    },
+  },
   OverrideRule: {
     resolveType(obj: OverrideRuleUnion) {
       const mapping = {
@@ -25,7 +40,6 @@ const scalarResolvers: IResolvers = {
       };
 
       const gqlType = mapping[obj.type];
-      console.log({ gqlType });
       if (!gqlType) throw new TypeError(`type ${obj.type} not accounted for!`);
       return gqlType;
     },
@@ -52,7 +66,7 @@ const scalarResolvers: IResolvers = {
 
 const queryResolvers: IResolvers = {
   Query: {
-    FeatureFlag: async (_, { id }: { id: string }) => repos.featureFlag.get(id),
+    featureFlag: async (_, { id }: { id: string }) => repos.featureFlag.get(id),
     allFeatureFlags: async (_, { limit }: { limit?: number }) =>
       repos.featureFlag.getMany(limit),
     experiment: async (_, { id }: { id: string }) => repos.experiment.get(id),
