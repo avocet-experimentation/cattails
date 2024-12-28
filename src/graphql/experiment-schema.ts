@@ -1,6 +1,8 @@
 export const experimentGQLSchema = /* GraphQL */ `
   scalar DefinedTreatments
 
+  scalar MetricDataType
+
   enum ExperimentStatus {
     draft
     active
