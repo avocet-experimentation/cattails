@@ -1,4 +1,6 @@
 export const experimentGQLSchema = /* GraphQL */ `
+  scalar DefinedTreatments
+
   enum ExperimentStatus {
     draft
     active
@@ -84,7 +86,7 @@ export const experimentGQLSchema = /* GraphQL */ `
     enrollment: Enrollment!
     flagIds: [String!]!
     dependents: [Metric!]!
-    definedTreatments: [Treatment!]!
+    definedTreatments: DefinedTreatments!
   }
 
   input PartialExperimentWithId {
@@ -103,7 +105,7 @@ export const experimentGQLSchema = /* GraphQL */ `
     enrollment: EnrollmentInput
     flagIds: [String!]
     dependents: [MetricInput!]
-    definedTreatments: [TreatmentInput!]
+    definedTreatments: DefinedTreatments
   }
 
   input ExperimentDraft {
@@ -119,6 +121,6 @@ export const experimentGQLSchema = /* GraphQL */ `
     enrollment: EnrollmentInput!
     flagIds: [String!]!
     dependents: [MetricInput!]!
-    definedTreatments: [TreatmentInput!]!
+    definedTreatments: DefinedTreatments!
   }
 `;
