@@ -7,7 +7,7 @@ import {
   clientPropValueSchema,
   OverrideRuleUnion,
   experimentSchema,
-  metricSchema,
+  oTelAttributeValueSchema,
 } from '@avocet/core';
 import { Filter } from 'mongodb';
 import { IResolvers } from 'mercurius';
@@ -61,7 +61,7 @@ const scalarResolvers: IResolvers = {
   MetricDataType: new GraphQLScalarType({
     name: 'MetricDataType',
     parseValue(value) {
-      return metricSchema.parse(value);
+      return oTelAttributeValueSchema.parse(value);
     },
   }),
   FlagValueDef: new GraphQLScalarType({
