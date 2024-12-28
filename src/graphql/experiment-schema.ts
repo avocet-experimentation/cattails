@@ -40,12 +40,12 @@ export const experimentGQLSchema = /* GraphQL */ `
 
   type Metric {
     fieldName: String
-    fieldDataType: String
+    fieldDataType: MetricDataType
   }
 
   input MetricInput {
     fieldName: String
-    fieldDataType: String
+    fieldDataType: MetricDataType
   }
 
   type FlagState {
