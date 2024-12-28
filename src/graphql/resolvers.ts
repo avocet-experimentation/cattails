@@ -6,6 +6,7 @@ import {
   featureFlagSchema,
   clientPropValueSchema,
   OverrideRuleUnion,
+  experimentSchema,
 } from '@avocet/core';
 import { Filter } from 'mongodb';
 import { IResolvers } from 'mercurius';
@@ -48,6 +49,12 @@ const scalarResolvers: IResolvers = {
     name: 'EnvironmentNames',
     parseValue(value) {
       return featureFlagSchema.shape.environmentNames.parse(value);
+    },
+  }),
+  DefinedTreatments: new GraphQLScalarType({
+    name: 'DefinedTreatments',
+    parseValue(value) {
+      return experimentSchema.shape.definedTreatments.parse(value);
     },
   }),
   FlagValueDef: new GraphQLScalarType({
