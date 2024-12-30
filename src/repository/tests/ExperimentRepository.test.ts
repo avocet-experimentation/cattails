@@ -121,9 +121,7 @@ describe('Embed methods', () => {
       const updateResult = await repoManager.experiment.update(expDoc);
       if (!updateResult) throw new Error('Update failed');
 
-      const startResult = await repoManager.experiment.startExperiment(
-        expDoc.id,
-      );
+      const startResult = await repoManager.experiment.start(expDoc.id);
       expect(startResult).toBe(true);
 
       const updatedExpDoc = await repoManager.experiment.get(expDoc.id);
