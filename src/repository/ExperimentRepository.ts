@@ -35,18 +35,18 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
     return updatedDoc;
   }
 
-  async startExperiment(experimentId: string) {
+  async start(experimentId: string) {
     const updatedDoc = await this.setExperimentStatus(experimentId, 'active');
     return this.createEmbeds(updatedDoc);
   }
 
-  async pauseExperiment(experimentId: string) {
+  async pause(experimentId: string) {
     const updatedDoc = await this.setExperimentStatus(experimentId, 'paused');
     return this.createEmbeds(updatedDoc);
   }
 
-  async stopExperiment(experimentId: string) {
-    await this.setExperimentStatus(experimentId, 'paused');
+  async complete(experimentId: string) {
+    await this.setExperimentStatus(experimentId, 'completed');
     return this.deleteEmbeds(experimentId);
   }
 

@@ -74,6 +74,13 @@ export const mutationResolvers: IResolvers = {
       await repos.experiment.delete(id);
       return id;
     },
+
+    startExperiment: async (_, { id }: { id: string }): Promise<boolean> =>
+      repos.experiment.start(id),
+    pauseExperiment: async (_, { id }: { id: string }): Promise<boolean> =>
+      repos.experiment.pause(id),
+    completeExperiment: async (_, { id }: { id: string }): Promise<boolean> =>
+      repos.experiment.complete(id),
     // #endregion
     // #region Environment
     createEnvironment: async (

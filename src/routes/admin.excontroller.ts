@@ -139,7 +139,7 @@ export const startExperimentHandler = async (
       .code(404)
       .send({ error: { code: 404, message: 'Experiment not found' } });
   }
-  const updatedStatus = await repository.experiment.startExperiment(experimentId);
+  const updatedStatus = await repository.experiment.start(experimentId);
   if (!updatedStatus) {
     return reply
       .code(404)

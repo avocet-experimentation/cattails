@@ -38,7 +38,10 @@ const mutationSchemas = /* GraphQL */ `
 
     createExperiment(newEntry: ExperimentDraft!): Experiment!
     updateExperiment(partialEntry: PartialExperimentWithId!): Experiment
-    deleteExperiment(id: ID!): Boolean
+    deleteExperiment(id: ID!): ID
+    startExperiment(id: ID!): Boolean
+    pauseExperiment(id: ID!): Boolean
+    completeExperiment(id: ID!): Boolean
 
     createEnvironment(newEntry: EnvironmentDraft!): Environment!
     updateEnvironment(partialEntry: PartialEnvironmentWithId!): Environment
