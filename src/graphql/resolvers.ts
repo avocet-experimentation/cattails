@@ -46,6 +46,15 @@ const scalarResolvers: IResolvers = {
       return gqlType;
     },
   },
+  OverrideRuleType: {
+    resolveType(value: OverrideRuleUnion['type']) {
+      if (value === 'Experiment') return value as 'Experiment';
+      if (value === 'ForcedValue') return value as 'ForcedValue';
+      throw new TypeError(
+        `Override rule type "${value}" not accounted for in resolver`,
+      );
+    },
+  },
   EnvironmentNames: new GraphQLScalarType({
     name: 'EnvironmentNames',
     parseValue(value) {

@@ -10,6 +10,10 @@ export const experimentGQLSchema = /* GraphQL */ `
     completed
   }
 
+  enum ExperimentType {
+    Experiment
+  }
+
   type ExperimentGroup {
     id: ID!
     name: String!
@@ -29,23 +33,23 @@ export const experimentGQLSchema = /* GraphQL */ `
   }
 
   type Enrollment {
-    attributes: [String]
-    proportion: Float
+    attributes: [String!]!
+    proportion: Float!
   }
 
   input EnrollmentInput {
-    attributes: [String!]
-    proportion: Float
+    attributes: [String!]!
+    proportion: Float!
   }
 
   type Metric {
-    fieldName: String
-    fieldDataType: MetricDataType
+    fieldName: String!
+    fieldDataType: MetricDataType!
   }
 
   input MetricInput {
-    fieldName: String
-    fieldDataType: MetricDataType
+    fieldName: String!
+    fieldDataType: MetricDataType!
   }
 
   type FlagState {
@@ -79,7 +83,7 @@ export const experimentGQLSchema = /* GraphQL */ `
     name: String!
     environmentName: String!
     status: ExperimentStatus!
-    type: String!
+    type: ExperimentType!
     description: String
     hypothesis: String
     startTimestamp: Float
