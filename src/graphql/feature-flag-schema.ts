@@ -5,10 +5,7 @@ export const featureFlagGQLSchema = /* GraphQL */ `
 
   scalar TextPrimitive
 
-  enum OverrideRuleType {
-    Experiment
-    ForcedValue
-  }
+  scalar OverrideRuleType
 
   interface OverrideRule {
     id: String!
