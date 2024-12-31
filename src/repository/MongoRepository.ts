@@ -467,4 +467,15 @@ export default class MongoRepository<T extends AvocetMongoTypes> {
     return this.manager.client.withSession(async (session) =>
       session.withTransaction(cb));
   }
+
+  /**
+   * Construct a matcher for one of many document IDs
+   */
+  protected getIdMatcher(ids: string[]) {
+    return {
+      _id: {
+        $in: ids.map((id) => ObjectId.createFromHexString(id)),
+      },
+    };
+  }
 }

@@ -1,11 +1,10 @@
 import {
   DocumentUpdateFailedError,
   Experiment,
+  ExperimentDraft,
   ExperimentReference,
   experimentSchema,
-  RuleStatus,
 } from '@avocet/core';
-import { ObjectId } from 'mongodb';
 import MongoRepository from './MongoRepository.js';
 import { IRepositoryManager, PartialWithStringId } from './repository-types.js';
 
@@ -14,40 +13,45 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
     super('experiment', experimentSchema, repositoryManager);
   }
 
-  protected async setExperimentStatus(
-    experimentId: string,
-    status: RuleStatus,
-  ) {
-    const updates = {
-      id: experimentId,
-      status,
-      startTimestamp: Date.now(),
-    };
+  async start(experimentId: string) {
+    const experimentDoc = await this.get(experimentId);
+    const linkedFlags = await this.manager.featureFlag.findMany(
+      this.getIdMatcher(experimentDoc.flagIds),
+    );
 
-    const updateResult = await this.update(updates);
-    if (!updateResult) {
-      throw new DocumentUpdateFailedError(
-        `Failed to set experiment ${experimentId} status to "${status}"`,
+    const isReady = ExperimentDraft.isReadyToStart(experimentDoc, linkedFlags);
+    if (!isReady) {
+      throw new Error(
+        `Experiment "${experimentDoc.name}" is not ready to start`,
       );
     }
 
-    const updatedDoc = await this.get(experimentId);
-    return updatedDoc;
+    return this.update({
+      id: experimentId,
+      status: 'active',
+      startTimestamp: Date.now(),
+    });
   }
 
-  async start(experimentId: string) {
-    const updatedDoc = await this.setExperimentStatus(experimentId, 'active');
-    return this.createEmbeds(updatedDoc);
-  }
-
+  /**
+   * WIP
+   */
   async pause(experimentId: string) {
-    const updatedDoc = await this.setExperimentStatus(experimentId, 'paused');
-    return this.createEmbeds(updatedDoc);
+    return this.update({
+      id: experimentId,
+      status: 'paused',
+    });
   }
 
+  /**
+   * WIP
+   */
   async complete(experimentId: string) {
-    await this.setExperimentStatus(experimentId, 'completed');
-    return this.deleteEmbeds(experimentId);
+    return this.update({
+      id: experimentId,
+      status: 'completed',
+      endTimestamp: Date.now(),
+    });
   }
 
   /** WIP
@@ -58,17 +62,10 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
     try {
       const experimentReference = new ExperimentReference(newExperiment);
 
-      const flagMatcher = {
-        _id: {
-          $in: newExperiment.flagIds.map((id) =>
-            ObjectId.createFromHexString(id)),
-        },
-      };
-
       const embedResult = await this.manager.featureFlag.push(
         'overrideRules',
         experimentReference,
-        flagMatcher,
+        this.getIdMatcher(newExperiment.flagIds),
       );
 
       if (!embedResult) {
@@ -100,12 +97,7 @@ export default class ExperimentRepository extends MongoRepository<Experiment> {
       const updatedExpDoc = await this.get(partialExperiment.id);
       const embedMatcher = { id: partialExperiment.id };
 
-      const flagFilter = {
-        _id: {
-          $in: updatedExpDoc.flagIds.map((id) =>
-            ObjectId.createFromHexString(id)),
-        },
-      };
+      const flagFilter = this.getIdMatcher(updatedExpDoc.flagIds);
 
       const pullResult = await featureFlag.pull(
         'overrideRules',
