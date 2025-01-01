@@ -69,7 +69,7 @@ async function computeFlagValue(
 }
 
 interface FetchFlagsClientBody {
-  environmentName: string;
+  apiKey: string;
   clientProps: ClientPropMapping;
 }
 
@@ -88,7 +88,15 @@ export const fetchFFlagHandler = async (
   request: FastifyRequest<{ Body: FetchFlagClientRequest }>,
   reply: FastifyReply,
 ): Promise<ClientSDKFlagMapping> => {
-  const { environmentName, clientProps, flagName } = request.body;
+  const { apiKey, clientProps, flagName } = request.body;
+
+  const environmentObj = await repos.environment.findOne({ apiKey });
+
+  const environmentName = environmentObj ? environmentObj.name : undefined;
+
+  if (!environmentName) {
+    throw new Error('No environment name found.');
+  }
 
   let currentValue: ClientSDKFlagValue = {
     value: null,

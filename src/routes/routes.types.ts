@@ -1,15 +1,15 @@
 // Outer-scope feature flag properties;
-// these props will act as the configuration of how the test groups are tested, recorded, and distributed.
+// these props will act as the config of how the test groups are tested, recorded, and distributed.
 
 type FlagParams = {
   fflagId: string;
   fflagName: string;
-}
+};
 
 type ExperimentParams = {
   experimentId: string;
   experimentName: string;
-}
+};
 
 export type FlagIdParam = Pick<FlagParams, 'fflagId'>;
 
@@ -23,7 +23,7 @@ export type ExperimentNameParam = Pick<ExperimentParams, 'experimentName'>;
 export type TrafficAllocation = {};
 
 // export type CachingParam = {
-//   environmentName: EnvironmentName;
+//   apiKey: apiKey;
 // };
 
 // export type CreateFFlagBodyRequest = FeatureFlag;
