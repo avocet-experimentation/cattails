@@ -85,7 +85,7 @@ export const experimentGQLSchema = /* GraphQL */ `
     compareValue: TextPrimitive!
     compareOperator: String!
     baseCondition: Condition!
-    deltaCondition: Condition!
+    testCondition: Condition!
   }
 
   input HypothesisInput {
@@ -95,7 +95,7 @@ export const experimentGQLSchema = /* GraphQL */ `
     compareValue: TextPrimitive!
     compareOperator: String!
     baseCondition: Condition!
-    deltaCondition: Condition!
+    testCondition: Condition!
   }
 
   type Experiment {
