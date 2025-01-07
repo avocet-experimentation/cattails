@@ -3,6 +3,8 @@ export const experimentGQLSchema = /* GraphQL */ `
 
   scalar MetricDataType
 
+  scalar Condition
+
   enum ExperimentStatus {
     draft
     active
@@ -44,12 +46,12 @@ export const experimentGQLSchema = /* GraphQL */ `
 
   type Metric {
     fieldName: String!
-    fieldDataType: MetricDataType!
+    type: MetricDataType!
   }
 
   input MetricInput {
     fieldName: String!
-    fieldDataType: MetricDataType!
+    type: MetricDataType!
   }
 
   type FlagState {
@@ -76,6 +78,26 @@ export const experimentGQLSchema = /* GraphQL */ `
     flagStates: [FlagStateInput!]!
   }
 
+  type Hypothesis {
+    id: ID!
+    dependentName: String!
+    analysis: String!
+    compareValue: TextPrimitive!
+    compareOperator: String!
+    baseCondition: Condition!
+    deltaCondition: Condition!
+  }
+
+  input HypothesisInput {
+    id: ID!
+    dependentName: String!
+    analysis: String!
+    compareValue: TextPrimitive!
+    compareOperator: String!
+    baseCondition: Condition!
+    deltaCondition: Condition!
+  }
+
   type Experiment {
     id: ID!
     createdAt: Float!
@@ -91,8 +113,9 @@ export const experimentGQLSchema = /* GraphQL */ `
     groups: [ExperimentGroup!]!
     enrollment: Enrollment!
     flagIds: [String!]!
-    dependents: [Metric!]!
     definedTreatments: DefinedTreatments!
+    dependents: [Metric!]!
+    hypotheses: [Hypothesis!]!
   }
 
   input PartialExperimentWithId {
@@ -110,8 +133,9 @@ export const experimentGQLSchema = /* GraphQL */ `
     groups: [ExperimentGroupInput!]
     enrollment: EnrollmentInput
     flagIds: [String!]
-    dependents: [MetricInput!]
     definedTreatments: DefinedTreatments
+    dependents: [MetricInput!]
+    hypotheses: [HypothesisInput!]
   }
 
   input ExperimentDraft {
@@ -128,5 +152,6 @@ export const experimentGQLSchema = /* GraphQL */ `
     flagIds: [String!]!
     dependents: [MetricInput!]!
     definedTreatments: DefinedTreatments!
+    hypotheses: [HypothesisInput!]!
   }
 `;

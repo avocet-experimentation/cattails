@@ -8,6 +8,7 @@ import {
   OverrideRuleUnion,
   experimentSchema,
   oTelAttributeValueSchema,
+  conditionSchema,
 } from '@avocet/core';
 import { Filter } from 'mongodb';
 import { IResolvers } from 'mercurius';
@@ -83,6 +84,12 @@ const scalarResolvers: IResolvers = {
     name: 'ClientPropValue',
     parseValue(value) {
       return clientPropValueSchema.parse(value);
+    },
+  }),
+  Condition: new GraphQLScalarType({
+    name: 'Condition',
+    parseValue(value) {
+      return conditionSchema.parse(value);
     },
   }),
 };
