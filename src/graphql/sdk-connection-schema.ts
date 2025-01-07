@@ -7,7 +7,7 @@ export const sdkConnectionGQLSchema = /* GraphQL */ `
     environmentId: ID!
     description: String
     allowedOrigins: [String!]!
-    clientKeyHash: String!
+    apiKeyHash: String!
   }
 
   input PartialSDKConnectionWithId {
@@ -18,7 +18,7 @@ export const sdkConnectionGQLSchema = /* GraphQL */ `
     environmentId: ID
     description: String
     allowedOrigins: [String!]
-    clientKeyHash: String
+    apiKeyHash: String
   }
 
   input SDKConnectionDraft {
@@ -26,6 +26,6 @@ export const sdkConnectionGQLSchema = /* GraphQL */ `
     environmentId: ID!
     description: String
     allowedOrigins: [String!]!
-    clientKeyHash: String!
+    apiKeyHash: String!
   }
 `;
