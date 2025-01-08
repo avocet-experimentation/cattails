@@ -8,7 +8,7 @@ import {
   OverrideRuleUnion,
   experimentSchema,
   oTelAttributeValueSchema,
-  conditionSchema,
+  conditionReferenceSchema,
 } from '@avocet/core';
 import { Filter } from 'mongodb';
 import { IResolvers } from 'mercurius';
@@ -89,7 +89,7 @@ const scalarResolvers: IResolvers = {
   ConditionReference: new GraphQLScalarType({
     name: 'ConditionReference',
     parseValue(value) {
-      return conditionSchema.parse(value);
+      return conditionReferenceSchema.parse(value);
     },
   }),
 };
