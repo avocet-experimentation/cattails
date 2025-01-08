@@ -3,7 +3,7 @@ export const experimentGQLSchema = /* GraphQL */ `
 
   scalar MetricDataType
 
-  scalar Condition
+  scalar ConditionReference
 
   enum ExperimentStatus {
     draft
@@ -84,8 +84,8 @@ export const experimentGQLSchema = /* GraphQL */ `
     analysis: String!
     compareValue: TextPrimitive!
     compareOperator: String!
-    baseCondition: Condition!
-    testCondition: Condition!
+    baseConditionRef: ConditionReference!
+    testConditionRef: ConditionReference!
   }
 
   input HypothesisInput {
@@ -94,8 +94,8 @@ export const experimentGQLSchema = /* GraphQL */ `
     analysis: String!
     compareValue: TextPrimitive!
     compareOperator: String!
-    baseCondition: Condition!
-    testCondition: Condition!
+    baseConditionRef: ConditionReference!
+    testConditionRef: ConditionReference!
   }
 
   type Experiment {

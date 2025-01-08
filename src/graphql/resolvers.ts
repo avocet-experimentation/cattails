@@ -86,8 +86,8 @@ const scalarResolvers: IResolvers = {
       return clientPropValueSchema.parse(value);
     },
   }),
-  Condition: new GraphQLScalarType({
-    name: 'Condition',
+  ConditionReference: new GraphQLScalarType({
+    name: 'ConditionReference',
     parseValue(value) {
       return conditionSchema.parse(value);
     },
