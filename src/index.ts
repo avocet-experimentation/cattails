@@ -50,33 +50,6 @@ server.addHook('onRequest', async (request, reply) => {
   }
 });
 
-server.register(mercuriusLogging);
-
-// configure cors
-await server.register(cors, {
-  prefix: 'graphql',
-  origin: cfg.DASHBOARD_URL,
-  credentials: true,
-  methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400,
-});
-
-// configure jwt auth
-await server.register(fastifyJwt, jwtValidationObject);
-
-// middleware to authorize all requests
-server.addHook('onRequest', async (request, reply) => {
-  try {
-    await request.jwtVerify();
-  } catch (error) {
-    console.log(error);
-    reply.code(401).send({ error: 'Unauthorized' });
-  }
-});
-
-server.register(mercuriusLogging);
-
 server.listen({ port: cfg.SERVICE_PORT }, (error, address) => {
   if (error instanceof Error) {
     console.error(error);
