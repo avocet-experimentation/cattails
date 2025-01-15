@@ -78,6 +78,13 @@ interface FetchFlagClientRequest extends FetchFlagsClientBody {
 
 const repos = new RepositoryManager(cfg.MONGO_API_URI);
 
+const getEnvFromKey = async (apiKey: string) => {
+  const environment = await repos.environment.findOne({ apiKey });
+  if (!environment) throw new Error('No environment found.');
+
+  return environment;
+};
+
 /**
  * Todo:
  * - pass client API key in body instead of environmentName
@@ -89,39 +96,42 @@ export const fetchFFlagHandler = async (
 ): Promise<ClientSDKFlagMapping> => {
   const { apiKey, clientProps, flagName } = request.body;
 
-  const environmentObj = await repos.environment.findOne({ apiKey });
+  try {
+    const environment = await getEnvFromKey(apiKey);
+    const environmentName = environment.name;
 
-  const environmentName = environmentObj ? environmentObj.name : undefined;
+    let currentValue: ClientSDKFlagValue = {
+      value: null,
+      metadata: ClientFlagManager.defaultIdString(),
+    };
 
-  if (!environmentName) {
-    throw new Error('No environment name found.');
+    const flag = await repos.featureFlag.findOne({
+      name: flagName,
+    });
+    if (flag && environmentName in flag.environmentNames) {
+      currentValue = await computeFlagValue(
+        repos.experiment,
+        flag,
+        environmentName,
+        clientProps,
+      );
+    }
+    return await reply.code(200).send({ [flagName]: currentValue });
+  } catch (e) {
+    return reply.code(404);
   }
-
-  let currentValue: ClientSDKFlagValue = {
-    value: null,
-    metadata: ClientFlagManager.defaultIdString(),
-  };
-
-  const flag = await repos.featureFlag.findOne({
-    name: flagName,
-  });
-  if (flag && environmentName in flag.environmentNames) {
-    currentValue = await computeFlagValue(
-      repos.experiment,
-      flag,
-      environmentName,
-      clientProps,
-    );
-  }
-  return reply.code(200).send({ [flagName]: currentValue });
 };
 
 export const getEnvironmentFFlagsHandler = async (
   request: FastifyRequest<{ Body: FetchFlagsClientBody }>,
   reply: FastifyReply,
 ): Promise<ClientSDKFlagMapping> => {
-  const { environmentName, clientProps } = request.body;
+  const { apiKey, clientProps } = request.body;
+
   try {
+    const environment = await getEnvFromKey(apiKey);
+    const environmentName = environment.name;
+
     const featureFlags = await repos.featureFlag.getEnvironmentFlags(environmentName);
 
     const resolve = await parallelAsync(
@@ -142,6 +152,6 @@ export const getEnvironmentFFlagsHandler = async (
       console.error(e);
     }
 
-    return reply.code(500);
+    return reply.code(404);
   }
 };
