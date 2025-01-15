@@ -5,9 +5,8 @@ import {
   AvocetMongoTypes,
   DraftRecord,
 } from '@avocet/core';
+import { RepositoryManager, MongoRepository } from '@avocet/mongo-client';
 import cfg from '../envalid.js';
-import RepositoryManager from '../repository/RepositoryManager.js';
-import MongoRepository from '../repository/MongoRepository.js';
 
 export const repoManager = new RepositoryManager(cfg.MONGO_TESTING_URI);
 

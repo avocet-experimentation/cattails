@@ -13,9 +13,8 @@ import {
   User,
 } from '@avocet/core';
 import { IResolvers } from 'mercurius';
-import { PartialWithStringId } from '../repository/repository-types.js';
+import { RepositoryManager, PartialWithStringId } from '@avocet/mongo-client';
 import cfg from '../envalid.js';
-import RepositoryManager from '../repository/RepositoryManager.js';
 
 const repos = new RepositoryManager(cfg.MONGO_ADMIN_URI);
 

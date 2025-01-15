@@ -15,7 +15,7 @@ import {
   insertExperiments,
   insertFeatureFlags,
   insertUsers,
-} from '../repository/insert-helpers.js';
+} from '../lib/insert-helpers.js';
 
 await eraseTestData();
 await insertUsers([staticUser]);

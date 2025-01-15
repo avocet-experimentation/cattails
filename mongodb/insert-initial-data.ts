@@ -1,5 +1,5 @@
 import { ClientPropDefDraft, EnvironmentDraft } from '@avocet/core';
-import { insertDrafts, repos } from '../src/repository/insert-helpers.js';
+import { insertDrafts, repos } from '../src/lib/insert-helpers.js';
 
 const defaultEnvironments: EnvironmentDraft[] = [
   EnvironmentDraft.template({ name: 'testing' }),

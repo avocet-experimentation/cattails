@@ -13,7 +13,7 @@ import {
 import { Filter } from 'mongodb';
 import { IResolvers } from 'mercurius';
 import { GraphQLScalarType } from 'graphql';
-import RepositoryManager from '../repository/RepositoryManager.js';
+import { RepositoryManager } from '@avocet/mongo-client';
 import cfg from '../envalid.js';
 import { mutationResolvers } from './mutation-resolvers.js';
 

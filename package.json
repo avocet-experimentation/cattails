@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@avocet/core": "file:../packages/avocet-core",
+    "@avocet/mongo-client": "file:../packages/mongo-client",
     "@fastify/cors": "^8.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/ws": "^8.5.13",
