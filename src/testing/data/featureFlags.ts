@@ -49,58 +49,40 @@ export const exampleFlagDrafts: FeatureFlagDraft[] = [
   }),
 ];
 
-export const booleanForcedValue1: ForcedValue = {
-  id: crypto.randomUUID(),
-  type: 'ForcedValue',
-  description: null,
-  startTimestamp: null,
-  endTimestamp: null,
-  status: 'active',
+export const booleanForcedValue1 = ForcedValue.template({
+  environmentName: 'production',
   value: true,
-  environmentName: 'prod',
   enrollment: {
     attributes: ['id'],
     proportion: 1,
   },
-};
+});
 
-export const booleanForcedValue2: ForcedValue = {
-  id: crypto.randomUUID(),
-  type: 'ForcedValue',
-  startTimestamp: null,
-  endTimestamp: null,
+export const booleanForcedValue2 = ForcedValue.template({
   description: 'Always sets this flag to true',
-  status: 'active',
+  environmentName: 'production',
   value: true,
-  environmentName: 'prod',
   enrollment: {
     attributes: ['id'],
     proportion: 1,
   },
-};
+});
 
-export const numberForcedValue1: ForcedValue = {
-  id: crypto.randomUUID(),
-  type: 'ForcedValue',
-  startTimestamp: null,
-  endTimestamp: null,
+export const numberForcedValue1 = ForcedValue.template({
   description: 'Sets volume to max',
-  status: 'active',
   value: 1,
   environmentName: 'testing',
   enrollment: {
     attributes: [],
     proportion: 1,
   },
-};
+});
 
-export const experimentRef1: ExperimentReference = ExperimentReference.template(
-  {
-    id: ObjectId.createFromTime(1).toHexString(),
-    name: 'Example Experiment',
-    environmentName: 'prod',
-  },
-);
+export const experimentRef1 = ExperimentReference.template({
+  id: ObjectId.createFromTime(1).toHexString(),
+  name: 'Example Experiment',
+  environmentName: 'prod',
+});
 
 export const staticRules: OverrideRuleUnion[] = [
   booleanForcedValue1,
@@ -139,21 +121,23 @@ export const staticFlagDrafts: FeatureFlagDraft[] = [
 // completed records. Only insert these by directly using Mongo
 export const staticFlags: FeatureFlag[] = [
   {
+    ...FeatureFlagDraft.templateBoolean({
+      name: 'use-new-database',
+      description: 'use new database',
+    }),
     id: '67328591069f921a07e5bd76',
-    name: 'use-new-database',
-    value: { type: 'boolean' as const, initial: false },
-    description: 'use new database',
     environmentNames: flagEnvironmentInit(),
     overrideRules: [booleanForcedValue1],
     createdAt: 1731364209327,
     updatedAt: 1731364209327,
   },
   {
+    ...FeatureFlagDraft.templateBoolean({
+      name: 'auto-update-ui',
+      description:
+        'Automatically update the page as new data is fetched. Long-lived flag',
+    }),
     id: '94328591069f921a07e5bd76',
-    name: 'auto-update-ui',
-    value: { type: 'boolean' as const, initial: false },
-    description:
-      'Automatically update the page as new data is fetched. Long-lived flag',
     environmentNames: flagEnvironmentInit(),
     overrideRules: [booleanForcedValue1],
     createdAt: 1,
