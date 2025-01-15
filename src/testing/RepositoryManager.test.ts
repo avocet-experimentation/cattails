@@ -19,13 +19,9 @@ import {
   exampleFlagDrafts,
   getExampleFlag,
   staticFlagDrafts,
-} from '../../testing/data/featureFlags.js';
-import { printDetail } from '../../lib/index.js';
-import {
-  repoManager,
-  insertFlags,
-  eraseTestData,
-} from '../../testing/testing-helpers.js';
+} from './data/featureFlags.js';
+import { printDetail } from '../lib/index.js';
+import { repoManager, insertFlags, eraseTestData } from './testing-helpers.js';
 
 beforeAll(eraseTestData);
 
