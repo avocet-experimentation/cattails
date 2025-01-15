@@ -1,16 +1,13 @@
 import { ClientPropDefDraft } from '@avocet/core';
 
 export const staticClientPropDefs: ClientPropDefDraft[] = [
-  {
+  ClientPropDefDraft.template({
     name: 'id',
     dataType: 'string',
     isIdentifier: true,
-    description: null,
-  },
-  {
+  }),
+  ClientPropDefDraft.template({
     name: 'version',
     dataType: 'number',
-    isIdentifier: false,
-    description: null,
-  },
+  }),
 ];
