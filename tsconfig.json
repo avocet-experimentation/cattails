@@ -11,6 +11,12 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true
   },
-  "include": ["src/**/*", "vitest.config.ts", "mongodb/**/*", ".eslintrc.cjs"],
+  "include": [
+    "src/**/*",
+    "vitest.config.ts",
+    "mongodb/**/*",
+    "eslintrc.cjs",
+    "prettier.config.js"
+  ],
   "exclude": ["node_modules"]
 }

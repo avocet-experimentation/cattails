@@ -24,7 +24,7 @@ module.exports = {
     'import/prefer-default-export': 'off',
     'import/no-extraneous-dependencies': [
       'error',
-      { devDependencies: ['**/*.test.js', '**/*.spec.js', 'vitest.config.ts'] }
+      { devDependencies: ['**/*.test.ts', '**/*.spec.ts', 'vitest.config.ts'] }
     ]
   },
   settings: {
