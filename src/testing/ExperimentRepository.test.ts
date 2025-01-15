@@ -10,14 +10,14 @@ import {
   idMap,
   Treatment,
 } from '@avocet/core';
-import { staticFlagDrafts } from '../../testing/data/featureFlags.js';
-import { exampleExperiments } from '../../testing/data/experiment-data.js';
+import { staticFlagDrafts } from './data/featureFlags.js';
+import { exampleExperiments } from './data/experiment-data.js';
 import {
   repoManager,
   eraseTestData,
   insertFlags,
   insertExperiments,
-} from '../../testing/testing-helpers.js';
+} from './testing-helpers.js';
 
 beforeAll(eraseTestData);
 

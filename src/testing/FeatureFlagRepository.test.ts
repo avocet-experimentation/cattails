@@ -8,12 +8,8 @@ import {
   numberForcedValue1,
   staticFlagDrafts,
   staticNumberFlag,
-} from '../../testing/data/featureFlags.js';
-import {
-  repoManager,
-  insertFlags,
-  eraseTestData,
-} from '../../testing/testing-helpers.js';
+} from './data/featureFlags.js';
+import { repoManager, insertFlags, eraseTestData } from './testing-helpers.js';
 
 beforeAll(eraseTestData);
 
