@@ -9,8 +9,7 @@ import {
   FeatureFlagDraft,
   UserDraft,
 } from '@avocet/core';
-import MongoRepository from './MongoRepository.js';
-import RepositoryManager from './RepositoryManager.js';
+import { RepositoryManager, MongoRepository } from '@avocet/mongo-client';
 import cfg from '../envalid.js';
 
 // change which one is commented out to swap the target database

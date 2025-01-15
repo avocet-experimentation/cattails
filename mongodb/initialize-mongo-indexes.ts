@@ -1,4 +1,4 @@
-import RepositoryManager from '../src/repository/RepositoryManager.js';
+import { RepositoryManager } from '@avocet/mongo-client';
 import cfg from '../src/envalid.js';
 
 const colls = new RepositoryManager(cfg.MONGO_ADMIN_URI);

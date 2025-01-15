@@ -1,5 +1,5 @@
 import { ExperimentDraft, FeatureFlagDraft, ForcedValue } from '@avocet/core';
-import { insertDrafts, repos } from '../src/repository/insert-helpers.js';
+import { insertDrafts, repos } from '../src/lib/insert-helpers.js';
 
 // assumes that default environments have already been inserted
 const allEnvironments = await repos.environment.getMany();

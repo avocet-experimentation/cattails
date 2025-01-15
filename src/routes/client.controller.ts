@@ -8,11 +8,10 @@ import {
   ForcedValue,
 } from '@avocet/core';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { RepositoryManager } from '@avocet/mongo-client';
 import ClientFlagManager from '../lib/ClientFlagManager.js';
-import RepositoryManager from '../repository/RepositoryManager.js';
 import cfg from '../envalid.js';
 import { printDetail } from '../lib/index.js';
-import ExperimentRepository from '../repository/ExperimentRepository.js';
 
 /**
  * Executes many asynchronous operations in parallel and returns once all of
@@ -39,7 +38,7 @@ const parallelAsync = async <P, A extends Array<unknown>>(
 };
 
 async function computeFlagValue(
-  experimentRepo: ExperimentRepository,
+  experimentRepo: RepositoryManager['experiment'],
   flag: FeatureFlag,
   environmentName: string,
   clientProps: ClientPropMapping,
