@@ -7,7 +7,6 @@ import { schema } from './graphql/schemas.js';
 import { resolvers } from './graphql/resolvers.js';
 import cfg from './envalid.js';
 import { getClientRoutes } from './routes/client.routes.js';
-import { getAdminRoutes } from './routes/admin.routes.js';
 
 const server = Fastify({
   logger: true,
@@ -17,7 +16,6 @@ const server = Fastify({
 server.get('/healthcheck', async () => ({ status: 'OK' }));
 // register routes for out flag entity
 server.register(getClientRoutes, { prefix: 'api' });
-server.register(getAdminRoutes, { prefix: 'admin' });
 // todo: replace '*' origin with environment variable referencing dashboard
 server.register(cors, { prefix: 'graphql', origin: '*' });
 server.register(mercurius, {
