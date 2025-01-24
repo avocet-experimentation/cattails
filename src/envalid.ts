@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { cleanEnv, num, str } from "envalid";
+import { cleanEnv, num, str } from 'envalid';
 
 const cfg = cleanEnv(process.env, {
   MONGO_DATABASE: str(),
