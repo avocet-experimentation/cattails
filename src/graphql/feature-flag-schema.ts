@@ -64,7 +64,7 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     name: String!
     value: FlagValueDef!
     description: String
-    environmentNames: EnvironmentNames
+    environmentNames: EnvironmentNames!
     overrideRules: [OverrideRule!]!
   }
 
@@ -83,7 +83,7 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     name: String!
     value: FlagValueDef!
     description: String
-    environmentNames: EnvironmentNames
+    environmentNames: EnvironmentNames!
     overrideRules: [OverrideRuleInput!]!
   }
 `;
