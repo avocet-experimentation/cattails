@@ -20,7 +20,6 @@ import {
   getExampleFlag,
   staticFlagDrafts,
 } from './data/featureFlags.js';
-import { printDetail } from '../lib/index.js';
 import { repoManager, insertFlags, eraseTestData } from './testing-helpers.js';
 
 beforeAll(eraseTestData);
@@ -171,8 +170,8 @@ describe('MongoRepository CRUD Methods', () => {
       expect(result).toBe(true);
 
       const updatedFirst = await repoManager.featureFlag.get(first);
-      printDetail({ first: exampleFlagDrafts[0] });
-      printDetail({ updatedFirst });
+      // printDetail({ first: exampleFlagDrafts[0] });
+      // printDetail({ updatedFirst });
       expect(updatedFirst).toMatchObject(updateObject);
     });
 

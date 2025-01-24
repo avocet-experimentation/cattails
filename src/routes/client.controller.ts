@@ -11,7 +11,6 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { RepositoryManager } from '@avocet/mongo-client';
 import ClientFlagManager from '../lib/ClientFlagManager.js';
 import cfg from '../envalid.js';
-import { printDetail } from '../lib/index.js';
 
 /**
  * Executes many asynchronous operations in parallel and returns once all of
@@ -144,7 +143,6 @@ export const getEnvironmentFFlagsHandler = async (
     );
 
     const environmentValues = Object.fromEntries(resolve);
-    printDetail(environmentValues);
     return await reply.code(200).send(environmentValues);
   } catch (e: unknown) {
     if (e instanceof Error) {
