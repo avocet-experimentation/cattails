@@ -1,9 +1,9 @@
 {
   "name": "cattails",
-  "version": "1.0.0",
   "description": "Service for working with Avocet's feature flags and experiments",
   "main": "index.js",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "npx tsx watch src/index.ts",
     "build": "rm -rf dist && tsup --clean --format esm ./src/index.ts",
@@ -14,9 +14,30 @@
     "initMongo": "(cd mongodb && docker compose up -d && bash init-db.sh .)",
     "exampleData": "npx tsx ./mongodb/insert-example-data.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "feature flag",
+    "experiment"
+  ],
+  "homepage": "https://avocet-experimentation.github.io",
+  "author": "Avocet Team (https://avocet-experimentation.github.io)",
+  "contributors": [
+    {
+      "name": "Gautam Panakkal",
+      "email": "gautampanakkal@gmail.com",
+      "url": "https://github.com/gpanakkal"
+    },
+    {
+      "name": "Adnan O. Shihabi",
+      "email": "adnan@ashihabi.me",
+      "url": "https://ashihabi.me"
+    },
+    {
+      "name": "Sean Mentele",
+      "email": "sean.a.mentele@gmail.com",
+      "url": "https://www.linkedin.com/in/sean-mentele-58481417a"
+    }
+  ],
+  "license": "MIT",
   "devDependencies": {
     "@types/jwk-to-pem": "^2.0.3",
     "@types/node": "^20.16.13",
@@ -33,8 +54,8 @@
     "vitest": "^2.0.0"
   },
   "dependencies": {
-    "@avocet/core": "file:../packages/avocet-core",
-    "@avocet/mongo-client": "file:../packages/mongo-client",
+    "@avocet/core": "^1.0.0",
+    "@avocet/mongo-client": "^1.0.0",
     "@fastify/cors": "^8.0.0",
     "@fastify/jwt": "^8.0.1",
     "@types/bcrypt": "^5.0.2",
