@@ -2,6 +2,7 @@ import {
   ClientPropMapping,
   ClientSDKFlagMapping,
   ClientSDKFlagValue,
+  Environment,
   Experiment,
   FeatureFlag,
   FeatureFlagDraft,
@@ -77,9 +78,12 @@ interface FetchFlagClientRequest extends FetchFlagsClientBody {
 
 const repos = new RepositoryManager(cfg.MONGO_API_URI);
 
-const getEnvFromKey = async (apiKey: string) => {
-  const environment = await repos.environment.findOne({ apiKey });
-  if (!environment) throw new Error('No environment found.');
+const getEnvFromKey = async (apiKey: string): Promise<Environment> => {
+  const connection = await repos.sdkConnection.findOne({ apiKeyHash: apiKey });
+  if (!connection) throw new Error('No SDK connection found.');
+
+  const environment = await repos.environment.get(connection.environmentId);
+  if (!connection) throw new Error('No environment found.');
 
   return environment;
 };
