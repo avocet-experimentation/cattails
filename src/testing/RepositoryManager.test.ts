@@ -267,20 +267,14 @@ describe('MongoRepository CRUD Methods', () => {
       // const firstDoc = await repo.featureFlag.get(first);
       // console.log(firstDoc);
 
-      const newRule: ForcedValue = {
-        id: randomUUID(),
-        type: 'ForcedValue',
-        description: null,
-        startTimestamp: null,
-        endTimestamp: null,
-        status: 'draft',
+      const newRule: ForcedValue = ForcedValue.template({
         value: true,
         environmentName: 'dev',
         enrollment: {
           attributes: [],
           proportion: 1,
         },
-      };
+      });
       const result = await repoManager.featureFlag.pushTo(
         'overrideRules',
         newRule,

@@ -9,7 +9,6 @@ export const featureFlagGQLSchema = /* GraphQL */ `
 
   interface OverrideRule {
     id: String!
-    status: ExperimentStatus!
     description: String
     startTimestamp: Float
     endTimestamp: Float
@@ -20,7 +19,6 @@ export const featureFlagGQLSchema = /* GraphQL */ `
 
   type ExperimentReference implements OverrideRule {
     id: String!
-    status: ExperimentStatus!
     description: String
     startTimestamp: Float
     endTimestamp: Float
@@ -28,11 +26,11 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     enrollment: Enrollment!
     type: OverrideRuleType!
     name: String!
+    status: ExperimentStatus!
   }
 
   type ForcedValue implements OverrideRule {
     id: String!
-    status: ExperimentStatus!
     description: String
     startTimestamp: Float
     endTimestamp: Float
@@ -50,7 +48,7 @@ export const featureFlagGQLSchema = /* GraphQL */ `
     name: String
     value: TextPrimitive
     description: String
-    status: ExperimentStatus!
+    status: ExperimentStatus
     environmentName: String!
     startTimestamp: Float
     endTimestamp: Float
