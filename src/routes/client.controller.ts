@@ -7,10 +7,10 @@ import {
   FeatureFlag,
   FeatureFlagDraft,
   ForcedValue,
+  SDKFlagManager,
 } from '@avocet/core';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { RepositoryManager } from '@avocet/mongo-client';
-import ClientFlagManager from '../lib/ClientFlagManager.js';
 import cfg from '../envalid.js';
 
 /**
@@ -45,11 +45,11 @@ async function computeFlagValue(
 ): Promise<ClientSDKFlagValue> {
   const defaultReturn = {
     value: flag.value.initial,
-    metadata: ClientFlagManager.singleIdString(flag.id),
+    metadata: SDKFlagManager.singleIdString(flag.id),
   };
 
   const envRules = FeatureFlagDraft.getEnvironmentRules(flag, environmentName);
-  const selectedRule = ClientFlagManager.enroll(envRules, clientProps);
+  const selectedRule = SDKFlagManager.enroll(envRules, clientProps);
   if (selectedRule === undefined) return defaultReturn;
 
   let fullRule: Experiment | ForcedValue;
@@ -59,7 +59,7 @@ async function computeFlagValue(
     fullRule = selectedRule;
   }
 
-  const ruleValue = ClientFlagManager.ruleValueAndMetadata(
+  const ruleValue = SDKFlagManager.ruleValueAndMetadata(
     fullRule,
     flag.id,
     clientProps,
@@ -105,7 +105,7 @@ export const fetchFFlagHandler = async (
 
     let currentValue: ClientSDKFlagValue = {
       value: null,
-      metadata: ClientFlagManager.defaultIdString(),
+      metadata: SDKFlagManager.defaultIdString(),
     };
 
     const flag = await repos.featureFlag.findOne({
