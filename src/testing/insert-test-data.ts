@@ -1,34 +1,33 @@
 /* eslint-disable no-console */
 
+import { Insert } from '@avocet/mongo-client';
 import { exampleFlagDrafts } from './data/featureFlags.js';
 import { staticClientPropDefs } from './data/clientPropDefs.js';
 import { staticSDKConnections } from './data/sdkConnections.js';
 import { exampleEnvironmentArray } from './data/environments.js';
 import { exampleExperiments } from './data/experiment-data.js';
 import { staticUser } from './data/user.js';
-import {
-  colls,
-  eraseTestData,
-  insertSDKConnections,
-  insertClientPropDefs,
-  insertEnvironments,
-  insertExperiments,
-  insertFeatureFlags,
-  insertUsers,
-} from '../lib/insert-helpers.js';
+import cfg from '../envalid.js';
 
-await eraseTestData();
-await insertUsers([staticUser]);
-await insertExperiments(exampleExperiments);
-await insertEnvironments(exampleEnvironmentArray);
-await insertEnvironments(exampleEnvironmentArray);
-await insertSDKConnections(staticSDKConnections);
-await insertFeatureFlags([exampleFlagDrafts[0]]);
-await insertClientPropDefs(staticClientPropDefs);
+const insert = new Insert(cfg.MONGO_TESTING_URI);
 
-console.log('Flags:', await colls.featureFlag.findMany({}));
-console.log('Client Connection:', await colls.sdkConnection.findMany({}));
-console.log('Experiment:', await colls.experiment.findMany({}));
-console.log('Environment:', await colls.environment.findMany({}));
-console.log('Client Prop Defs: ', await colls.clientPropDef.findMany({}));
-console.log('User:', await colls.user.findMany({}));
+await insert.eraseTestData();
+await insert.users([staticUser]);
+await insert.experiments(exampleExperiments);
+await insert.environments(exampleEnvironmentArray);
+await insert.SDKConnections(staticSDKConnections);
+await insert.featureFlags([exampleFlagDrafts[0]]);
+await insert.clientPropDefs(staticClientPropDefs);
+
+console.log('Flags:', await insert.manager.featureFlag.findMany({}));
+console.log(
+  'Client Connection:',
+  await insert.manager.sdkConnection.findMany({}),
+);
+console.log('Experiment:', await insert.manager.experiment.findMany({}));
+console.log('Environment:', await insert.manager.environment.findMany({}));
+console.log(
+  'Client Prop Defs: ',
+  await insert.manager.clientPropDef.findMany({}),
+);
+console.log('User:', await insert.manager.user.findMany({}));

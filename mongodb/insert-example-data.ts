@@ -1,8 +1,10 @@
 import { ExperimentDraft, FeatureFlagDraft, ForcedValue } from '@avocet/core';
-import { insertDrafts, repos } from '../src/lib/insert-helpers.js';
+import { Insert } from '@avocet/mongo-client';
+import cfg from '../src/envalid.js';
 
+const insert = new Insert(cfg.MONGO_ADMIN_URI);
 // assumes that default environments have already been inserted
-const allEnvironments = await repos.environment.getMany();
+const allEnvironments = await insert.manager.environment.getMany();
 
 // verify the testing environment exists - update code below if testing
 // environment is removed from initial data
@@ -46,7 +48,7 @@ const exampleFeatureFlags: FeatureFlagDraft[] = [
   exampleSiteThemeFlag,
 ];
 
-await insertDrafts(exampleFeatureFlags, repos.featureFlag);
+await insert.featureFlags(exampleFeatureFlags);
 // #endregion
 
 // #region EXPERIMENTS
@@ -69,7 +71,7 @@ export const exampleExperiments: ExperimentDraft[] = [
   abExperiment1,
 ];
 
-await insertDrafts(exampleExperiments, repos.experiment);
+await insert.experiments(exampleExperiments);
 // #endregion
 
 // eslint-disable-next-line no-console
