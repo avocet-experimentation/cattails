@@ -1,4 +1,4 @@
-# cattails
+# Management API
 ⚠️ Work in Progress
 
-This project is currently under active development. A complete version with full documentation will be available soon.
+This project is under active development. Documentation will be available soon.

@@ -9,7 +9,6 @@
     "build": "rm -rf dist && tsup --clean --format esm ./src/index.ts",
     "start": "node dist/index.js",
     "test": "npx vitest",
-    "testData": "npx tsx ./src/testing/insert-test-data.ts",
     "coverage": "npx vitest run --coverage",
     "initMongo": "(cd mongodb && docker compose up -d && bash init-db.sh .)",
     "exampleData": "npx tsx ./mongodb/insert-example-data.ts"
@@ -58,7 +57,6 @@
     "@fastify/cors": "^8.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/ws": "^8.5.13",
-    "deepmerge": "^4.3.1",
     "dotenv": "^16.4.5",
     "envalid": "^8.0.0",
     "fastify": "^4.17.0",
