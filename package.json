@@ -50,7 +50,7 @@
     "prettier-eslint": "^16.3.0",
     "tsx": "^3.12.7",
     "typescript": "~5.4.5",
-    "vitest": "^2.0.0"
+    "vitest": ">=2.1.9"
   },
   "dependencies": {
     "@avocet/core": "^1.1.0",
