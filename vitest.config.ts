@@ -8,5 +8,8 @@ export default defineConfig({
       tsconfig: './tsconfig.json',
     },
     fileParallelism: false,
+    sequence: {
+      concurrent: false,
+    },
   },
 });

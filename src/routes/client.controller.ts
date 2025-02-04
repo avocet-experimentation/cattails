@@ -13,32 +13,9 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { RepositoryManager } from '@avocet/mongo-client';
 import cfg from '../envalid.js';
 
-/**
- * Executes many asynchronous operations in parallel and returns once all of
- * the promises resolve or any one of them rejects.
- * @param cb any function that returns a `Promise`
- * @param argumentSets an array of tuples of arguments to pass into `cb`
- * @param promiseTransform an optional transform operation
- * @returns
- */
-const parallelAsync = async <P, A extends Array<unknown>>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cb: (...args: A) => Promise<P>,
-  argumentSets: A[],
-) => {
-  const promises: Promise<P>[] = [];
-
-  for (let i = 0; i < argumentSets.length; i += 1) {
-    const args = argumentSets[i];
-    const promise = cb(...args);
-    promises.push(promise);
-  }
-
-  return Promise.all(promises);
-};
+const repos = new RepositoryManager(cfg.MONGO_API_URI);
 
 async function computeFlagValue(
-  experimentRepo: RepositoryManager['experiment'],
   flag: FeatureFlag,
   environmentName: string,
   clientProps: ClientPropMapping,
@@ -54,7 +31,7 @@ async function computeFlagValue(
 
   let fullRule: Experiment | ForcedValue;
   if (selectedRule.type === 'Experiment') {
-    fullRule = await experimentRepo.get(selectedRule.id);
+    fullRule = await repos.experiment.get(selectedRule.id);
   } else {
     fullRule = selectedRule;
   }
@@ -67,17 +44,6 @@ async function computeFlagValue(
   return ruleValue ?? defaultReturn;
 }
 
-interface FetchFlagsClientBody {
-  apiKey: string;
-  clientProps: ClientPropMapping;
-}
-
-interface FetchFlagClientRequest extends FetchFlagsClientBody {
-  flagName: string;
-}
-
-const repos = new RepositoryManager(cfg.MONGO_API_URI);
-
 const getEnvFromKey = async (apiKey: string): Promise<Environment> => {
   const connection = await repos.sdkConnection.findOne({ apiKeyHash: apiKey });
   if (!connection) throw new Error('No SDK connection found.');
@@ -88,13 +54,14 @@ const getEnvFromKey = async (apiKey: string): Promise<Environment> => {
   return environment;
 };
 
-/**
- * Todo:
- * - pass client API key in body instead of environmentName
- * - use key to identify environment
- */
 export const fetchFFlagHandler = async (
-  request: FastifyRequest<{ Body: FetchFlagClientRequest }>,
+  request: FastifyRequest<{
+    Body: {
+      apiKey: string;
+      clientProps: ClientPropMapping;
+      flagName: string;
+    };
+  }>,
   reply: FastifyReply,
 ): Promise<ClientSDKFlagMapping> => {
   const { apiKey, clientProps, flagName } = request.body;
@@ -112,12 +79,7 @@ export const fetchFFlagHandler = async (
       name: flagName,
     });
     if (flag && environmentName in flag.environmentNames) {
-      currentValue = await computeFlagValue(
-        repos.experiment,
-        flag,
-        environmentName,
-        clientProps,
-      );
+      currentValue = await computeFlagValue(flag, environmentName, clientProps);
     }
     return await reply.code(200).send({ [flagName]: currentValue });
   } catch (e) {
@@ -126,7 +88,12 @@ export const fetchFFlagHandler = async (
 };
 
 export const getEnvironmentFFlagsHandler = async (
-  request: FastifyRequest<{ Body: FetchFlagsClientBody }>,
+  request: FastifyRequest<{
+    Body: {
+      apiKey: string;
+      clientProps: ClientPropMapping;
+    };
+  }>,
   reply: FastifyReply,
 ): Promise<ClientSDKFlagMapping> => {
   const { apiKey, clientProps } = request.body;
@@ -137,17 +104,15 @@ export const getEnvironmentFFlagsHandler = async (
 
     const featureFlags = await repos.featureFlag.getEnvironmentFlags(environmentName);
 
-    const resolve = await parallelAsync(
-      (flag, ...args) =>
-        computeFlagValue(repos.experiment, flag, ...args).then((result) => [
+    const resolve = await Promise.all(
+      featureFlags.map((flag) =>
+        computeFlagValue(flag, environmentName, clientProps).then((result) => [
           flag.name,
           result,
-        ]),
-      featureFlags.map((flag) => [flag, environmentName, clientProps] as const),
+        ])),
     );
-
-    const environmentValues = Object.fromEntries(resolve);
-    return await reply.code(200).send(environmentValues);
+    const environmentFlagMapping = Object.fromEntries(resolve);
+    return await reply.code(200).send(environmentFlagMapping);
   } catch (e: unknown) {
     if (e instanceof Error) {
       // eslint-disable-next-line no-console
