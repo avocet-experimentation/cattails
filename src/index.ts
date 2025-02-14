@@ -14,14 +14,14 @@ const server = Fastify({
 // check if service is up during deployment; check on regular frequency
 server.get('/healthcheck', async () => ({ status: 'OK' }));
 // todo: replace '*' origin with environment variable referencing dashboard
-server.register(cors, { prefix: 'graphql', origin: '*' });
-server.register(mercurius, {
+await server.register(cors, { origin: '*' });
+await server.register(mercurius, {
   schema,
   resolvers,
   graphiql: true,
 });
 
-server.register(mercuriusLogging);
+await server.register(mercuriusLogging);
 
 server.listen({ port: cfg.MANAGEMENT_API_PORT }, (error, address) => {
   if (error instanceof Error) {
