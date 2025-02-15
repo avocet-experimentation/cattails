@@ -23,7 +23,10 @@ await server.register(mercurius, {
 
 await server.register(mercuriusLogging);
 
-server.listen({ port: cfg.MANAGEMENT_API_PORT }, (error, address) => {
+server.listen({
+  port: cfg.MANAGEMENT_API_PORT,
+  host: '0.0.0.0',
+}, (error, address) => {
   if (error instanceof Error) {
     console.error(error);
     process.exit(1);
