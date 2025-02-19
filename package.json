@@ -53,8 +53,8 @@
     "vitest": ">=2.1.9"
   },
   "dependencies": {
-    "@avocet/core": "^1.1.0",
-    "@avocet/mongo-client": "^1.1.0",
+    "@avocet/core": "^1.1.2",
+    "@avocet/mongo-client": "^1.1.1",
     "@fastify/cors": "^8.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/ws": "^8.5.13",
